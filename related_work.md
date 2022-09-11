@@ -1,9 +1,6 @@
 # Directly related
 - Kingma et al (2014) - [Auto-Encoding Variational Bayes](https://arxiv.org/abs/1312.6114)
     - VAE introduction
-- Li et al (2020) [OPTIMUS Organizing Sentences via Pre-trained Modeling of a Latent Space](https://arxiv.org/abs/2004.04092)
-    - Combines BERT with GPT-2
-    - network architecture will be used
 - Pati et al (2020) AR-VAE [Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders](https://arxiv.org/abs/2004.05485)
     - will be used as extension for the optimization goal for the VAE of OPTIMUS
     - Goal: explicitly encode different continuous-valued attributes along cetain latent dimension (proof on image and music)
@@ -12,6 +9,11 @@
     - Introduction references
         - the topics of image gender swap, speaking style change
         - **other disentangle approaches**
+
+## Optimus
+- Li et al (2020) [OPTIMUS Organizing Sentences via Pre-trained Modeling of a Latent Space](https://arxiv.org/abs/2004.04092)
+    - Combines BERT with GPT-2
+    - network architecture will be used
 - [GPT-2](https://github.com/openai/gpt-2) and accompanying paper [Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)
     - 
 - Radford et al (2016) [Neural machine translation of rare words with subword units](https://arxiv.org/abs/1508.07909)
@@ -21,6 +23,9 @@
 ## Evaluation metrics
 - Adel et al (2018) [Discovering Interpretable Representations for Both Deep Generative and Discriminative Models](http://proceedings.mlr.press/v80/adel18a.html)
     - 
+- Carbonneau et al (2022) - [Measuring Disentanglement: A Review of Metrics](https://arxiv.org/abs/2012.09276)
+    - 
+
 
 ## German simplification (transformer)
 - [Research group on Language Technology for Accessibility at the university of zurich](https://www.cl.uzh.ch/en/texttechnologies/research/accessibility.html)
@@ -87,8 +92,6 @@
         - may sample from syntactic, but infer in semantic space for sentence with same meaning but different syntax
         - use multi-task loss, adversarial loss, adversarial recontstruction loss
         - non-parallel
-- Nangi et al (2021) [Counterfactuals to Control Latent Disentangled Text Representations for Style Transfer](https://aclanthology.org/2021.acl-short.7)
-    - Goal: 
 ## Other / Non-text
 - Hadjeres et al (2017) [GLSR-VAE Geodesic Latent Space Regularization for Variational AutoEncoder Architectures](https://arxiv.org/abs/1707.04588)
     - CONTINUOUS-VALUED attribute
@@ -104,6 +107,10 @@
 
 
 # Misc
+- Nangi et al (2021) [Counterfactuals to Control Latent Disentangled Text Representations for Style Transfer](https://aclanthology.org/2021.acl-short.7)
+    - propose counterfactual-based approach to control the latent space for style transfer
+    - no new disentanglement method 
+    - Based on John et al (2018)
 - Ethayarajh et al (2019) [How Contextual are Contextualized Word Representations? Comparing the Geometry of BERT, ELMo, and GPT-2 Embeddings](https://arxiv.org/abs/1909.00512)
     - inspects context of embeddings in BERT, ELMo and GPT-2
     - Major findings:
@@ -112,8 +119,6 @@
         - context-specificity manifests differently in the models
         - most likely the representations to not correspond to a finite number of word-sense representations
     - Gives summary of BERT, ELMo, GPT-2
-- Carbonneau et al (2022) - [Measuring Disentanglement: A Review of Metrics](https://arxiv.org/abs/2012.09276)
-    - 
 - Bowman et al. (2015) [Generating sentences from a continuous space](https://arxiv.org/abs/1511.06349)
     - rnn-based VAE for sentence generation
     - interpolation between known sentences
@@ -138,31 +143,29 @@
     - short version of AR-VAE paper
 
 # Further read up
+- Mathieu et al (2019) [Disentangling Disentanglement in Variational Autoencoders](https://proceedings.mlr.press/v97/mathieu19a.html)
+    - might yield general decomposition scheme
+- Wang et al (2018) [Style Tokens Unsupervised Style Modeling, Control and Transfer in End-to-End Speech Synthesis]()
+    - 
+
+
+# On hold
+## Disentanglement
 - Ding (2020) [Guided Variational Autoencoder for Disentanglement Learning](https://arxiv.org/abs/2004.01255)
     - Guided-VAE for as a controllable generative model
+    - work on images
     - Content:
         - general disentanglement, supervised and unsupervised
         - use excitation process (as in electric generators) to increase corresponce between latent variable and attribute label
-- Mathieu et al (2019) [Disentangling Disentanglement in Variational Autoencoders](https://proceedings.mlr.press/v97/mathieu19a.html)
-    - might yield general decomposition scheme
 - Rhodes et al (2021) [Local Disentanglement in Variational Auto-Encoders Using Jacobian $L_1$ Regularization](https://papers.nips.cc/paper/2021/hash/bfd2308e9e75263970f8079115edebbd-Abstract.html)
-    - content unclear as of now
-- Wang et al (2018) [Style Tokens Unsupervised Style Modeling, Control and Transfer in End-to-End Speech Synthesis]()
-    - 
-- Dai et al (2019) [Style Transformer: Unpaired Text Style Transfer without Disentangled Latent Representation]()
-    - 
-- Li et al (2021) [Surrogate Gradient Field for Latent Space Manipulation]()
-    - 
-- Yi et al (2020) [Text Style Transfer via Learning Style Instance Supported Latent Space](https://www.ijcai.org/Proceedings/2020/0526)
-    -    
-
-- Devaraj et al (2022) [Evaluating Factuality in Text Simplification](https://aclanthology.org/2022.acl-long.506/)
-    - 
-
-## On hold
+    - on images
+    
+## Other
 - Miao et al (2016) [Language as a Latent Variable: Discrete Generative Models for Sentence Compression](https://arxiv.org/abs/1609.07317)
     - VAE trained for compressing sentences
     - seems outdated
+- Devaraj et al (2022) [Evaluating Factuality in Text Simplification](https://aclanthology.org/2022.acl-long.506/)
+    - Text simplification
 - Yang et al (2017) [Improved Variational Autoencoders for Text Modeling using Dilated Convolutions](http://proceedings.mlr.press/v70/yang17d.html)
     - apply dilated convolution to VAE
     - lack of relevance and seems a bit outdated
@@ -170,3 +173,12 @@
     - no real relevant findings?
 - Bostrom et al (2020) [Byte Pair Encoding is Suboptimal for Language Model Pretraining](https://arxiv.org/abs/2004.03720)
     - BPE might be restrictive
+
+
+## Not related
+- Dai et al (2019) [Style Transformer: Unpaired Text Style Transfer without Disentangled Latent Representation]()
+    - No disentanglement, no VAE
+- Li et al (2021) [Surrogate Gradient Field for Latent Space Manipulation]()
+    - Images and not using VAE
+- Yi et al (2020) [Text Style Transfer via Learning Style Instance Supported Latent Space](https://www.ijcai.org/Proceedings/2020/0526)
+    - Don't use VAE
