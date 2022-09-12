@@ -10,6 +10,15 @@
         - the topics of image gender swap, speaking style change
         - **other disentangle approaches**
 
+# Models
+## VAE
+- Higgins et al (2017) [beta-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework]()
+    - 
+- Cho et al (2014) [Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation
+](https://arxiv.org/abs/1406.1078)
+    - RNN-based VAE (R-VAE)
+- Wang et al (2019) [Controllable Unsupervised Text Attribute Transfer via Editing Entangled Latent Representation](https://proceedings.neurips.cc/paper/2019/hash/8804f94e16ba5b680e239a554a08f7d2-Abstract.html)
+    - Transformer VAE (T-VAE)
 ## Optimus
 - Li et al (2020) [OPTIMUS Organizing Sentences via Pre-trained Modeling of a Latent Space](https://arxiv.org/abs/2004.04092)
     - Combines BERT with GPT-2
