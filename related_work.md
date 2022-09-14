@@ -27,7 +27,9 @@
     - 
 - Radford et al (2016) - [Neural machine translation of rare words with subword units](https://arxiv.org/abs/1508.07909)
     - **Byte Pair Encoding**
-- []
+- Li et al (2021) - [Prefix-Tuning Optimizing Continuous Prompts for Generation](https://arxiv.org/abs/2101.00190)
+    - Allow for tuning on pre-trained OPTIMUS
+    - 407 Citations according to Google Scholar
 
 ## Evaluation metrics
 - Adel et al (2018) - [Discovering Interpretable Representations for Both Deep Generative and Discriminative Models](http://proceedings.mlr.press/v80/adel18a.html)
@@ -89,6 +91,7 @@
 ## Text
 - John et al (2018) - [Disentangled Representation Learning for Non-Parallel Text Style Transfer](https://arxiv.org/abs/1808.04339)
     - Goal: disentangle style and content in VAEs
+    - Split latent into style and content space
     - yields comparison metrics
     - Content:
         - use multi-task and adversarial loss
@@ -96,11 +99,20 @@
         - binary sentiment tag -> might be transferable to simplification
 - Bao et al (2019) - [Generating Sentences from Disentangled Syntactic and Semantic Spaces](https://arxiv.org/abs/1907.05789)
     - Goal: split latent space into syntactic and semantic space
+    - Expand John et al (2018)
     - Content:
         - split latent space into z_semantic and z_syntactic
         - may sample from syntactic, but infer in semantic space for sentence with same meaning but different syntax
         - use multi-task loss, adversarial loss, adversarial recontstruction loss
         - non-parallel
+- Cheng et al (2020) - [Improving Disentangled Text Representation Learning with Information-Theoretic Guidance](https://arxiv.org/abs/2006.00693)
+    - Use Mutual Information
+    - Expand John et al (2018)
+- Li et al (2022) - [Variational Autoencoder with Disentanglement Priors for Low-Resource](https://arxiv.org/abs/2202.13363)
+    - split latent space into content and task-specific one encoding the labels
+    - use mixture Gaussian for content, Gaussian prior for each label
+    - Use OPTIMUS
+
 ## Other / Non-text
 - Hadjeres et al (2017) - [GLSR-VAE Geodesic Latent Space Regularization for Variational AutoEncoder Architectures](https://arxiv.org/abs/1707.04588)
     - CONTINUOUS-VALUED attribute
