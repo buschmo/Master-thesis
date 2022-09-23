@@ -19,6 +19,7 @@
     - RNN-based VAE (R-VAE)
 - Wang et al (2019) - [Controllable Unsupervised Text Attribute Transfer via Editing Entangled Latent Representation](https://proceedings.neurips.cc/paper/2019/hash/8804f94e16ba5b680e239a554a08f7d2-Abstract.html)
     - Transformer VAE (T-VAE)
+    - based on Vaswani et al (2017) - [Attention is all you need](https://arxiv.org/abs/1706.03762)
 ## Optimus
 - Li et al (2020) - [OPTIMUS Organizing Sentences via Pre-trained Modeling of a Latent Space](https://arxiv.org/abs/2004.04092)
     - Combines BERT with GPT-2
@@ -27,7 +28,6 @@
     - 
 - Radford et al (2016) - [Neural machine translation of rare words with subword units](https://arxiv.org/abs/1508.07909)
     - **Byte Pair Encoding**
-- []
 
 ## Evaluation metrics
 - Adel et al (2018) - [Discovering Interpretable Representations for Both Deep Generative and Discriminative Models](http://proceedings.mlr.press/v80/adel18a.html)
@@ -101,6 +101,7 @@
         - may sample from syntactic, but infer in semantic space for sentence with same meaning but different syntax
         - use multi-task loss, adversarial loss, adversarial recontstruction loss
         - non-parallel
+- Li et al (2022) - [Variational Autoencoder with Disentanglement Priors for Low-Resource](https://arxiv.org/abs/2202.13363)
 ## Other / Non-text
 - Hadjeres et al (2017) - [GLSR-VAE Geodesic Latent Space Regularization for Variational AutoEncoder Architectures](https://arxiv.org/abs/1707.04588)
     - CONTINUOUS-VALUED attribute
@@ -154,8 +155,6 @@
 # Further read up
 - Mathieu et al (2019) - [Disentangling Disentanglement in Variational Autoencoders](https://proceedings.mlr.press/v97/mathieu19a.html)
     - might yield general decomposition scheme
-- Wang et al (2018) - [Style Tokens Unsupervised Style Modeling, Control and Transfer in End-to-End Speech Synthesis]()
-    - 
 
 
 # On hold
@@ -168,6 +167,9 @@
         - use excitation process (as in electric generators) to increase corresponce between latent variable and attribute label
 - Rhodes et al (2021) - [Local Disentanglement in Variational Auto-Encoders Using Jacobian $L_1$ Regularization](https://papers.nips.cc/paper/2021/hash/bfd2308e9e75263970f8079115edebbd-Abstract.html)
     - on images
+- Cheng et al (2020) - [Improving Disentangled Text Representation Learning with Information-Theoretic Guidance
+](https://arxiv.org/abs/2006.00693)
+    - Disentanglement via MI
     
 ## Other
 - Miao et al (2016) - [Language as a Latent Variable: Discrete Generative Models for Sentence Compression](https://arxiv.org/abs/1609.07317)
