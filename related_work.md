@@ -130,6 +130,8 @@
   - [Different domain usage (kinda, i.e. still image) of fader network](https://arxiv.org/abs/2010.07233)
 
 # Misc
+- Devlin et al (2019) - [BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding](https://arxiv.org/abs/1810.04805)
+  - Introduction of BERT
 - Nangi et al (2021) - [Counterfactuals to Control Latent Disentangled Text Representations for Style Transfer](https://aclanthology.org/2021.acl-short.7)
   - propose counterfactual-based approach to control the latent space for style transfer
   - no new disentanglement method
