@@ -1,4 +1,4 @@
 name: master
 dependencies:
   - pip
-  - python
+  - python==3.10
