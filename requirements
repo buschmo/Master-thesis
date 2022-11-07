@@ -1,0 +1,6 @@
+ipykernel
+jupyter
+ipywidgets
+torch
+transformers
+sentence-transformers
