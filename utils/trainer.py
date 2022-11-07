@@ -1,19 +1,28 @@
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import utilitites as utl
+import utils.utilitites as utl
 
 
 class Trainer():
-    def __init__(self, dataset, model, lr=1e-4):
+    def __init__(self, dataset, model, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0):
         # from trainer
         self.dataset = dataset
         self.model = model
+        if torch.cuda.is_available():
+            self.model.cuda()
 
         self.optimizer = torch.optim.Adam(
             filter(lambda p: p.requires_grad, self.model.parameters()),
             lr=lr
         )
+
+        self.beta=beta
+        self.gamma=gamma
+        self.delta=delta
+        self.capacity=capacity
+        self.use_reg_loss = True
+        self.reg_dim = (0,)
 
     def train_model(self, batch_size, num_epochs):
         # from trainer
@@ -22,12 +31,12 @@ class Trainer():
         generator_train = DataLoader(dataset_train, batch_size=batch_size)
         generator_val = DataLoader(dataset_val, batch_size=batch_size)
 
-        for epoch in tqdm(range(num_epochs), desc="Epochs"):
+        for epoch_index in tqdm(range(num_epochs), desc="Epochs"):
             # Train the model
             self.model.train()
             mean_loss_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
                 data_loader=generator_train,
-                epoch_num=epoch,
+                epoch_num=epoch_index,
                 train=True
             )
 
@@ -35,14 +44,14 @@ class Trainer():
             self.model.eval()
             mean_loss_val, mean_accuracy_val = self.loss_and_acc_on_epoch(
                 data_loader=generator_val,
-                epoch_num=epoch,
+                epoch_num=epoch_index,
                 train=False
             )
 
             # TODO reinstate?
             # self.eval_model(
             #     data_loader=generator_val,
-            #     epoch_num=epoch
+            #     epoch_num=epoch_index
             # )
 
             data_element = {
@@ -55,13 +64,13 @@ class Trainer():
             }
             self.print_epoch_stats(**data_element)
 
-            self.model.save_checkpoint(epoch)
+            self.model.save_checkpoint(epoch_index)
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):
         # from trainer
         mean_loss = 0
         mean_accuracy = 0
-        for batch, (X, y) in tqdm(enumerate(data_loader), desc="Batch"):
+        for batch_num, (X, y) in tqdm(enumerate(data_loader), desc="Batch"):
             batch_data = (X.to("cuda"), y.to("cuda"))
 
             self.optimizer.zero_grad()
@@ -91,7 +100,7 @@ class Trainer():
         outputs, z_dist, prior_dist, z_tilde, z_prior = self.model(inputs)
 
         # compute reconstruction loss
-        recons_loss = self.reconstruction_loss(inputs, outputs, self.dec_dist)
+        recons_loss = self.reconstruction_loss(inputs, outputs)
 
         # compute KLD loss
         dist_loss = self.compute_kld_loss(
@@ -124,7 +133,7 @@ class Trainer():
 
     # TODO staticmethod necessary? maybe move to other module?
     @staticmethod
-    def reconstruction_loss(x, x_recons, dist):
+    def reconstruction_loss(x, x_recons):
         # from image_vae_trainer
         batch_size = x.size(0)
         x_recons = torch.sigmoid(x_recons)  # TODO sigmoid?
@@ -145,7 +154,7 @@ class Trainer():
     def compute_reg_loss(z, labels, reg_dim, gamma, factor=1.0):
         # from trainer
         x = z[:, reg_dim]
-        reg_loss = Trainer.reg_loss_sign(x, lbabels, factor=factor)
+        reg_loss = Trainer.reg_loss_sign(x, labels, factor=factor)
         return gamma * reg_loss
 
     # TODO why is this method correct?

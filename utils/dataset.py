@@ -48,15 +48,15 @@ class TextDataset(Dataset):
         df_normal = pd.read_csv(path_normal, index_col=0)
         labels = np.concatenate([np.zeros(df_easy.shape[0]), np.ones(df_normal.shape[0])])
 
-        self.embeddings = pd.concat([df_easy,df_normal])
-        self.labels = pd.DataFrame(labels)
+        self.embeddings = pd.concat([df_easy,df_normal]).to_numpy(dtype="float32")
+        self.labels = pd.DataFrame(labels).to_numpy(dtype="float32")
         
     
     def __len__(self):
         return len(self.labels)
 
     def __getitem__(self, index):
-        return self.embeddings.iloc[index], self.labels.iloc[index]
+        return self.embeddings[index], self.labels[index]
 
     def getInputSize(self):
         return self.embeddings.shape[1]

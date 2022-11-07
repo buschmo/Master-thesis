@@ -2,6 +2,7 @@ import torch
 from torch import nn, distributions
 from code.base_model import BaseModel
 
+
 class NaiveVAE(BaseModel):
     def __init__(self, input_size):
         super().__init__()
@@ -36,6 +37,7 @@ class NaiveVAE(BaseModel):
 
     def decode(self, z):
         hidden = self.decoder(z)
+        return hidden
 
     def reparametrize(self, z_dist):
         z_tilde = z_dist.rsample()
@@ -46,16 +48,15 @@ class NaiveVAE(BaseModel):
         z_prior = prior_dist.sample()
         return z_tilde, z_prior, prior_dist
 
-
     def forward(self, x):
         z_dist = self.encode(x)
-        
+
         z_tilde, z_prior, prior_dist = self.reparametrize(z_dist)
 
         output = self.decode(z_tilde)
 
         return output, z_dist, prior_dist, z_tilde, z_prior
-    
+
     def __repr__(self):
         return self.state_dict()
 

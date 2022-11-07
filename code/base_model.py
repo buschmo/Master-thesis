@@ -30,12 +30,12 @@ class BaseModel(nn.Module):
 
     def save_checkpoint(self, epoch_num):
         if not self.filepath.parent.exists():
-            self.filepath.parent.mkdir()
+            self.filepath.parent.mkdir(parents=True)
             
-        filename = self.filepath.with_stem(f"{self.__repr__()}_{epoch_num}")
+        filename = self.filepath.with_stem(f"{self.__str__()}_{epoch_num}")
         torch.save(self.state_dict(), filename)
         print(f"Model checkpoint {self} saved for epoch {epoch_num}.")
     
     def load(self):
         self.load_state_dict(torch.load(self.filepath))
-        
+
