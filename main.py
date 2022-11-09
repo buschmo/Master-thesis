@@ -1,7 +1,7 @@
 import torch
 
 from code.naive_model import NaiveVAE
-from utils.dataset import TextDataset
+from utils.dataset import SimpleGermanDataset
 from utils.trainer import Trainer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -14,13 +14,13 @@ def main():
     else:
         print("Cuda was found.")
 
-    dataset = TextDataset()
-    model = NaiveVAE(input_size=dataset.getInputSize())
-    trainer = Trainer(dataset, model)
+    dataset = SimpleGermanDataset()
+    model = NaiveVAE(input_size=dataset.getInputSize(), filename=dataset.__str__())
+    trainer = Trainer(dataset, model, checkpoint_index=50)
 
     trainer.train_model(
         batch_size=64,
-        num_epochs=100
+        num_epochs=1000
     )
 
 
