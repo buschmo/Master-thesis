@@ -4,25 +4,27 @@ from code.base_model import BaseModel
 
 
 class NaiveVAE(BaseModel):
-    def __init__(self, input_size):
-        super().__init__()
+    def __init__(self, input_size, **kwargs):
+        super().__init__(**kwargs)
 
         self.input_size = input_size
-        self.z_dim = 64
+        self.z_dim = 32
+        self.encoder_dim = 128
+        self.decoder_dim = 128
 
         self.encoder = nn.Sequential(
-            nn.Linear(self.input_size, 256),
-            nn.ReLU()
+            nn.Linear(self.input_size, self.encoder_dim),
+            nn.SELU()
         )
 
-        self.enc_mean = nn.Linear(256, self.z_dim)
-        self.enc_log_std = nn.Linear(256, self.z_dim)
+        self.enc_mean = nn.Linear(self.encoder_dim, self.z_dim)
+        self.enc_log_std = nn.Linear(self.encoder_dim, self.z_dim)
 
         self.decoder = nn.Sequential(
-            nn.Linear(self.z_dim, 256),
-            nn.ReLU(),
-            nn.Linear(256, input_size),
-            nn.ReLU()
+            nn.Linear(self.z_dim, self.decoder_dim),
+            nn.SELU(),
+            nn.Linear(self.decoder_dim, input_size),
+            nn.SELU()
         )
 
     def encode(self, x):
