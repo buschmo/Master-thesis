@@ -5,7 +5,7 @@ import utils.utilitites as utl
 
 
 class Trainer():
-    def __init__(self, dataset, model, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0):
+    def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0):
         # from trainer
         self.dataset = dataset
         self.model = model
@@ -17,17 +17,19 @@ class Trainer():
             lr=lr
         )
 
-        self.beta=beta
-        self.gamma=gamma
-        self.delta=delta
-        self.capacity=capacity
+        self.checkpoint_index = checkpoint_index
+        self.beta = beta
+        self.gamma = gamma
+        self.delta = delta
+        self.capacity = capacity
         self.use_reg_loss = True
         self.reg_dim = (0,)
 
     def train_model(self, batch_size, num_epochs):
         # from trainer
-        dataset_train, dataset_val = torch.utils.data.random_split(self.dataset, [
-                                                                   0.8, 0.2])
+        dataset_train, dataset_val = torch.utils.data.random_split(
+            self.dataset, [0.8, 0.2]
+        )
         generator_train = DataLoader(dataset_train, batch_size=batch_size)
         generator_val = DataLoader(dataset_val, batch_size=batch_size)
 
@@ -64,7 +66,9 @@ class Trainer():
             }
             self.print_epoch_stats(**data_element)
 
-            self.model.save_checkpoint(epoch_index)
+            if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0):
+                self.model.save_checkpoint(epoch_index)
+        self.model.save()
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):
         # from trainer
@@ -136,7 +140,7 @@ class Trainer():
     def reconstruction_loss(x, x_recons):
         # from image_vae_trainer
         batch_size = x.size(0)
-        x_recons = torch.sigmoid(x_recons)  # TODO sigmoid?
+        # x_recons = torch.sigmoid(x_recons)  # TODO sigmoid?
         recons_loss = torch.nn.functional.mse_loss(
             x_recons, x, reduction='sum'
         ).div(batch_size)
@@ -157,7 +161,6 @@ class Trainer():
         reg_loss = Trainer.reg_loss_sign(x, labels, factor=factor)
         return gamma * reg_loss
 
-    # TODO why is this method correct?
     @staticmethod
     def reg_loss_sign(latent_code, attribute, factor=1.0):
         # compute latent distance matrix
@@ -260,7 +263,7 @@ class Trainer():
             "test_loss": mean_loss_test,
             "test_acc": mean_accuracy_test,
         }
-    
+
     # TODO implement
     def loss_and_acc_test():
         # from image_vae_trainer
