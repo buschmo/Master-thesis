@@ -42,7 +42,7 @@ if not path_easy.exists() or not path_normal.exists():
         df.to_csv("data/df_normal.csv")
 
 
-class TextDataset(Dataset):
+class SimpleGermanDataset(Dataset):
     def __init__(self):
         df_easy = pd.read_csv(path_easy, index_col=0)
         df_normal = pd.read_csv(path_normal, index_col=0)
@@ -58,5 +58,9 @@ class TextDataset(Dataset):
     def __getitem__(self, index):
         return self.embeddings[index], self.labels[index]
 
+    def __str__(self):
+        return "SimpleGermanCorpus"
+
     def getInputSize(self):
         return self.embeddings.shape[1]
+    
