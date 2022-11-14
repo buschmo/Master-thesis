@@ -1,34 +1,71 @@
 import sklearn
 import numpy as np
-import spacy
+from torch import Tensor
+import scipy
+import tqdm
+from typing import Tuple
 
+""" Code primarily taken from ar-vae evaluation.py """
 
 """ Helper functions """
 
 
-def continuous_mutual_info(mus, ys):
+def continuous_mutual_info(mus: Tensor, ys: Tensor) -> np.array:
+    """ Estimates the empirical mutual information.
+    
+    Needed for MIG.
+
+    Args:
+        mus (Tensor): latent code
+        ys (Tensor): attribute
+
+    Returns:
+        np.array: values of [code, attribute] pairing
+    """    
     num_codes = mus.shape[1]
     num_attributes = ys.shape[1]
     m = np.zeros([num_codes, num_attributes])
-    for i in range(num_attributes):
-        m[:, i] = sklearn.feature_selection.mutual_info_regression(
-            mus, ys[:, i])
+    # calculate MI for each attribute with every latent z
+    for j in range(num_attributes):
+        m[:, j] = sklearn.feature_selection.mutual_info_regression(
+            mus, ys[:, j])
     return m
 
 
-def continuous_entropy(ys):
+def continuous_entropy(ys: Tensor) -> np.array:
+    """ Computes entropy for continuous attribute values
+
+    Needed for MIG.
+    
+    Args:
+        ys (Tensor): attributes
+
+    Returns:
+        np.array: entropy for each attribute dimension
+    """    
     num_factors = ys.shape[1]
     h = np.zeros(num_factors)
+    # calculate MI for each 
     for j in tqdm(range(num_factors)):
-        h[j] = mutual_info_regression(
+        h[j] = sklearn.feature_selection.mutual_info_regression(
             ys[:, j].reshape(-1, 1), ys[:, j]
         )
     return h
 
 
-def _compute_score_matrix(mus, ys):
-    "Score matrix given by linear regression"
-    # from evaluation
+def _compute_score_matrix(mus:Tensor, ys:Tensor) -> np.array:
+    """ Compute score matrix given by linear regression
+
+    Needed for SAP score.
+    Works with continuous attributes
+    
+    Args:
+        mus (Tensor): latent code
+        ys (Tensor): attributes
+
+    Returns:
+        np.array: score matrix
+    """
     num_latent_codes = mus.shape[1]
     num_attributes = ys.shape[1]
     score_matrix = np.zeros([num_latent_codes, num_attributes])
@@ -48,14 +85,33 @@ def _compute_score_matrix(mus, ys):
     return score_matrix
 
 
-def _compute_avg_diff_top_two(matrix):
-    # from evaluation
+def _compute_avg_diff_top_two(matrix:Tensor) -> float:
+    """ Computes the difference between the two highest values in matrix
+
+    Needed for SAP score.
+
+    Args:
+        matrix (Tensor): matrix with values
+
+    Returns:
+        float: difference between 1st and 2nd highest value
+    """    
     sorted_matrix = np.sort(matrix, axis=0)
     return np.mean(sorted_matrix[-1, :] - sorted_matrix[-2, :])
 
 
-def _compute_correlation_matrix(mus, ys):
-    # from evaluation
+def _compute_correlation_matrix(mus:Tensor, ys:Tensor) -> np.array:
+    """ Computes the correlation matrix of two tensors
+    
+    Needed for spearman's rank correlation.
+
+    Args:
+        mus (Tensor): latent code z
+        ys (Tensor): attributes a
+
+    Returns:
+        np.array: correlation matrix
+    """    
     num_latent_codes = mus.shape[1]
     num_attributes = ys.shape[1]
     score_matrix = np.zeros([num_latent_codes, num_attributes])
@@ -73,53 +129,102 @@ def _compute_correlation_matrix(mus, ys):
 
 """ Actual Metrics """
 
-# TODO correct?
-def compute_interpretability_metric(latent_codes, attributes, attr_list):
-    # from evaluation
+
+def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, attr_list: list[str]) -> dict[str, Tuple[int, float]]:
+    """ Computes the interpretability score
+
+    Based on Adel et al (2018) - Discovering Interpretable Representations for Both Deep Generative and Discriminative Models
+    Chapter 4
+
+    Args:
+        latent_codes (Tensor): latent code z
+        attributes (Tensor): attributes to be interpreted
+        attr_list (list[str]): names for the attributes
+
+    Returns:
+        dict[str, Tuple[int, float]]: mapping attribute names to tuple of dimension and value. Also containt key "mean" with dimension -1
+    """
     interpretability_metrics = {}
     total = 0
     for i, attr_name in tqdm(enumerate(attr_list), desc="Interpretability"):
-        attr_labels = attributes[:, i]
+        attr_values = attributes[:, i]
+        # (i) get maximal informative dimension of latent
         mutual_info = sklearn.feature_selection.mutual_info_regression(
-            latent_codes, attr_labels)
+            latent_codes, attr_values)
         dim = np.argmax(mutual_info)
 
+        # (ii) measure interpretability by using a simple probabilistic relationship
         reg = sklearn.linear_model.LinearRegression().fit(
-            latent_codes[:, dim:dim+1], attr_labels)
-        score = reg.score(latent_codes[:, dim:dim+1], attr_labels)
+            latent_codes[:, dim:dim+1], attr_values)
+        score = reg.score(latent_codes[:, dim:dim+1], attr_values)
         interpretability_metrics[attr_name] = (int(dim), float(score))
         total += float(score)
     interpretability_metrics["mean"] = (-1, total/len(attr_list))
     return interpretability_metric
 
 
-def compute_mig(latent_codes, attributes):
-    # from evaluation
+def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
+    """ Computes the mutual information gap
+
+    Based on Chen et al (2018) - Isolating Sources of Disentanglement in Variational Autoencoders
+    Chapter 4.1
+
+    Args:
+        latent_codes (Tensor): latent code z
+        attributes (Tensor): attributes a
+
+    Returns:
+        dict[str, float]: key "mig" with score
+    """
     score_dict = {}
+    # Equation (5)
     m = continuous_mutual_info(latent_codes, attributes)
     entropy = continuous_entropy(attributes)
     sorted_m = np.sort(m, axis=0)[::-1]
+    # Equation (6)
     score_dict["mig"] = np.mean(
         np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:])
     )
     return score_dict
 
 
-def compute_sap_score():
-    # from evaluation
+def compute_sap_score(latent_codes:Tensor, attributes:Tensor) -> dict[str, float]:
+    """ Computes the SAP score
+    
+    Based on Kumar et al (2018) - Variational Inference of Disentangled Latent Concepts from Unlabeled Observations
+    Chapter 3
+
+    Args:
+        latent_codes (Tensor): latent code z
+        attributes (Tensor): attributes a
+
+    Returns:
+        dict[str, float]: key "SAP_score" with value
+    """    
+    # (i) Matrix with linear regression score
     score_matrix = _compute_score_matrix(latent_codes, attributes)
-    # TODO necessary?
     # Score matrix should have shape [num_codes, num_attributes].
     assert score_matrix.shape[0] == latent_codes.shape[1]
     assert score_matrix.shape[1] == attributes.shape[1]
 
+    # (ii) for each attribute, take the difference of the top two entries
     scores = {
         "SAP_score": _compute_avg_diff_top_two(score_matrix)
     }
 
 
-def compute_correlation_score():
-    # from evaluation
+def compute_correlation_score(latent_codes:Tensor, attributes:Tensor)-> dict[str, float]:
+    """ Calculate spearman's rank correlation
+    
+    Based on Spearman (1904) - The Proof and Measurement of Association between Two Things
+
+    Args:
+        latent_codes (Tensor): latent codes z
+        attributes (Tensor): attributes a
+
+    Returns:
+        dict[str, float]: key "Corr_score" giving the spearman score
+    """    
     corr_matrix = _compute_correlation_matrix(latent_codes, attributes)
     scores = {
         "Corr_score": np.mean(np.max(corr_matrix, axis=0))
