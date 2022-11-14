@@ -37,14 +37,16 @@
 ## Evaluation metrics
 - Adel et al (2018) - [Discovering Interpretable Representations for Both Deep Generative and Discriminative Models](http://proceedings.mlr.press/v80/adel18a.html)
   - Interpretability score
-- Carbonneau et al (2022) - [Measuring Disentanglement: A Review of Metrics](https://arxiv.org/abs/2012.09276)
-    -
 - Chen et al (2018) - [Isolating Sources of Disentanglement in Variational Autoencoders](https://proceedings.neurips.cc/paper/2018/hash/1ee3dfcd8a0645a25a35977997223d22-Abstract.html)
-  - Mutual information
+  - Mutual information gap
 - Kumar et al (2018) - [Variational Inference of Disentangled Latent Concepts from Unlabeled Observations](https://arxiv.org/abs/1711.00848)
   - SAP Score
+- Spearman (1904) - [The Proof and Measurement of Association between Two Things](https://www.jstor.org/stable/1412159?origin=JSTOR-pdf#metadata_info_tab_contents)
+  - Spearman Rank
 - Eastwood et al (2018) - [A framework for the quantitative evaluation of disentangled representations](https://proceedings.neurips.cc/paper/2017/hash/9cb9ed4f35cf7c2f295cc2bc6f732a84-Abstract.html)
   - 
+- Carbonneau et al (2022) - [Measuring Disentanglement: A Review of Metrics](https://arxiv.org/abs/2012.09276)
+    -
 
 ## German simplification (transformer)
 - [Research group on Language Technology for Accessibility at the university of zurich](https://www.cl.uzh.ch/en/texttechnologies/research/accessibility.html)
