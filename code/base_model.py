@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 class BaseModel(nn.Module):
-
+    
     def __init__(self, filepath=None, filename=None):
         super().__init__()
         if filepath:
@@ -14,7 +14,7 @@ class BaseModel(nn.Module):
             self.update_filepath()
 
     def __repr__(self):
-        raise NotImplementedError
+        return self.state_dict()
 
     def __str__(self):
         raise NotImplementedError

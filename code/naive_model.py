@@ -14,7 +14,7 @@ class NaiveVAE(BaseModel):
 
         self.encoder = nn.Sequential(
             nn.Linear(self.input_size, self.encoder_dim),
-            nn.SELU()
+            nn.ReLU()
         )
 
         self.enc_mean = nn.Linear(self.encoder_dim, self.z_dim)
@@ -22,9 +22,8 @@ class NaiveVAE(BaseModel):
 
         self.decoder = nn.Sequential(
             nn.Linear(self.z_dim, self.decoder_dim),
-            nn.SELU(),
-            nn.Linear(self.decoder_dim, input_size),
-            nn.SELU()
+            nn.ReLU(),
+            nn.Linear(self.decoder_dim, input_size)
         )
 
     def encode(self, x):
@@ -58,9 +57,7 @@ class NaiveVAE(BaseModel):
         output = self.decode(z_tilde)
 
         return output, z_dist, prior_dist, z_tilde, z_prior
-
-    def __repr__(self):
-        return self.state_dict()
+    
 
     def __str__(self):
         return "NaiveModel"
