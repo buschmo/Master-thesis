@@ -11,8 +11,8 @@ from typing import Tuple
 
 
 def continuous_mutual_info(mus: Tensor, ys: Tensor) -> np.array:
-    """ Estimates the empirical mutual information.
-    
+    """ Estimates the empirical mutual information on continuous attributes.
+
     Needed for MIG.
 
     Args:
@@ -21,7 +21,7 @@ def continuous_mutual_info(mus: Tensor, ys: Tensor) -> np.array:
 
     Returns:
         np.array: values of [code, attribute] pairing
-    """    
+    """
     num_codes = mus.shape[1]
     num_attributes = ys.shape[1]
     m = np.zeros([num_codes, num_attributes])
@@ -32,20 +32,41 @@ def continuous_mutual_info(mus: Tensor, ys: Tensor) -> np.array:
     return m
 
 
+def discrete_mutual_info(mus: Tensor, ys: Tensor) -> np.array:
+    """ Estimates the empirical mutual information on discrete attributes.
+
+    Needed for MIG.
+
+    Args:
+        mus (Tensor): latent code
+        ys (Tensor): attribute
+
+    Returns:
+        np.array: values of [code, attribute] pairing
+    """
+    num_codes = mus.shape[1]
+    num_attributes = ys.shape[1]
+    m = np.zeros([num_codes, num_attributes])
+    for i in range(num_codes):
+        for j in range(num_attributes):
+            m[i, j] = sklearn.metrics.mutual_info_score(ys[:, j], mus[:, i])
+    return m
+
+
 def continuous_entropy(ys: Tensor) -> np.array:
     """ Computes entropy for continuous attribute values
 
     Needed for MIG.
-    
+
     Args:
         ys (Tensor): attributes
 
     Returns:
         np.array: entropy for each attribute dimension
-    """    
+    """
     num_factors = ys.shape[1]
     h = np.zeros(num_factors)
-    # calculate MI for each 
+    # calculate MI for each attribute
     for j in tqdm(range(num_factors)):
         h[j] = sklearn.feature_selection.mutual_info_regression(
             ys[:, j].reshape(-1, 1), ys[:, j]
@@ -53,12 +74,31 @@ def continuous_entropy(ys: Tensor) -> np.array:
     return h
 
 
-def _compute_score_matrix(mus:Tensor, ys:Tensor) -> np.array:
-    """ Compute score matrix given by linear regression
+def discrete_entropy(ys: Tensor) -> np.array:
+    """ Computes entropy for discrete attribute values
+
+    Needed for MIG.
+
+    Args:
+        ys (Tensor): attributes
+
+    Returns:
+        np.array: entropy for each attribute dimension
+    """
+    num_factors = ys.shape[1]
+    h = np.zeros(num_factors)
+    # calculate MI for each attribute
+    for j in tqdm(range(num_factors)):
+        # H(Y) = I(Y|Y) in discrete case
+        h[j] = sklearn.metrics.mutual_info_score(ys[:, j], ys[:, j])
+
+
+def _compute_score_matrix(mus: Tensor, ys: Tensor) -> np.array:
+    """ Compute score matrix given for continuous attributes by linear regression
 
     Needed for SAP score.
-    Works with continuous attributes
-    
+    Takes the R**2 score obtained with fitting a line that minimizes the linear regression error.
+
     Args:
         mus (Tensor): latent code
         ys (Tensor): attributes
@@ -85,7 +125,27 @@ def _compute_score_matrix(mus:Tensor, ys:Tensor) -> np.array:
     return score_matrix
 
 
-def _compute_avg_diff_top_two(matrix:Tensor) -> float:
+def _compute_discrete_score_matrix(mus: Tensor, ys: Tensor) -> np.array:
+    """ Compute score matrix S given for discrete attributes by linear regression
+
+    Needed for SAP score.
+    Fits one or more thresholds directly on the i-th latent variable minimizing the balanced classification errors.
+    S_{i,j} is the balanced classification accuracy for the j-th attribute.
+
+    Balanced classification accuracy: sum(#correct / #all in class) / #classes
+
+    Args:
+        mus (Tensor): latent code
+        ys (Tensor): attributes
+
+    Returns:
+        np.array: score matrix
+    """
+    # TODO implement
+    pass
+
+
+def _compute_avg_diff_top_two(matrix: Tensor) -> float:
     """ Computes the difference between the two highest values in matrix
 
     Needed for SAP score.
@@ -95,14 +155,14 @@ def _compute_avg_diff_top_two(matrix:Tensor) -> float:
 
     Returns:
         float: difference between 1st and 2nd highest value
-    """    
+    """
     sorted_matrix = np.sort(matrix, axis=0)
     return np.mean(sorted_matrix[-1, :] - sorted_matrix[-2, :])
 
 
-def _compute_correlation_matrix(mus:Tensor, ys:Tensor) -> np.array:
+def _compute_correlation_matrix(mus: Tensor, ys: Tensor) -> np.array:
     """ Computes the correlation matrix of two tensors
-    
+
     Needed for spearman's rank correlation.
 
     Args:
@@ -111,7 +171,7 @@ def _compute_correlation_matrix(mus:Tensor, ys:Tensor) -> np.array:
 
     Returns:
         np.array: correlation matrix
-    """    
+    """
     num_latent_codes = mus.shape[1]
     num_attributes = ys.shape[1]
     score_matrix = np.zeros([num_latent_codes, num_attributes])
@@ -164,7 +224,7 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
 
 
 def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
-    """ Computes the mutual information gap
+    """ Computes the mutual information gap for continuous attributes
 
     Based on Chen et al (2018) - Isolating Sources of Disentanglement in Variational Autoencoders
     Chapter 4.1
@@ -188,9 +248,27 @@ def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
     return score_dict
 
 
-def compute_sap_score(latent_codes:Tensor, attributes:Tensor) -> dict[str, float]:
+def compute_discrete_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
+    """ Computes the mutual information gap for discrete attributes
+
+    Based on Chen et al (2018) - Isolating Sources of Disentanglement in Variational Autoencoders
+    Chapter 4.1
+
+    Args:
+        latent_codes (Tensor): latent code z
+        attributes (Tensor): attributes a
+
+    Returns:
+        dict[str, float]: key "mig" with score
+    """
+    # TODO implement
+    # this should work similar to compute_mig, but swap for discrete mi and entropy
+    pass
+
+
+def compute_sap_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
     """ Computes the SAP score
-    
+
     Based on Kumar et al (2018) - Variational Inference of Disentangled Latent Concepts from Unlabeled Observations
     Chapter 3
 
@@ -200,7 +278,7 @@ def compute_sap_score(latent_codes:Tensor, attributes:Tensor) -> dict[str, float
 
     Returns:
         dict[str, float]: key "SAP_score" with value
-    """    
+    """
     # (i) Matrix with linear regression score
     score_matrix = _compute_score_matrix(latent_codes, attributes)
     # Score matrix should have shape [num_codes, num_attributes].
@@ -213,9 +291,9 @@ def compute_sap_score(latent_codes:Tensor, attributes:Tensor) -> dict[str, float
     }
 
 
-def compute_correlation_score(latent_codes:Tensor, attributes:Tensor)-> dict[str, float]:
+def compute_correlation_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
     """ Calculate spearman's rank correlation
-    
+
     Based on Spearman (1904) - The Proof and Measurement of Association between Two Things
 
     Args:
@@ -224,7 +302,7 @@ def compute_correlation_score(latent_codes:Tensor, attributes:Tensor)-> dict[str
 
     Returns:
         dict[str, float]: key "Corr_score" giving the spearman score
-    """    
+    """
     corr_matrix = _compute_correlation_matrix(latent_codes, attributes)
     scores = {
         "Corr_score": np.mean(np.max(corr_matrix, axis=0))
