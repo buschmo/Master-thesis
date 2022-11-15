@@ -5,13 +5,10 @@ from pathlib import Path
 
 class BaseModel(nn.Module):
     
-    def __init__(self, filepath=None, filename=None):
+    def __init__(self, foldername=None):
         super().__init__()
-        if filepath:
-            self.filepath = filepath
-        else:
-            self.filename = filename if filename else self.__str__()
-            self.update_filepath()
+        self.foldername = foldername if foldername else self.__str__()
+        self.update_filepath()
 
     def __repr__(self):
         return self.state_dict()
@@ -21,7 +18,7 @@ class BaseModel(nn.Module):
 
     def update_filepath(self):
         dir_name = Path("checkpoints").absolute()
-        self.filepath = Path(dir_name, self.__str__(), self.filename + ".pt")
+        self.filepath = Path(dir_name, self.foldername, self.__str__() + ".pt")
 
     def save(self):
         if not self.filepath.parent.exists():

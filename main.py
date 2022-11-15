@@ -16,7 +16,7 @@ def main():
 
     # dataset = SimpleWikipediaDataset()
     dataset = SimpleGermanDataset()
-    model = NaiveVAE(input_size=dataset.getInputSize(), filename=dataset.__str__())
+    model = NaiveVAE(input_size=dataset.getInputSize(), foldername=dataset.__str__())
     trainer = Trainer(dataset, model, checkpoint_index=50)
 
     trainer.train_model(
