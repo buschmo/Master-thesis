@@ -26,6 +26,9 @@ class NaiveVAE(BaseModel):
             nn.Linear(self.decoder_dim, input_size)
         )
 
+    def __str__(self):
+        return f"NaiveModel_{self.encoder_dim}_{self.z_dim}_{self.decoder_dim}"
+
     def encode(self, x):
         hidden = self.encoder(x)
 
@@ -57,7 +60,3 @@ class NaiveVAE(BaseModel):
         output = self.decode(z_tilde)
 
         return output, z_dist, prior_dist, z_tilde, z_prior
-    
-
-    def __str__(self):
-        return "NaiveModel"
