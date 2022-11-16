@@ -1,8 +1,14 @@
-import sklearn
+# Calcuations
+from sklearn.feature_selection import mutual_info_regression
+from sklearn.metrics import mutual_info_score
+from sklearn.linear_model import LinearRegression
 import numpy as np
 from torch import Tensor
 import scipy
-import tqdm
+
+# Miscellaneous
+from tqdm import tqdm
+# Typing
 from typing import Tuple
 
 """ Code primarily taken from ar-vae evaluation.py """
@@ -27,7 +33,7 @@ def continuous_mutual_info(mus: Tensor, ys: Tensor) -> np.array:
     m = np.zeros([num_codes, num_attributes])
     # calculate MI for each attribute with every latent z
     for j in range(num_attributes):
-        m[:, j] = sklearn.feature_selection.mutual_info_regression(
+        m[:, j] = mutual_info_regression(
             mus, ys[:, j])
     return m
 
@@ -49,7 +55,7 @@ def discrete_mutual_info(mus: Tensor, ys: Tensor) -> np.array:
     m = np.zeros([num_codes, num_attributes])
     for i in range(num_codes):
         for j in range(num_attributes):
-            m[i, j] = sklearn.metrics.mutual_info_score(ys[:, j], mus[:, i])
+            m[i, j] = mutual_info_score(ys[:, j], mus[:, i])
     return m
 
 
@@ -68,7 +74,7 @@ def continuous_entropy(ys: Tensor) -> np.array:
     h = np.zeros(num_factors)
     # calculate MI for each attribute
     for j in tqdm(range(num_factors)):
-        h[j] = sklearn.feature_selection.mutual_info_regression(
+        h[j] = mutual_info_regression(
             ys[:, j].reshape(-1, 1), ys[:, j]
         )
     return h
@@ -90,7 +96,7 @@ def discrete_entropy(ys: Tensor) -> np.array:
     # calculate MI for each attribute
     for j in tqdm(range(num_factors)):
         # H(Y) = I(Y|Y) in discrete case
-        h[j] = sklearn.metrics.mutual_info_score(ys[:, j], ys[:, j])
+        h[j] = mutual_info_score(ys[:, j], ys[:, j])
 
 
 def _compute_score_matrix(mus: Tensor, ys: Tensor) -> np.array:
@@ -209,18 +215,18 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
     for i, attr_name in tqdm(enumerate(attr_list), desc="Interpretability"):
         attr_values = attributes[:, i]
         # (i) get maximal informative dimension of latent
-        mutual_info = sklearn.feature_selection.mutual_info_regression(
+        mutual_info = mutual_info_regression(
             latent_codes, attr_values)
         dim = np.argmax(mutual_info)
 
         # (ii) measure interpretability by using a simple probabilistic relationship
-        reg = sklearn.linear_model.LinearRegression().fit(
+        reg = LinearRegression().fit(
             latent_codes[:, dim:dim+1], attr_values)
         score = reg.score(latent_codes[:, dim:dim+1], attr_values)
         interpretability_metrics[attr_name] = (int(dim), float(score))
         total += float(score)
     interpretability_metrics["mean"] = (-1, total/len(attr_list))
-    return interpretability_metric
+    return interpretability_metrics
 
 
 def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
@@ -289,6 +295,7 @@ def compute_sap_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, flo
     scores = {
         "SAP_score": _compute_avg_diff_top_two(score_matrix)
     }
+    return scores
 
 
 def compute_correlation_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
