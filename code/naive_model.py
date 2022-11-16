@@ -5,12 +5,13 @@ from code.base_model import BaseModel
 
 class NaiveVAE(BaseModel):
     def __init__(self, input_size, **kwargs):
-        super().__init__(**kwargs)
-
+        # set basic parameters
         self.input_size = input_size
         self.z_dim = 32
         self.encoder_dim = 128
         self.decoder_dim = 128
+        # call super function afterwards
+        super().__init__(**kwargs)
 
         self.encoder = nn.Sequential(
             nn.Linear(self.input_size, self.encoder_dim),
