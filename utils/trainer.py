@@ -1,7 +1,21 @@
+# for calculations
 import torch
 from torch.utils.data import DataLoader
+import numpy as np
+
+# miscellaneous
 from tqdm import tqdm
+from pathlib import Path
+import json
+
+# own packages
 import utils.utilitites as utl
+import utils.evaluation as evl
+
+# define attributes and the label dimension their represented by
+REG_TYPES = {
+    "simplicity": 0
+}
 
 
 class Trainer():
@@ -50,12 +64,6 @@ class Trainer():
                 train=False
             )
 
-            # TODO reinstate?
-            # self.eval_model(
-            #     data_loader=generator_val,
-            #     epoch_num=epoch_index
-            # )
-
             data_element = {
                 'epoch_index': epoch_index,
                 'num_epochs': num_epochs,
@@ -68,6 +76,10 @@ class Trainer():
 
             if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0):
                 self.model.save_checkpoint(epoch_index)
+                self.eval_model(
+                    data_loader=generator_val,
+                    epoch_num=epoch_index
+                )
         self.model.save()
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):
@@ -195,62 +207,50 @@ class Trainer():
     # TODO Issue to rework this. Maybe move to BaseModel?
     def eval_model(self, data_loader, epoch_num=0):
         # From image_vae_trainer.compute_eval_metrics
-        results_fp = os.path.join(
-            os.path.dirname(self.model.filepath),
-            'results_dict.json'
-        )
-        if os.path.exists(results_fp):
+        results_fp = self.model.filepath.with_stem(f"{self.model.filepath.stem}_{epoch_num}").with_suffix(".json")
+        if results_fp.exists():
             with open(results_fp, 'r') as infile:
                 self.metrics = json.load(infile)
         else:
-            batch_size = 128
-            _, _, data_loader = self.dataset.data_loaders(
-                batch_size=batch_size)
             latent_codes, attributes, attr_list = self.compute_representations(
                 data_loader)
-            interp_metrics = compute_interpretability_metric(
+            interp_metrics = evl.compute_interpretability_metric(
                 latent_codes, attributes, attr_list
             )
             self.metrics = {
                 "interpretability": interp_metrics
             }
             self.metrics.update(
-                compute_correlation_score(latent_codes, attributes))
-            self.metrics.update(compute_modularity(latent_codes, attributes))
-            self.metrics.update(compute_mig(latent_codes, attributes))
-            self.metrics.update(compute_sap_score(latent_codes, attributes))
-            self.metrics.update(self.test_model(batch_size=batch_size))
+                evl.compute_correlation_score(latent_codes, attributes))
+            # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
+            self.metrics.update(evl.compute_mig(latent_codes, attributes))
+            self.metrics.update(evl.compute_sap_score(latent_codes, attributes))
+            # self.metrics.update(self.test_model(batch_size=batch_size))
+            if not results_fp.parent.exists():
+                results_fp.parent.mkdir(parents=True)
             with open(results_fp, 'w') as outfile:
                 json.dump(self.metrics, outfile, indent=2)
         return self.metrics
 
     def compute_representations(self, data_loader):
         latent_codes = []
-        attributes = []
+        attr_values = []
         for sample_id, (inputs, labels) in tqdm(enumerate(data_loader)):
-            inputs, labels = (inputs.to("cuda"), labels.to("cuda"))
+            inputs = inputs.to("cuda")
             _, _, _, z_tilde, _ = self.model(inputs)
             latent_codes.append(utl.to_numpy(z_tilde))
-            attributes.append(utl.to_numpy(labels))
+            attr_values.append(labels)
             if sample_id == 200:
+                # TODO how about the whole dataset?
                 break
+        # turn lists into matrices
         latent_codes = np.concatenate(latent_codes, 0)
-        attributes = np.concatenate(attributes, 0)
-        attributes, attr_list = self._extract_relevant_attributes(attributes)
-        return latent_codes, attributes, attr_list
+        attr_values = np.concatenate(attr_values, 0)
+        attr_list = REG_TYPES.keys()
+        return latent_codes, attr_values, attr_list
 
-    def _extract_relevant_attributes(self, attributes):
-        """ Extract label dimensions based on indices given by attr_dict. Ignore rest. """
-        attr_list = [
-            attr for attr in self.attr_dict.keys() if attr != 'digit_identity' and attr != 'color'
-        ]
-        attr_idx_list = [
-            self.attr_dict[attr] for attr in attr_list
-        ]
-        attr_labels = attributes[:, attr_idx_list]
-        return attr_labels, attr_list
-
-    def test_model():
+    # def nexessary? 
+    def test_model(self, data_loader):
         # from image_vae_trainer
         _, _, gen_test = self.dataset.data_loaders(batch_size)
         mean_loss_test, mean_accuracy_test = self.loss_and_acc_test(gen_test)
