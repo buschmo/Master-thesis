@@ -6,8 +6,6 @@ import numpy as np
 from torch import Tensor
 import scipy
 
-# Miscellaneous
-from tqdm import tqdm
 # Typing
 from typing import Tuple
 
@@ -73,7 +71,7 @@ def continuous_entropy(ys: Tensor) -> np.array:
     num_factors = ys.shape[1]
     h = np.zeros(num_factors)
     # calculate MI for each attribute
-    for j in tqdm(range(num_factors)):
+    for j in range(num_factors):
         h[j] = mutual_info_regression(
             ys[:, j].reshape(-1, 1), ys[:, j]
         )
@@ -94,7 +92,7 @@ def discrete_entropy(ys: Tensor) -> np.array:
     num_factors = ys.shape[1]
     h = np.zeros(num_factors)
     # calculate MI for each attribute
-    for j in tqdm(range(num_factors)):
+    for j in range(num_factors):
         # H(Y) = I(Y|Y) in discrete case
         h[j] = mutual_info_score(ys[:, j], ys[:, j])
 
@@ -212,7 +210,7 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
     """
     interpretability_metrics = {}
     total = 0
-    for i, attr_name in tqdm(enumerate(attr_list), desc="Interpretability"):
+    for i, attr_name in enumerate(attr_list):
         attr_values = attributes[:, i]
         # (i) get maximal informative dimension of latent
         mutual_info = mutual_info_regression(
