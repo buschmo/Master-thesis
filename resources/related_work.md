@@ -38,9 +38,9 @@
 - Adel et al (2018) - [Discovering Interpretable Representations for Both Deep Generative and Discriminative Models](http://proceedings.mlr.press/v80/adel18a.html)
   - Interpretability score
 - Chen et al (2018) - [Isolating Sources of Disentanglement in Variational Autoencoders](https://proceedings.neurips.cc/paper/2018/hash/1ee3dfcd8a0645a25a35977997223d22-Abstract.html)
-  - Mutual information gap
+  - Mutual Information Gap
 - Kumar et al (2018) - [Variational Inference of Disentangled Latent Concepts from Unlabeled Observations](https://arxiv.org/abs/1711.00848)
-  - SAP Score
+  - Separated Attribute Predictability Score
 - Spearman (1904) - [The Proof and Measurement of Association between Two Things](https://www.jstor.org/stable/1412159?origin=JSTOR-pdf#metadata_info_tab_contents)
   - Spearman Rank
 - Eastwood et al (2018) - [A framework for the quantitative evaluation of disentangled representations](https://proceedings.neurips.cc/paper/2017/hash/9cb9ed4f35cf7c2f295cc2bc6f732a84-Abstract.html)
