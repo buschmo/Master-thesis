@@ -12,15 +12,28 @@ import json
 import utils.utilitites as utl
 import utils.evaluation as evl
 
+# logging results
+from torch.utils.tensorboard import SummaryWriter
+import datetime
+import time
+
 # define attributes and the label dimension their represented by
-REG_TYPES = {
-    "simplicity": 0
+ATTRIBUTE_DIMENSIONS = {
+    "Simplicity": 0
 }
 
 
 class Trainer():
     def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0):
         # from trainer
+        ts = time.time()
+        st = datetime.datetime.fromtimestamp(ts).strftime(
+            '%Y-%m-%d_%H:%M:%S'
+        )
+        self.writer = SummaryWriter(
+            logdir=Path("runs", self.model.__str__() + st)
+        )
+
         self.dataset = dataset
         self.model = model
         if torch.cuda.is_available():
@@ -64,6 +77,14 @@ class Trainer():
                 train=False
             )
 
+            self.eval_model(
+                    data_loader=generator_val,
+                    epoch_num=epoch_index
+            )
+            
+            self.writer.add_scalar("loss/training", mean_loss_train, epoch_index)
+            self.writer.add_scalar("loss/validation", mean_loss_val, epoch_index)
+            
             data_element = {
                 'epoch_index': epoch_index,
                 'num_epochs': num_epochs,
@@ -76,10 +97,7 @@ class Trainer():
 
             if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0):
                 self.model.save_checkpoint(epoch_index)
-                self.eval_model(
-                    data_loader=generator_val,
-                    epoch_num=epoch_index
-                )
+                
         self.model.save()
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):
@@ -204,33 +222,45 @@ class Trainer():
         acc = torch.sum(correct.float()) / binary_targets.view(-1).size(0)
         return acc
 
-    # TODO Issue to rework this. Maybe move to BaseModel?
     def eval_model(self, data_loader, epoch_num=0):
         # From image_vae_trainer.compute_eval_metrics
-        results_fp = self.model.filepath.with_stem(f"{self.model.filepath.stem}_{epoch_num}").with_suffix(".json")
+        results_fp = self.model.filepath.with_stem(
+            f"{self.model.filepath.stem}_{epoch_num}").with_suffix(".json")
         if results_fp.exists():
             with open(results_fp, 'r') as infile:
                 self.metrics = json.load(infile)
         else:
-            latent_codes, attributes, attr_list = self.compute_representations(
-                data_loader)
-            interp_metrics = evl.compute_interpretability_metric(
-                latent_codes, attributes, attr_list
-            )
-            self.metrics = {
-                "interpretability": interp_metrics
-            }
-            self.metrics.update(
-                evl.compute_correlation_score(latent_codes, attributes))
-            # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
-            self.metrics.update(evl.compute_mig(latent_codes, attributes))
-            self.metrics.update(evl.compute_sap_score(latent_codes, attributes))
-            # self.metrics.update(self.test_model(batch_size=batch_size))
+            self.metrics = compute_eval_metrics()
+
+        if self.writer:
+            self.writer.add_scalars("Disentanglement/Interpretability", {k: v[1] for k,v in self.metrics["Interpretability"].items()}, epoch_num)
+            self.writer.add_scalar("Disentanglement/MIG", self.metrics["MIG"], epoch_num)
+            self.writer.add_scalar("Disentanglement/SAP", self.metrics["SAP"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Correlation", self.metrics["Correlation"], epoch_num)
+        else:
             if not results_fp.parent.exists():
                 results_fp.parent.mkdir(parents=True)
             with open(results_fp, 'w') as outfile:
                 json.dump(self.metrics, outfile, indent=2)
         return self.metrics
+
+    def compute_eval_metrics(self):
+        latent_codes, attributes, attr_list = self.compute_representations(
+            data_loader)
+        interp_metrics = evl.compute_interpretability_metric(
+            latent_codes, attributes, attr_list
+        )
+        metrics = {
+            "Interpretability": interp_metrics
+        }
+        # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
+        metrics.update(evl.compute_mig(latent_codes, attribtes))
+        metrics.update(
+            evl.compute_sap_score(latent_codes, attributes))
+        metrics.update(
+            evl.compute_correlation_score(latent_codes, attributes))
+        # metrics.update(self.test_model(batch_size=batch_size))
+        return metrics
 
     def compute_representations(self, data_loader):
         latent_codes = []
@@ -246,10 +276,10 @@ class Trainer():
         # turn lists into matrices
         latent_codes = np.concatenate(latent_codes, 0)
         attr_values = np.concatenate(attr_values, 0)
-        attr_list = REG_TYPES.keys()
+        attr_list = ATTRIBUTE_DIMENSIONS.keys()
         return latent_codes, attr_values, attr_list
 
-    # def nexessary? 
+    # TODO necessary?
     def test_model(self, data_loader):
         # from image_vae_trainer
         _, _, gen_test = self.dataset.data_loaders(batch_size)
