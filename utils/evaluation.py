@@ -225,7 +225,7 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
         score = reg.score(latent_codes[:, dim:dim+1], attr_values)
         interpretability_metrics[attr_name] = (int(dim), float(score))
         total += float(score)
-    interpretability_metrics["mean"] = (-1, total/len(attr_list))
+    interpretability_metrics["Mean"] = (-1, total/len(attr_list))
     return interpretability_metrics
 
 
@@ -242,15 +242,15 @@ def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
     Returns:
         dict[str, float]: key "mig" with score
     """
-    score_dict = {}
+    scores = {}
     # Equation (5)
     m = continuous_mutual_info(latent_codes, attributes)
     entropy = continuous_entropy(attributes)
     sorted_m = np.sort(m, axis=0)[::-1]
     # Equation (6)
-    score_dict["mig"] = np.mean(
-        np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:])
-    )
+    scores = {
+        "Mutual Information Gap": np.mean(np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
+    }
     return score_dict
 
 
@@ -293,7 +293,7 @@ def compute_sap_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, flo
 
     # (ii) for each attribute, take the difference of the top two entries
     scores = {
-        "SAP_score": _compute_avg_diff_top_two(score_matrix)
+        "Separated Attribute Predictability": _compute_avg_diff_top_two(score_matrix)
     }
     return scores
 
@@ -312,6 +312,6 @@ def compute_correlation_score(latent_codes: Tensor, attributes: Tensor) -> dict[
     """
     corr_matrix = _compute_correlation_matrix(latent_codes, attributes)
     scores = {
-        "Corr_score": np.mean(np.max(corr_matrix, axis=0))
+        "Spearman's Rank Correlation": np.mean(np.max(corr_matrix, axis=0))
     }
     return scores
