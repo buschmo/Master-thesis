@@ -26,16 +26,17 @@ ATTRIBUTE_DIMENSIONS = {
 class Trainer():
     def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0):
         # from trainer
+        self.dataset = dataset
+        self.model = model
+
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime(
             '%Y-%m-%d_%H:%M:%S'
         )
         self.writer = SummaryWriter(
-            logdir=Path("runs", self.model.__str__() + st)
+            log_dir=Path("runs", self.model.__str__() + st)
         )
 
-        self.dataset = dataset
-        self.model = model
         if torch.cuda.is_available():
             self.model.cuda()
 
@@ -230,13 +231,13 @@ class Trainer():
             with open(results_fp, 'r') as infile:
                 self.metrics = json.load(infile)
         else:
-            self.metrics = compute_eval_metrics()
+            self.metrics = self.compute_eval_metrics(data_loader)
 
         if self.writer:
             self.writer.add_scalars("Disentanglement/Interpretability", {k: v[1] for k,v in self.metrics["Interpretability"].items()}, epoch_num)
-            self.writer.add_scalar("Disentanglement/MIG", self.metrics["MIG"], epoch_num)
-            self.writer.add_scalar("Disentanglement/SAP", self.metrics["SAP"], epoch_num)
-            self.writer.add_scalar("Disentanglement/Correlation", self.metrics["Correlation"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Mutual Information Gap", self.metrics["Mutual Information Gap"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Separated Attribute Predictability", self.metrics["Separated Attribute Predictability"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation", self.metrics["Spearman's Rank Correlation"], epoch_num)
         else:
             if not results_fp.parent.exists():
                 results_fp.parent.mkdir(parents=True)
@@ -244,7 +245,7 @@ class Trainer():
                 json.dump(self.metrics, outfile, indent=2)
         return self.metrics
 
-    def compute_eval_metrics(self):
+    def compute_eval_metrics(self, data_loader):
         latent_codes, attributes, attr_list = self.compute_representations(
             data_loader)
         interp_metrics = evl.compute_interpretability_metric(
@@ -254,7 +255,7 @@ class Trainer():
             "Interpretability": interp_metrics
         }
         # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
-        metrics.update(evl.compute_mig(latent_codes, attribtes))
+        metrics.update(evl.compute_mig(latent_codes, attributes))
         metrics.update(
             evl.compute_sap_score(latent_codes, attributes))
         metrics.update(

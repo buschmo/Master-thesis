@@ -249,7 +249,7 @@ def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
     scores = {
         "Mutual Information Gap": np.mean(np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
     }
-    return score_dict
+    return scores
 
 
 def compute_discrete_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
