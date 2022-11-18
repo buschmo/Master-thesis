@@ -14,8 +14,6 @@ import utils.evaluation as evl
 
 # logging results
 from torch.utils.tensorboard import SummaryWriter
-import datetime
-import time
 
 # define attributes and the label dimension their represented by
 ATTRIBUTE_DIMENSIONS = {
@@ -24,18 +22,15 @@ ATTRIBUTE_DIMENSIONS = {
 
 
 class Trainer():
-    def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0):
+    def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0, timestamp=""):
         # from trainer
+        self.writer = SummaryWriter(
+            log_dir=Path("runs", dataset.__str__(),  "_".join(
+                [model.__str__(), timestamp]))
+        )
+
         self.dataset = dataset
         self.model = model
-
-        ts = time.time()
-        st = datetime.datetime.fromtimestamp(ts).strftime(
-            '%Y-%m-%d_%H:%M:%S'
-        )
-        self.writer = SummaryWriter(
-            log_dir=Path("runs", self.model.__str__() + st)
-        )
 
         if torch.cuda.is_available():
             self.model.cuda()
@@ -79,13 +74,15 @@ class Trainer():
             )
 
             self.eval_model(
-                    data_loader=generator_val,
-                    epoch_num=epoch_index
+                data_loader=generator_val,
+                epoch_num=epoch_index
             )
-            
-            self.writer.add_scalar("loss/training", mean_loss_train, epoch_index)
-            self.writer.add_scalar("loss/validation", mean_loss_val, epoch_index)
-            
+
+            self.writer.add_scalar(
+                "loss/training", mean_loss_train, epoch_index)
+            self.writer.add_scalar(
+                "loss/validation", mean_loss_val, epoch_index)
+
             data_element = {
                 'epoch_index': epoch_index,
                 'num_epochs': num_epochs,
@@ -98,7 +95,7 @@ class Trainer():
 
             if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0):
                 self.model.save_checkpoint(epoch_index)
-                
+
         self.model.save()
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):
@@ -234,10 +231,14 @@ class Trainer():
             self.metrics = self.compute_eval_metrics(data_loader)
 
         if self.writer:
-            self.writer.add_scalars("Disentanglement/Interpretability", {k: v[1] for k,v in self.metrics["Interpretability"].items()}, epoch_num)
-            self.writer.add_scalar("Disentanglement/Mutual Information Gap", self.metrics["Mutual Information Gap"], epoch_num)
-            self.writer.add_scalar("Disentanglement/Separated Attribute Predictability", self.metrics["Separated Attribute Predictability"], epoch_num)
-            self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation", self.metrics["Spearman's Rank Correlation"], epoch_num)
+            self.writer.add_scalars("Disentanglement/Interpretability", {
+                                    k: v[1] for k, v in self.metrics["Interpretability"].items()}, epoch_num)
+            self.writer.add_scalar("Disentanglement/Mutual Information Gap",
+                                   self.metrics["Mutual Information Gap"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Separated Attribute Predictability",
+                                   self.metrics["Separated Attribute Predictability"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
+                                   self.metrics["Spearman's Rank Correlation"], epoch_num)
         else:
             if not results_fp.parent.exists():
                 results_fp.parent.mkdir(parents=True)

@@ -5,10 +5,10 @@ from pathlib import Path
 
 class BaseModel(nn.Module):
     
-    def __init__(self, foldername=None):
+    def __init__(self, foldername=None, timestamp=""):
         super().__init__()
         self.foldername = foldername if foldername else self.__str__()
-        self.update_filepath()
+        self.update_filepath(timestamp)
 
     def __repr__(self):
         return self.state_dict()
@@ -16,9 +16,9 @@ class BaseModel(nn.Module):
     def __str__(self):
         raise NotImplementedError
 
-    def update_filepath(self):
+    def update_filepath(self, timestamp=""):
         dir_name = Path("checkpoints").absolute()
-        self.filepath = Path(dir_name, self.foldername, self.__str__() + ".pt")
+        self.filepath = Path(dir_name, self.foldername, "_".join([self.__str__(), timestamp]) + ".pt")
 
     def save(self):
         if not self.filepath.parent.exists():
