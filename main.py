@@ -3,7 +3,7 @@ import datetime
 import time
 
 from code.naive_model import NaiveVAE
-from utils.dataset import SimpleGermanDataset, SimpleWikipediaDataset
+from utils.datasets import SimpleGermanDataset, SimpleWikipediaDataset
 from utils.trainer import Trainer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
