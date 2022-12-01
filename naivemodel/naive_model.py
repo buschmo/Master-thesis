@@ -1,10 +1,10 @@
 import torch
 from torch import nn, distributions
-from code.base_model import BaseModel
+from utils.base_model import BaseModel
 
 
 class NaiveVAE(BaseModel):
-    def __init__(self, input_size, **kwargs):
+    def __init__(self, input_size, dropout=0.1, **kwargs):
         # set basic parameters
         self.input_size = input_size
         self.z_dim = 32
@@ -15,7 +15,8 @@ class NaiveVAE(BaseModel):
 
         self.encoder = nn.Sequential(
             nn.Linear(self.input_size, self.encoder_dim),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(dropout)
         )
 
         self.enc_mean = nn.Linear(self.encoder_dim, self.z_dim)
@@ -24,8 +25,12 @@ class NaiveVAE(BaseModel):
         self.decoder = nn.Sequential(
             nn.Linear(self.z_dim, self.decoder_dim),
             nn.ReLU(),
-            nn.Linear(self.decoder_dim, input_size)
+            nn.Dropout(dropout),
+            nn.Linear(self.decoder_dim, input_size),
+            nn.Dropout(dropout)
         )
+
+        self.init_weights()
 
     def __str__(self):
         return f"NaiveModel_{self.encoder_dim}_{self.z_dim}_{self.decoder_dim}"

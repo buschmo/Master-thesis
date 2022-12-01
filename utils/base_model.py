@@ -18,7 +18,7 @@ class BaseModel(nn.Module):
 
     def update_filepath(self, timestamp=""):
         dir_name = Path("checkpoints").absolute()
-        self.filepath = Path(dir_name, self.foldername, "_".join([self.__str__(), timestamp]) + ".pt")
+        self.filepath = Path(dir_name, self.foldername, "_".join([timestamp, self.__str__()]) + ".pt")
 
     def save(self):
         if not self.filepath.parent.exists():
@@ -49,3 +49,11 @@ class BaseModel(nn.Module):
         for k, v in d.items():
             d[k] = sorted(v)
         return d
+    
+
+    def init_weights(self):
+        for name, param in self.named_parameters():
+            if "weight" in name:
+                nn.init.xavier_normal_(param)
+            if "bias" in name:
+                param.bias.data.zero_()
