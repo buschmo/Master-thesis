@@ -3,7 +3,7 @@ import datetime
 import time
 
 from code.naive_model import NaiveVAE
-from utils.datasets import SimpleGermanDataset, SimpleWikipediaDataset
+from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT
 from utils.trainer import Trainer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -16,9 +16,9 @@ def main():
     else:
         print("Cuda was found.")
 
-    # dataset = SimpleWikipediaDataset()
-    # dataset = SimpleGermanDataset()
-    for Dataset in [SimpleGermanDataset, SimpleWikipediaDataset]:
+    # dataset = SimpleWikipediaDatasetBERT()
+    # dataset = SimpleGermanDatasetBERT()
+    for Dataset in [SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT]:
         dataset = Dataset()
         for num_epochs in [1000]:
             for use_reg_loss in [True, False]:

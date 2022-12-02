@@ -27,7 +27,7 @@ class BaseDataset(Dataset):
         return self.embeddings.shape[1]
 
 
-class SimpleGermanDataset(BaseDataset):
+class SimpleGermanDatasetBERT(BaseDataset):
     def __init__(self):
         self.path_easy = Path("data/SimpleGerman/easy.csv")
         self.path_normal = Path("data/SimpleGerman/normal.csv")
@@ -71,7 +71,7 @@ class SimpleGermanDataset(BaseDataset):
             df.to_csv(self.path_normal)
 
 
-class SimpleWikipediaDataset(BaseDataset):
+class SimpleWikipediaDatasetBERT(BaseDataset):
     def __init__(self):
         self.path_easy = Path("data/SimpleWikipedia/easy.csv")
         self.path_normal = Path("data/SimpleWikipedia/normal.csv")
