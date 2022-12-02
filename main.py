@@ -2,7 +2,7 @@ import torch
 import datetime
 import time
 
-from code.naive_model import NaiveVAE
+from models.naive_model import NaiveVAE
 from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT
 from utils.trainer import Trainer
 
@@ -26,8 +26,10 @@ def main():
                 timestamp = datetime.datetime.fromtimestamp(ts).strftime(
                     '%Y-%m-%d_%H:%M:%S'
                 )
-                model = NaiveVAE(input_size=dataset.getInputSize(), foldername=dataset.__str__(), timestamp=timestamp)
-                trainer = Trainer(dataset, model, checkpoint_index=0, use_reg_loss=use_reg_loss,timestamp=timestamp)
+                model = NaiveVAE(input_size=dataset.getInputSize(
+                ), foldername=dataset.__str__(), timestamp=timestamp)
+                trainer = Trainer(dataset, model, checkpoint_index=0,
+                                  use_reg_loss=use_reg_loss, timestamp=timestamp)
 
                 trainer.train_model(
                     batch_size=64,
