@@ -1,6 +1,7 @@
 import torch
 from torch import nn, distributions
 from torch import Tensor
+import math
 from pathlib import Path
 
 from utils.base_model import BaseModel
@@ -11,43 +12,67 @@ Based on Wang et al (2019) - Controllable Unsupervised Text Attribute Transfer v
 
 
 class TVAE(BaseModel):
-    def __init__(self, ntoken: int, d_model: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float = 0.5, use_gru=False, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, ntoken: int, d_model: int = 512, z_dim: int = 512, nhead_encoder: int = 8, nhead_decoder: int = 8, d_hid: int = 2048, nlayers: int = 6, dropout: float = 0.1, use_gru=False, **kwargs):
         self.d_model = d_model
+        self.ntoken = ntoken
+        self.z_dim = z_dim
+        super().__init__(**kwargs)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
         self.embedding = nn.Embedding(ntoken, d_model)
-        encoder_layers = nn.TransformerEncoderLayer(
-            d_model=d_model, nhead=nhead_encoder, dim_feed_forward=d_hid, dropout=dropout, batch_first=True)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=nhead_encoder,
+            dim_feedforward=d_hid,
+            dropout=dropout,
+            batch_first=True
+        )
         self.encoder = nn.TransformerEncoder(
-            encoder_layers=encoder_layers, num_layers=nlayers)
+            encoder_layer=encoder_layer,
+            num_layers=nlayers
+        )
 
+        # TODO two linear layers?
         # Putting variation into VAE
-        self.enc_mean = nn.Linear(self.d_model, self.z_dim)
-        self.enc_log_std = nn.Linear(self.d_model, self.z_dim)
+        self.enc_mean = nn.Linear(d_model, z_dim)
+        self.enc_log_std = nn.Linear(d_model, z_dim)
 
         # Converting
-        self.latent2hidden = nn.Linear(self.z_dim, self.d_model)
+        self.latent2hidden = nn.Linear(z_dim, d_model)
 
         # TODO more variables might be needed. See EncoderLayer above
-        decoder_layers = nn.TransformerDecoderLayer(
-            d_model=d_model, nhead=nhead_decoder, dim_feed_forward=d_hid, dropout=dropout, batch_first=True)
-        self.decoder = nn.TransformerDecoder(decoder_layers, nlayers)
+        decoder_layer = nn.TransformerDecoderLayer(
+            d_model=d_model,
+            nhead=nhead_decoder,
+            dim_feedforward=d_hid,
+            dropout=dropout,
+            batch_first=True
+        )
+        self.decoder = nn.TransformerDecoder(
+            decoder_layer=decoder_layer,
+            num_layers=nlayers
+        )
 
         # TODO implement GRU from TVAE
         if use_gru:
             raise NotImplementedError
 
-        self.generator = Generator(d_model, ntoken)
+        # TODO which one to use?
+        # self.generator = Generator(d_model, ntoken)
+        self.generator = nn.Linear(d_model, ntoken)
 
-        self.init_weights()
+        # TODO rework initialization
+        # self.init_weights()
 
     def __str__(self):
         return f"TVAE_{self.d_model}_{self.z_dim}"
 
-    def encode(self, x: Tensor, mask: Tensor) -> Tensor:
+    def encode(self, x: Tensor, padding_mask: Tensor) -> Tensor:
         x = self.embedding(x) * math.sqrt(self.d_model)
         x = self.pos_encoder(x)
-        hidden = self.encoder(x, mask)
+        hidden = self.encoder(
+            src=x,
+            src_key_padding_mask=padding_mask
+        )
 
         z_mean = self.enc_mean(hidden)
         z_log_std = self.enc_log_std(hidden)
@@ -55,13 +80,6 @@ class TVAE(BaseModel):
             loc=z_mean, scale=torch.exp(z_log_std))
 
         return z_distribution
-
-    # TODO missing arguments
-    # TODO is logit correct?
-    def decode(self, z: Tensor) -> Tensor:
-        hidden = self.latent2hidden(z)
-        logit = self.decoder(hidden) 
-        return logit
 
     def reparametrize(self, z_dist: distributions.Distribution) -> Tensor:
         z_tilde = z_dist.rsample()
@@ -72,15 +90,24 @@ class TVAE(BaseModel):
         z_prior = prior_dist.sample()
         return z_tilde, z_prior, prior_dist
 
-    # TODO rename prob to something more fitting
-    def forward(self, x: Tensor, mask: Tensor) -> Tensor:
-        z_dist = self.encode(x, mask)
+    def forward(self, src: Tensor, tgt: Tensor, tgt_mask: Tensor, src_key_padding_mask: Tensor, tgt_key_padding_mask: Tensor) -> Tensor:
+        z_dist = self.encode(src, src_key_padding_mask)
 
         z_tilde, z_prior, prior_dist = reparametrize(z_dist)
 
-        logit = self.decode(z_tilde)
-        prob = self.generator(logit)
-        return prob
+        # memory = self.latent2hidden(z_tilde)
+        memory = z_tilde
+
+        # TODO is logit correct?
+        logit = self.decoder(
+            tgt=tgt,
+            memory=memory,
+            tgt_mask=tgt_mask,
+            tgt_key_padding_mask=tgt_key_padding_mask
+        )
+
+        logits = self.generator(logit)
+        return logits, z_dist, prior_dist, z_tilde, z_prior
 
 
 class PositionalEncoding(nn.Module):
@@ -120,11 +147,3 @@ class Generator(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         return F.log_softmax(self.proj(x), dim=-1)
-
-
-def generate_square_subsequent_mask(sz: int) -> Tensor:
-    """Generates an upper-triangular matrix of -inf, with zeros on diag."""
-    return torch.triu(torch.ones(sz, sz) * float('-inf'), diagonal=1)
-
-def create_pad_mask(matrix:Tensor, pad_token:int) -> Tensor:
-    return (matrix == pad_token)
