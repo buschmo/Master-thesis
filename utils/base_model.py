@@ -52,8 +52,14 @@ class BaseModel(nn.Module):
     
 
     def init_weights(self):
+        # TODO rework this method
         for name, param in self.named_parameters():
-            if "weight" in name:
-                nn.init.xavier_normal_(param)
-            if "bias" in name:
-                param.bias.data.zero_()
+            try:
+                if "weight" in name:
+                    nn.init.xavier_normal_(param)
+            except ValueError as err:
+                print(err)
+                print(name)
+            # TODO is this necessary?
+            # if "bias" in name:
+            #     param.bias.data.zero_()
