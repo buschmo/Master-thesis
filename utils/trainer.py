@@ -102,7 +102,7 @@ class Trainer():
         # from trainer
         mean_loss = 0
         mean_accuracy = 0
-        for batch_num, (X, y) in tqdm(enumerate(data_loader), desc="Batch"):
+        for batch_num, batch in tqdm(enumerate(data_loader), desc="Batch"):
             batch_data = self.process_batch_data(batch)
 
             self.optimizer.zero_grad()
@@ -171,10 +171,48 @@ class Trainer():
         raise NotImplementedError
 
     def eval_model(self, data_loader, epoch_num=0):
-        raise NotImplementedError
+        # From image_vae_trainer.compute_eval_metrics
+        results_fp = self.model.filepath.with_stem(
+            f"{self.model.filepath.stem}_{epoch_num}").with_suffix(".json")
+        if results_fp.exists():
+            with open(results_fp, 'r') as infile:
+                self.metrics = json.load(infile)
+        else:
+            self.metrics = self.compute_eval_metrics(data_loader)
+
+        if self.writer:
+            self.writer.add_scalars("Disentanglement/Interpretability", {
+                                    k: v[1] for k, v in self.metrics["Interpretability"].items()}, epoch_num)
+            self.writer.add_scalar("Disentanglement/Mutual Information Gap",
+                                   self.metrics["Mutual Information Gap"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Separated Attribute Predictability",
+                                   self.metrics["Separated Attribute Predictability"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
+                                   self.metrics["Spearman's Rank Correlation"], epoch_num)
+        else:
+            if not results_fp.parent.exists():
+                results_fp.parent.mkdir(parents=True)
+            with open(results_fp, 'w') as outfile:
+                json.dump(self.metrics, outfile, indent=2)
+        return self.metrics
 
     def compute_eval_metrics(self, data_loader):
-        raise NotImplementedError
+        latent_codes, attributes, attr_list = self.compute_representations(
+            data_loader)
+        interp_metrics = evl.compute_interpretability_metric(
+            latent_codes, attributes, attr_list
+        )
+        metrics = {
+            "Interpretability": interp_metrics
+        }
+        # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
+        metrics.update(evl.compute_mig(latent_codes, attributes))
+        metrics.update(
+            evl.compute_sap_score(latent_codes, attributes))
+        metrics.update(
+            evl.compute_correlation_score(latent_codes, attributes))
+        # metrics.update(self.test_model(batch_size=batch_size))
+        return metrics
 
     def compute_representations(self, data_loader):
         raise NotImplementedError
