@@ -12,7 +12,7 @@ logging.set_verbosity_error()
 
 class BaseDataset(Dataset):
     def __init__(self):
-        super.__init__()
+        super().__init__()
 
     def __len__(self):
         return len(self.labels)
@@ -29,18 +29,17 @@ class BaseDataset(Dataset):
 
 class SimpleGermanDatasetBERT(BaseDataset):
     def __init__(self):
-        self.path_easy = Path("data/SimpleGerman/BERTeasy.csv")
-        self.path_normal = Path("data/SimpleGerman/BERTnormal.csv")
+        self.path_easy = Path("data/SimpleGerman/BERTeasy.pt")
+        self.path_normal = Path("data/SimpleGerman/BERTnormal.pt")
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
-        df_easy = pd.read_csv(self.path_easy, index_col=0)
-        df_normal = pd.read_csv(self.path_normal, index_col=0)
-        labels = np.concatenate(
-            [np.zeros(df_easy.shape[0]), np.ones(df_normal.shape[0])])
+        t_easy = torch.load(self.path_easy)
+        t_normal = torch.load(self.path_normal)
 
-        self.embeddings = pd.concat(
-            [df_easy, df_normal]).to_numpy(dtype="float32")
-        self.labels = pd.DataFrame(labels).to_numpy(dtype="float32")
+        self.embeddings = torch.cat(
+            [t_easy, t_normal])
+        self.labels = torch.cat(
+            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])])
 
     def __str__(self):
         return "SimpleGermanCorpus"
@@ -60,31 +59,30 @@ class SimpleGermanDatasetBERT(BaseDataset):
         if not self.path_easy.exists():
             g1 = generator("data/SimpleGerman/fixed_easy.txt")
             # use CLS embedding as sentence embedding
-            easy = [i[0][0] for i in tqdm(pipe(g1), desc="Easy")]
-            df = pd.DataFrame(easy)
-            df.to_csv(self.path_easy)
+            easy_embeddings = [i[0][0] for i in tqdm(pipe(g1), desc="German Easy embeddings")]
+            t = torch.tensor(easy_embeddings)
+            torch.save(t, self.path_easy)
         if not self.path_normal.exists():
             g2 = generator("data/SimpleGerman/fixed_normal.txt")
             # use CLS embedding as sentence embedding
-            normal = [i[0][0] for i in tqdm(pipe(g2), desc="Normal")]
-            df = pd.DataFrame(normal)
-            df.to_csv(self.path_normal)
+            normal_embeddings = [i[0][0] for i in tqdm(pipe(g2), desc="German Normal embeddings")]
+            t = torch.tensor(normal_embeddings)
+            torch.save(t, self.path_normal)
 
 
 class SimpleWikipediaDatasetBERT(BaseDataset):
     def __init__(self):
-        self.path_easy = Path("data/SimpleWikipedia/BERTeasy.csv")
-        self.path_normal = Path("data/SimpleWikipedia/BERTnormal.csv")
+        self.path_easy = Path("data/SimpleWikipedia/BERTeasy.pt")
+        self.path_normal = Path("data/SimpleWikipedia/BERTnormal.pt")
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
-        df_easy = pd.read_csv(self.path_easy, index_col=0)
-        df_normal = pd.read_csv(self.path_normal, index_col=0)
-        labels = np.concatenate(
-            [np.zeros(df_easy.shape[0]), np.ones(df_normal.shape[0])])
+        t_easy = torch.load(self.path_easy)
+        t_normal = torch.load(self.path_normal)
 
-        self.embeddings = pd.concat(
-            [df_easy, df_normal]).to_numpy(dtype="float32")
-        self.labels = pd.DataFrame(labels).to_numpy(dtype="float32")
+        self.embeddings = torch.cat(
+            [t_easy, t_normal])
+        self.labels = torch.cat(
+            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])])
 
     def __str__(self):
         return "SimpleWikipediaCorpus"
@@ -108,16 +106,16 @@ class SimpleWikipediaDatasetBERT(BaseDataset):
             g1 = generator(
                 "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned", model_name)
             # use CLS embedding as sentence embedding
-            easy = [i[0][0] for i in tqdm(pipe(g1), desc="Easy")]
-            df = pd.DataFrame(easy)
-            df.to_csv(self.path_easy)
+            easy_embeddings = [i[0][0] for i in tqdm(pipe(g1), desc="Wikipedia Easy embeddings")]
+            t = torch.tensor(easy_embeddings)
+            torch.save(t, self.path_easy)
         if not self.path_normal.exists():
             g2 = generator(
                 "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned", model_name)
             # use CLS embedding as sentence embedding
-            normal = [i[0][0] for i in tqdm(pipe(g2), desc="Normal")]
-            df = pd.DataFrame(normal)
-            df.to_csv(self.path_normal)
+            normal_embeddings = [i[0][0] for i in tqdm(pipe(g2), desc="Wikipedia Normal embeddings")]
+            t=torch.tensor(normal_embeddings)
+            torch.save(t, self.path_normal)
 
 
 class SimpleGermanDatasetWordPiece(BaseDataset):
@@ -127,6 +125,7 @@ class SimpleGermanDatasetWordPiece(BaseDataset):
 
         model_name = "deepset/gbert-base"
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
+        self.vocab_size = len(self.tokenizer.get_vocab())
         self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]") # start pad end symbols
 
         if not self.path_easy.exists() or not self.path_normal.exists():
@@ -172,6 +171,7 @@ class SimpleWikipediaDatasetWordPiece(BaseDataset):
         # English BERT from https://huggingface.co/bert-base-uncased
         model_name = "bert-base-uncased"
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
+        self.vocab_size = len(self.tokenizer.get_vocab())
         self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]") # start pad end symbols
 
         if not self.path_easy.exists() or not self.path_normal.exists():
