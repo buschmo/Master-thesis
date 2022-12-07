@@ -102,7 +102,8 @@ class Trainer():
         # from trainer
         mean_loss = 0
         mean_accuracy = 0
-        for batch_num, batch in tqdm(enumerate(data_loader), desc="Batch"):
+        # for batch_num, batch in tqdm(enumerate(data_loader), desc="Batch"):
+        for batch_num, batch in enumerate(data_loader):
             batch_data = self.process_batch_data(batch)
 
             self.optimizer.zero_grad()

@@ -108,7 +108,8 @@ class TVAETrainer(Trainer):
     def compute_representations(self, data_loader):
         latent_codes = []
         attr_values = []
-        for sample_id, batch in tqdm(enumerate(data_loader)):
+        # for sample_id, batch in tqdm(enumerate(data_loader)):
+        for sample_id, batch in enumerate(data_loader):
             batch_data =self.process_batch_data(batch)
             src, tgt, tgt_true, tgt_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch_data
             labels = labels.to("cpu")

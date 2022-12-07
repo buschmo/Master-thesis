@@ -97,7 +97,8 @@ class NaiveTrainer(Trainer):
     def compute_representations(self, data_loader):
         latent_codes = []
         attr_values = []
-        for sample_id, (inputs, labels) in tqdm(enumerate(data_loader)):
+        # for sample_id, (inputs, labels) in tqdm(enumerate(data_loader)):
+        for sample_id, (inputs, labels) in enumerate(data_loader):
             inputs = inputs.to("cuda")
             _, _, _, z_tilde, _ = self.model(inputs)
             latent_codes.append(utl.to_numpy(z_tilde))
