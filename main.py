@@ -29,8 +29,13 @@ def main():
                 )
                 model = NaiveVAE(input_size=dataset.getInputSize(
                 ), foldername=dataset.__str__(), timestamp=timestamp)
-                trainer = NaiveTrainer(dataset=dataset, model=model, checkpoint_index=0,
-                                       use_reg_loss=use_reg_loss, timestamp=timestamp)
+                trainer = NaiveTrainer(
+                    dataset=dataset,
+                    model=model,
+                    checkpoint_index=0,
+                    use_reg_loss=use_reg_loss,
+                    timestamp=timestamp
+                )
 
                 trainer.train_model(
                     batch_size=64,
@@ -38,15 +43,24 @@ def main():
                 )
 
     for Dataset in [SimpleGermanDatasetWordPiece, SimpleWikipediaDatasetWordPiece]:
+        # continue
         dataset = Dataset()
-        for num_epochs in [1000]:
+        for num_epochs in [100]:
             for use_reg_loss in [True, False]:
                 ts = time.time()
                 timestamp = datetime.datetime.fromtimestamp(ts).strftime(
                     '%Y-%m-%d_%H:%M:%S'
                 )
                 model = TVAE(
-                    ntoken=dataset.getInputSize(),
+                    ntoken=dataset.vocab_size,
+                    d_model=256,
+                    z_dim=64,
+                    nhead_encoder=8,
+                    nhead_decoder=8,
+                    d_hid=512,
+                    nlayers=3,
+                    dropout=0.1,
+                    use_gru=False,
                     foldername=dataset.__str__(),
                     timestamp=timestamp)
                 trainer = TVAETrainer(
@@ -58,7 +72,7 @@ def main():
                 )
 
                 trainer.train_model(
-                    batch_size=32,
+                    batch_size=8,
                     num_epochs=num_epochs
                 )
 
