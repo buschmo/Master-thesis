@@ -12,13 +12,14 @@ Based on Wang et al (2019) - Controllable Unsupervised Text Attribute Transfer v
 
 
 class TVAE(BaseModel):
-    def __init__(self, ntoken: int, d_model: int = 512, z_dim: int = 512, nhead_encoder: int = 8, nhead_decoder: int = 8, d_hid: int = 2048, nlayers: int = 6, dropout: float = 0.1, use_gru=False, **kwargs):
+    def __init__(self, ntoken: int, d_model: int = 512, z_dim: int = 128, nhead_encoder: int = 8, nhead_decoder: int = 8, d_hid: int = 2048, nlayers: int = 6, dropout: float = 0.1, use_gru=False, **kwargs):
         self.d_model = d_model
         self.ntoken = ntoken
         self.z_dim = z_dim
         super().__init__(**kwargs)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
-        self.embedding = nn.Embedding(ntoken, d_model)
+        self.embedder = Embedder(ntoken, d_model)
+
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=nhead_encoder,
@@ -39,7 +40,6 @@ class TVAE(BaseModel):
         # Converting
         self.latent2hidden = nn.Linear(z_dim, d_model)
 
-        # TODO more variables might be needed. See EncoderLayer above
         decoder_layer = nn.TransformerDecoderLayer(
             d_model=d_model,
             nhead=nhead_decoder,
@@ -67,15 +67,17 @@ class TVAE(BaseModel):
         return f"TVAE_{self.d_model}_{self.z_dim}"
 
     def encode(self, x: Tensor, padding_mask: Tensor) -> Tensor:
-        x = self.embedding(x) * math.sqrt(self.d_model)
+        x = self.embedder(x)
         x = self.pos_encoder(x)
         hidden = self.encoder(
             src=x,
             src_key_padding_mask=padding_mask
         )
 
-        z_mean = self.enc_mean(hidden)
-        z_log_std = self.enc_log_std(hidden)
+        # TODO this needs to be reconsidered
+        hidden_mean = torch.mean(hidden, dim=1)
+        z_mean = self.enc_mean(hidden_mean)
+        z_log_std = self.enc_log_std(hidden_mean)
         z_distribution = distributions.Normal(
             loc=z_mean, scale=torch.exp(z_log_std))
 
@@ -93,20 +95,22 @@ class TVAE(BaseModel):
     def forward(self, src: Tensor, tgt: Tensor, tgt_mask: Tensor, src_key_padding_mask: Tensor, tgt_key_padding_mask: Tensor) -> Tensor:
         z_dist = self.encode(src, src_key_padding_mask)
 
-        z_tilde, z_prior, prior_dist = reparametrize(z_dist)
+        z_tilde, z_prior, prior_dist = self.reparametrize(z_dist)
 
-        # memory = self.latent2hidden(z_tilde)
-        memory = z_tilde
+        tgt = self.embedder(tgt)
 
-        # TODO is logit correct?
-        logit = self.decoder(
+        # memory = z_tilde
+        memory_small = self.latent2hidden(z_tilde)
+        memory = memory_small.view(memory_small.shape[0], 1, memory_small.shape[1]).repeat(1,tgt.shape[1],1)
+
+
+        logits = self.decoder(
             tgt=tgt,
             memory=memory,
             tgt_mask=tgt_mask,
             tgt_key_padding_mask=tgt_key_padding_mask
         )
-
-        logits = self.generator(logit)
+        logits = self.generator(logits)
         return logits, z_dist, prior_dist, z_tilde, z_prior
 
 
@@ -129,20 +133,20 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 
-# TODO forgot the plans for this class ._.
-# TODO might be unnecessary
 class Embedder(nn.Module):
-    def __init__(self):
-        super.__init__()
+    def __init__(self, ntoken, d_model):
+        super().__init__()
+        self.d_model = d_model
+        self.embedding = nn.Embedding(ntoken, d_model)
 
     def forward(self, x: Tensor) -> Tensor:
-        return
+        return self.embedding(x) * math.sqrt(self.d_model)
 
 
 # TODO this needs to be called on the last layers output
 class Generator(nn.Module):
     def __init__(self, d_model: int, ntoken: int):
-        super.__init__()
+        super().__init__()
         self.proj = nn.Linear(d_model, ntoken)
 
     def forward(self, x: Tensor) -> Tensor:

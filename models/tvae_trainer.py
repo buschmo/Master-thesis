@@ -47,7 +47,7 @@ class TVAETrainer(Trainer):
         # Mask [PAD] tokens
         src_key_padding_mask = (src == self.dataset.PAD)
         tgt_key_padding_mask = (tgt == self.dataset.PAD)
-
+        
         # TODO no memory_key_padding? no src_masking?
         return (src.to("cuda"), tgt.to("cuda"), tgt_true.to("cuda"), tgt_mask.to("cuda"), src_key_padding_mask.to("cuda"), tgt_key_padding_mask.to("cuda"), labels.to("cuda"))
 
@@ -88,26 +88,30 @@ class TVAETrainer(Trainer):
         # compute accuracy
         # TODO this needs to be changed
         accuracy = self.mean_accuracy(
-            weights=torch.sigmoid(outputs),
-            targets=inputs
+            weights=torch.sigmoid(prob),
+            targets=tgt_true
         )
 
         return loss, accuracy
 
+    @staticmethod
     def reconstruction_loss(input, target):
+        input = input.permute(0,2,1)
         return F.cross_entropy(input, target)
 
     @staticmethod
     def mean_accuracy(weights, targets):
-        torch.argmax(weights)
-        acc= 0
+        weights = torch.argmax(weights, dim=-1)
+        acc = torch.sum(targets==weights) / torch.numel(targets)
         return acc
 
     def compute_representations(self, data_loader):
         latent_codes = []
         attr_values = []
         for sample_id, batch in tqdm(enumerate(data_loader)):
-            src, tgt, tgt_true, tgt_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch
+            batch_data =self.process_batch_data(batch)
+            src, tgt, tgt_true, tgt_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch_data
+            labels = labels.to("cpu")
             _, _, _, z_tilde, _ = self.model(
                 src=src,
                 tgt=tgt,
