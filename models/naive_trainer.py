@@ -39,7 +39,7 @@ class NaiveTrainer(Trainer):
         outputs, z_dist, prior_dist, z_tilde, z_prior = self.model(inputs)
 
         # compute reconstruction loss
-        recons_loss = self.reconstruction_loss(inputs, outputs)
+        recons_loss = self.reconstruction_loss(outputs, inputs)
 
         # compute KLD loss
         dist_loss = self.compute_kld_loss(
@@ -73,12 +73,12 @@ class NaiveTrainer(Trainer):
     # TODO staticmethod necessary? maybe move to other module?
 
     @staticmethod
-    def reconstruction_loss(x, x_recons):
+    def reconstruction_loss(input, target):
         # from image_vae_trainer
-        batch_size = x.size(0)
+        batch_size = input.size(0)
         # x_recons = torch.sigmoid(x_recons)  # TODO sigmoid?
         recons_loss = torch.nn.functional.mse_loss(
-            x_recons, x, reduction='sum'
+            target, input, reduction='sum'
         ).div(batch_size)
         return recons_loss
 

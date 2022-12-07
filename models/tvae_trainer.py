@@ -63,7 +63,7 @@ class TVAETrainer(Trainer):
         )
 
         # compute reconstruction loss
-        recons_loss = self.reconstruction_loss(tgt_true, prob)
+        recons_loss = self.reconstruction_loss(prob, tgt_true)
 
         # compute KLD loss
         dist_loss = self.compute_kld_loss(
@@ -94,8 +94,8 @@ class TVAETrainer(Trainer):
 
         return loss, accuracy
 
-    def reconstruction_loss(x, x_recons):
-        return F.cross_entropy(x_recons, x)
+    def reconstruction_loss(input, target):
+        return F.cross_entropy(input, target)
 
     @staticmethod
     def mean_accuracy(weights, targets):

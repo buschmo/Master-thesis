@@ -129,7 +129,7 @@ class Trainer():
     def process_batch_data(self, batch):
         raise NotImplementedError
 
-    def reconstruction_loss(x, x_recons):
+    def reconstruction_loss(input, target):
         raise NotImplementedError
 
     @staticmethod
