@@ -18,7 +18,7 @@ class BaseDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, index):
-        return self.embeddings[index], self.labels[index]
+        return self.embeddings[index], self.labels[index].view(1,)
 
     def __str__(self):
         raise NotImplementedError
@@ -130,19 +130,19 @@ class SimpleGermanDatasetWordPiece(BaseDataset):
 
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
-        t_easy = torch.load(self.path_easy)
-        t_normal = torch.load(self.path_normal)
+        t_easy = torch.load(self.path_easy).long()
+        t_normal = torch.load(self.path_normal).long()
 
         self.embeddings = torch.cat(
             [t_easy, t_normal])
         self.labels = torch.cat(
-            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])])
+            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])]).view((-1,1))
 
     def __str__(self):
         return "SimpleGermanCorpus"
 
     def createDataset(self):
-        def generator(file, model_name):
+        def generator(file):
             with open(file) as fp:
                 lines = [i.strip() for i in fp.readlines()]
             for line in lines:
@@ -153,13 +153,13 @@ class SimpleGermanDatasetWordPiece(BaseDataset):
 
         if not self.path_easy.exists():
             easy_embeddings = [i for i in tqdm(
-                generator("data/SimpleGerman/fixed_easy.txt", model_name), desc="Easy German")]
-            t = torch.IntTensor(easy_embeddings)
+                generator("data/SimpleGerman/fixed_easy.txt"), desc="Easy German")]
+            t = torch.LongTensor(easy_embeddings)
             torch.save(t, self.path_easy)
         if not self.path_normal.exists():
             normal_embeddings = [i for i in tqdm(generator(
-                "data/SimpleGerman/fixed_normal.txt", model_name), desc="Normal German")]
-            t = torch.IntTensor(normal_embeddings)
+                "data/SimpleGerman/fixed_normal.txt"), desc="Normal German")]
+            t = torch.LongTensor(normal_embeddings)
             torch.save(t, self.path_normal)
 
 
@@ -188,7 +188,7 @@ class SimpleWikipediaDatasetWordPiece(BaseDataset):
         return "SimpleWikipediaCorpus"
 
     def createDataset(self):
-        def generator(file, model_name):
+        def generator(file):
             with open(file) as fp:
                 lines = [i.split("\t")[-1].strip() for i in fp.readlines()]
             for line in lines:
@@ -199,15 +199,15 @@ class SimpleWikipediaDatasetWordPiece(BaseDataset):
 
         if not self.path_easy.exists():
             g1 = generator(
-                "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned", model_name)
+                "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned")
             # use CLS embedding as sentence embedding
             easy_embeddings = [i for i in tqdm(g1, desc="Wikipedia Easy")]
-            t = torch.IntTensor(easy_embeddings)
+            t = torch.LongTensor(easy_embeddings)
             torch.save(t, self.path_easy)
         if not self.path_normal.exists():
             g2 = generator(
-                "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned", model_name)
+                "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned")
             # use CLS embedding as sentence embedding
             normal_embeddings = [i for i in tqdm(g2, desc="Wikipedia Normal")]
-            t = torch.IntTensor(normal_embeddings)
+            t = torch.LongTensor(normal_embeddings)
             torch.save(t, self.path_normal)
