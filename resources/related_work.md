@@ -21,6 +21,12 @@
   - Transformer AE (T-AE)
   - based on Vaswani et al (2017) - [Attention is all you need](https://arxiv.org/abs/1706.03762) (Transformer Paper)
   - fast-gradient-iterative-modification to edit latent representation towards desired attribute by using a separate classifier
+- Nangi et al (2021) - [Counterfactuals to Control Latent Disentangled Text Representations for Style Transfer](https://aclanthology.org/2021.acl-short.7)
+  - propose counterfactual-based approach to control the latent space for style transfer
+  - no new disentanglement method
+  - Based on John et al (2018)
+  - Introduce T-VAE based on T-AE by Wang et al (2019) in appendix
+
 
 ## Optimus
 - Li et al (2020) - [OPTIMUS Organizing Sentences via Pre-trained Modeling of a Latent Space](https://arxiv.org/abs/2004.04092)
@@ -135,11 +141,6 @@
 # Misc
 - Devlin et al (2019) - [BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding](https://arxiv.org/abs/1810.04805)
   - Introduction of BERT
-- Nangi et al (2021) - [Counterfactuals to Control Latent Disentangled Text Representations for Style Transfer](https://aclanthology.org/2021.acl-short.7)
-  - propose counterfactual-based approach to control the latent space for style transfer
-  - no new disentanglement method
-  - Based on John et al (2018)
-  - Introduce T-VAE based on T-AE by Wang et al (2019) in appendix
 - Ethayarajh et al (2019) - [How Contextual are Contextualized Word Representations? Comparing the Geometry of BERT, ELMo, and GPT-2 Embeddings](https://arxiv.org/abs/1909.00512)
   - inspects context of embeddings in BERT, ELMo and GPT-2
   - Major findings:
