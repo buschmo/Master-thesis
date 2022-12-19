@@ -13,9 +13,13 @@ Based on Wang et al (2019) - Controllable Unsupervised Text Attribute Transfer v
 
 class TVAE(BaseModel):
     def __init__(self, ntoken: int, d_model: int = 512, z_dim: int = 128, nhead_encoder: int = 8, nhead_decoder: int = 8, d_hid: int = 2048, nlayers: int = 6, dropout: float = 0.1, use_gru=False, **kwargs):
-        self.d_model = d_model
         self.ntoken = ntoken
+        self.d_model = d_model
         self.z_dim = z_dim
+        self.nhead_encoder = nhead_encoder
+        self.d_hid = d_hid
+        self.nlayers= nlayers
+        self.dropout = dropout
         super().__init__(**kwargs)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
         self.embedder = Embedder(ntoken, d_model)
@@ -64,7 +68,7 @@ class TVAE(BaseModel):
         # self.init_weights()
 
     def __str__(self):
-        return f"TVAE_{self.d_model}_{self.z_dim}"
+        return f"TVAE_{self.d_model}_{self.z_dim}_{self.nhead_encoder}_{self.nhead_decoder}_{self.d_hid}_{self.nlayers}_{self.dropout}"
 
     def encode(self, x: Tensor, padding_mask: Tensor) -> Tensor:
         x = self.embedder(x)

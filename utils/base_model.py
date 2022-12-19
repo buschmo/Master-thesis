@@ -18,7 +18,7 @@ class BaseModel(nn.Module):
 
     def update_filepath(self, timestamp=""):
         dir_name = Path("checkpoints").absolute()
-        self.filepath = Path(dir_name, self.foldername, "_".join([timestamp, self.__str__()]) + ".pt")
+        self.filepath = Path(dir_name, self.foldername, self.__str__(), timestamp + ".pt")
 
     def save(self):
         if not self.filepath.parent.exists():
