@@ -176,13 +176,13 @@ class SimpleWikipediaDatasetWordPiece(BaseDataset):
 
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
-        t_easy = torch.load(self.path_easy)
-        t_normal = torch.load(self.path_normal)
+        t_easy = torch.load(self.path_easy).long()
+        t_normal = torch.load(self.path_normal).long()
 
         self.embeddings = torch.cat(
             [t_easy, t_normal])
         self.labels = torch.cat(
-            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])])
+            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])]).view((-1,1))
 
     def __str__(self):
         return "SimpleWikipediaCorpus"
