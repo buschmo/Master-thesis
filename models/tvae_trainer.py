@@ -47,7 +47,7 @@ class TVAETrainer(Trainer):
         # Mask [PAD] tokens
         src_key_padding_mask = (src == self.dataset.PAD)
         tgt_key_padding_mask = (tgt == self.dataset.PAD)
-        
+
         # TODO no memory_key_padding? no src_masking?
         return (src.to("cuda"), tgt.to("cuda"), tgt_true.to("cuda"), tgt_mask.to("cuda"), src_key_padding_mask.to("cuda"), tgt_key_padding_mask.to("cuda"), labels.to("cuda"))
 
@@ -96,13 +96,20 @@ class TVAETrainer(Trainer):
 
     @staticmethod
     def reconstruction_loss(input, target):
-        input = input.permute(0,2,1)
-        return F.cross_entropy(input, target)
+        input = input.permute(0, 2, 1)
+        return F.cross_entropy(
+            input=input,
+            target=target,
+            ignore_index=0  # ignore the padding label
+        )
 
     @staticmethod
     def mean_accuracy(weights, targets):
         weights = torch.argmax(weights, dim=-1)
-        acc = torch.sum(targets==weights) / torch.numel(targets)
+        mask = targets.ge(0.5) # remove [PAD] label from accuracy calculation
+        numerator = torch.sum(targets.masked_select(mask) == weights.masked_select(mask))
+        denominator = len(targets.masked_select(mask))
+        acc = numerator / denominator
         return acc
 
     def compute_representations(self, data_loader):
@@ -110,7 +117,7 @@ class TVAETrainer(Trainer):
         attr_values = []
         # for sample_id, batch in tqdm(enumerate(data_loader)):
         for sample_id, batch in enumerate(data_loader):
-            batch_data =self.process_batch_data(batch)
+            batch_data = self.process_batch_data(batch)
             src, tgt, tgt_true, tgt_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch_data
             labels = labels.to("cpu")
             _, _, _, z_tilde, _ = self.model(
