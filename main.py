@@ -45,7 +45,7 @@ def main():
     for Dataset in [SimpleGermanDatasetWordPiece, SimpleWikipediaDatasetWordPiece]:
         # continue
         dataset = Dataset()
-        for num_epochs in [100]:
+        for num_epochs in [25]:
             for use_reg_loss in [True, False]:
                 ts = time.time()
                 timestamp = datetime.datetime.fromtimestamp(ts).strftime(
@@ -58,7 +58,7 @@ def main():
                     nhead_encoder=8,
                     nhead_decoder=8,
                     d_hid=512,
-                    nlayers=3,
+                    nlayers=1,
                     dropout=0.1,
                     use_gru=False,
                     foldername=dataset.__str__(),
@@ -66,7 +66,7 @@ def main():
                 trainer = TVAETrainer(
                     dataset=dataset,
                     model=model,
-                    checkpoint_index=0,
+                    checkpoint_index=1,
                     use_reg_loss=use_reg_loss,
                     timestamp=timestamp
                 )
