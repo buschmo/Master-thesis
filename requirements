@@ -6,3 +6,4 @@ transformers
 sentence-transformers
 pandas
 tensorflow
+click
