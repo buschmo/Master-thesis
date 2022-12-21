@@ -8,6 +8,7 @@ from utils.base_model import BaseModel
 
 """
 Based on Wang et al (2019) - Controllable Unsupervised Text Attribute Transfer via Editing Entangled Latent Representation
+and Nangi et al (2021) - Counterfactuals to Control Latent Disentangled Text Representations for Style Transfer
 """
 
 
@@ -17,6 +18,7 @@ class TVAE(BaseModel):
         self.d_model = d_model
         self.z_dim = z_dim
         self.nhead_encoder = nhead_encoder
+        self.nhead_decoder = nhead_decoder
         self.d_hid = d_hid
         self.nlayers= nlayers
         self.dropout = dropout
