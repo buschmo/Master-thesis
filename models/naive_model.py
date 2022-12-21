@@ -4,12 +4,12 @@ from utils.base_model import BaseModel
 
 
 class NaiveVAE(BaseModel):
-    def __init__(self, input_size, dropout=0.1, **kwargs):
+    def __init__(self, input_size, z_dim=32, encoder_dim=128, decoder_dim=128, dropout=0.1, **kwargs):
         # set basic parameters
         self.input_size = input_size
-        self.z_dim = 32
-        self.encoder_dim = 128
-        self.decoder_dim = 128
+        self.z_dim = z_dim
+        self.encoder_dim = encoder_dim
+        self.decoder_dim = decoder_dim
         # call super function afterwards
         super().__init__(**kwargs)
 
