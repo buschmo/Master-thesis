@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 class BaseModel(nn.Module):
-    
+
     def __init__(self, foldername=None, timestamp=""):
         super().__init__()
         self.foldername = foldername if foldername else self.__str__()
@@ -18,7 +18,8 @@ class BaseModel(nn.Module):
 
     def update_filepath(self, timestamp=""):
         dir_name = Path("checkpoints").absolute()
-        self.filepath = Path(dir_name, self.foldername, self.__str__(), timestamp + ".pt")
+        self.filepath = Path(dir_name, self.foldername,
+                             self.__str__()+"_"+timestamp + "_model.pt")
 
     def save(self):
         if not self.filepath.parent.exists():
@@ -49,7 +50,6 @@ class BaseModel(nn.Module):
         for k, v in d.items():
             d[k] = sorted(v)
         return d
-    
 
     def init_weights(self):
         # TODO rework this method
