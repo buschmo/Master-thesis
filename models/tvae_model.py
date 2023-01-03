@@ -13,7 +13,7 @@ and Nangi et al (2021) - Counterfactuals to Control Latent Disentangled Text Rep
 
 
 class TVAE(BaseModel):
-    def __init__(self, ntoken: int, d_model: int = 512, z_dim: int = 128, nhead_encoder: int = 8, nhead_decoder: int = 8, d_hid: int = 2048, nlayers: int = 6, dropout: float = 0.1, use_gru=False, **kwargs):
+    def __init__(self, ntoken: int, d_model: int = 256, z_dim: int = 64, nhead_encoder: int = 8, nhead_decoder: int = 8, d_hid: int = 512, nlayers: int = 1, dropout: float = 0.1, use_gru=False, **kwargs):
         self.ntoken = ntoken
         self.d_model = d_model
         self.z_dim = z_dim
