@@ -26,7 +26,7 @@ class TVAE(BaseModel):
         self.pos_encoder = PositionalEncoding(d_model, dropout)
         self.embedder = Embedder(ntoken, d_model)
 
-        encoder_layer = nn.TransformerEncoderLayer(
+        self.encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=nhead_encoder,
             dim_feedforward=d_hid,
@@ -34,7 +34,7 @@ class TVAE(BaseModel):
             batch_first=True
         )
         self.encoder = nn.TransformerEncoder(
-            encoder_layer=encoder_layer,
+            encoder_layer=self.encoder_layer,
             num_layers=nlayers
         )
 
@@ -46,7 +46,7 @@ class TVAE(BaseModel):
         # Converting
         self.latent2hidden = nn.Linear(z_dim, d_model)
 
-        decoder_layer = nn.TransformerDecoderLayer(
+        self.decoder_layer = nn.TransformerDecoderLayer(
             d_model=d_model,
             nhead=nhead_decoder,
             dim_feedforward=d_hid,
@@ -54,7 +54,7 @@ class TVAE(BaseModel):
             batch_first=True
         )
         self.decoder = nn.TransformerDecoder(
-            decoder_layer=decoder_layer,
+            decoder_layer=self.decoder_layer,
             num_layers=nlayers
         )
 
