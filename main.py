@@ -8,7 +8,7 @@ from models.naive_model import NaiveVAE
 from models.naive_trainer import NaiveTrainer
 from models.tvae_model import TVAE
 from models.tvae_trainer import TVAETrainer
-from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT, SimpleGermanDatasetWordPiece, SimpleWikipediaDatasetWordPiece
+from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT, DatasetWordPiece
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -35,22 +35,21 @@ def main(train: bool, evaluate: Path, model: str, dataset: str, num_epochs: int,
         return
 
     if dataset == "German":
-        Datasets = [SimpleGermanDatasetWordPiece] if model == "TVAE" else [
-            SimpleGermanDatasetBERT]
+        datasets = [DatasetWordPiece(large=False)] if model == "TVAE" else [
+            SimpleGermanDatasetBERT()]
     elif dataset == "Wikipedia":
-        Datasets = [SimpleWikipediaDatasetWordPiece] if model == "TVAE" else [
-            SimpleGermanDatasetBERT]
+        datasets = [DatasetWordPiece(large=True)] if model == "TVAE" else [
+            SimpleGermanDatasetBERT()]
     elif dataset == "All":
-        Datasets = [SimpleGermanDatasetWordPiece, SimpleWikipediaDatasetWordPiece] if model == "TVAE" else [
-            SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT]
+        datasets = [DatasetWordPiece(large=False), DatasetWordPiece(large=True)] if model == "TVAE" else [
+            SimpleGermanDatasetBERT(), SimpleWikipediaDatasetBERT()]
 
     if evaluate:
         eval(evaluate)
 
     if train:
         if model == "TVAE":
-            for Dataset in Datasets:
-                dataset = Dataset()
+            for dataset in datasets:
                 ts = time.time()
                 timestamp = datetime.datetime.fromtimestamp(ts).strftime(
                     '%Y-%m-%d_%H:%M:%S'
@@ -81,8 +80,7 @@ def main(train: bool, evaluate: Path, model: str, dataset: str, num_epochs: int,
                 )
 
         else:
-            for Dataset in Datasets:
-                dataset = Dataset()
+            for dataset in datasets:
                 ts = time.time()
                 timestamp = datetime.datetime.fromtimestamp(ts).strftime(
                     '%Y-%m-%d_%H:%M:%S'
@@ -122,7 +120,7 @@ def eval(path):
         for i in l:
             if len(i.stem) != 19:
                 d[i.stem[:19]].append(i)
-        dataset = SimpleWikipediaDatasetWordPiece()
+        dataset = DatasetWordPiece(large=True)
         data_loader = DataLoader(dataset, batch_size=32)
         for k, v in tqdm(d.items(), desc="Model Iteration"):
             # Writer anlegen
