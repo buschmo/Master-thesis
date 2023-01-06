@@ -119,14 +119,15 @@ class SimpleWikipediaDatasetBERT(BaseDataset):
 
 
 class SimpleGermanDatasetWordPiece(BaseDataset):
-    def __init__(self):
+    def __init__(self, max_length: int=None):
         self.path_easy = Path("data/SimpleGerman/WordPieceEasy.pt")
         self.path_normal = Path("data/SimpleGerman/WordPieceNormal.pt")
 
         model_name = "deepset/gbert-base"
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.vocab_size = len(self.tokenizer.get_vocab())
-        self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]") # start pad end symbols
+        self.max_length = max_length
+        self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]") # symbols for start, pad and end
 
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
@@ -147,9 +148,11 @@ class SimpleGermanDatasetWordPiece(BaseDataset):
                 lines = [i.strip() for i in fp.readlines()]
             for line in lines:
                 line_token = self.tokenizer.encode(line, padding="max_length")
-                if len(line_token) > 512:
+                if len(line_token) > self.max_length:
                     continue
-                yield line_token
+                tokens = line_token[:self.max_length-1]
+                tokens.append(line_token[-1])
+                yield tokens
 
         if not self.path_easy.exists():
             easy_embeddings = [i for i in tqdm(
@@ -172,7 +175,7 @@ class SimpleWikipediaDatasetWordPiece(BaseDataset):
         model_name = "bert-base-uncased"
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.vocab_size = len(self.tokenizer.get_vocab())
-        self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]") # start pad end symbols
+        self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]") # symbols for start, pad and end
 
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
