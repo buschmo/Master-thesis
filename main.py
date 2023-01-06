@@ -36,13 +36,13 @@ def main(train: bool, evaluate: Path, model: str, dataset: str, emb_length: int,
         return
 
     if dataset == "German":
-        datasets = [DatasetWordPiece(large=False)] if model == "TVAE" else [
+        datasets = [DatasetWordPiece(large=False, max_length=emb_length)] if model == "TVAE" else [
             SimpleGermanDatasetBERT()]
     elif dataset == "Wikipedia":
-        datasets = [DatasetWordPiece(large=True)] if model == "TVAE" else [
+        datasets = [DatasetWordPiece(large=True, max_length=emb_length)] if model == "TVAE" else [
             SimpleGermanDatasetBERT()]
     elif dataset == "All":
-        datasets = [DatasetWordPiece(large=False), DatasetWordPiece(large=True)] if model == "TVAE" else [
+        datasets = [DatasetWordPiece(large=False, max_length=emb_length), DatasetWordPiece(large=True, max_length=emb_length)] if model == "TVAE" else [
             SimpleGermanDatasetBERT(), SimpleWikipediaDatasetBERT()]
 
     if evaluate:
@@ -70,7 +70,7 @@ def main(train: bool, evaluate: Path, model: str, dataset: str, emb_length: int,
                 trainer = TVAETrainer(
                     dataset=dataset,
                     model=model,
-                    checkpoint_index=1,
+                    checkpoint_index=checkpoint_index,
                     use_reg_loss=use_reg_loss,
                     timestamp=timestamp
                 )
@@ -97,7 +97,7 @@ def main(train: bool, evaluate: Path, model: str, dataset: str, emb_length: int,
                 trainer = NaiveTrainer(
                     dataset=dataset,
                     model=model,
-                    checkpoint_index=0,
+                    checkpoint_index=checkpoint_index,
                     use_reg_loss=use_reg_loss,
                     timestamp=timestamp
                 )
