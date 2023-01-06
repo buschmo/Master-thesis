@@ -25,7 +25,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 @click.option("-B", "--batch-size", "batch_size", type=int, default=32, show_default=True, help="Size of the batches to be trained.")
 @click.option("--reg", "use_reg_loss", is_flag=True, type=bool, default=True,  help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
 @click.option("-C", "--checkpoint-index", "checkpoint_index", type=int, default=0, show_default=True, help="Frequency of checkpoint creation. 0 disables checkpoints.")
-@click.option("-d", "--dim", "d_model", type=int, default=256, show_default=True, help="Internal dimension size of the TVAE model. Each sublayer produces this output size.")
+@click.option("-d", "--d-model", "d_model", type=int, default=256, show_default=True, help="Internal dimension size of the TVAE model. Each sublayer produces this output size.")
 @click.option("-z", "--z-dim", "z_dim", type=int, default=64, show_default=True, help="Size of the latent dimension.")
 @click.option("-ne", "--nhead-encoder", "nhead_encoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer encoder (Also used as linear dim of encoder in NaiveModel).")
 @click.option("-nd", "--nhead-decoder", "nhead_decoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer decoder (Also used as linear dim of decoder in NaiveModel).")
