@@ -2,6 +2,8 @@ import torch
 import datetime
 import time
 import click
+import pprint
+import json
 from pathlib import Path
 
 from models.naive_model import NaiveVAE
@@ -14,23 +16,38 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 @click.command()
-@click.option("-t", "--train", "train", type=bool, default=False, show_default=True, help="")
+@click.option("-t", "--train", "train", is_flag=True, type=bool, default=False, help="Flag, if a model is to be trained.")
 @click.option("-e", "--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
 @click.option("-M", "--model", "model", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
 @click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="All", show_default=True, help="Determine the dataset(s) to be used.")
 @click.option("-L", "--emb-length", "emb_length", type=int, default=512, show_default=True, help="Sets the length of the WordPiece embedding.")
 @click.option("-N", "--num-epochs", type=int, default=50, show_default=True, help="Number of epochs to be trained.")
 @click.option("-B", "--batch-size", "batch_size", type=int, default=32, show_default=True, help="Size of the batches to be trained.")
-@click.option("--reg/--no-reg", "use_reg_loss", default=True,  show_default=True, help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
+@click.option("--reg", "use_reg_loss", is_flag=True, type=bool, default=True,  help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
 @click.option("-C", "--checkpoint-index", "checkpoint_index", type=int, default=0, show_default=True, help="Frequency of checkpoint creation. 0 disables checkpoints.")
 @click.option("-d", "--dim", "d_model", type=int, default=256, show_default=True, help="Internal dimension size of the TVAE model. Each sublayer produces this output size.")
 @click.option("-z", "--z-dim", "z_dim", type=int, default=64, show_default=True, help="Size of the latent dimension.")
-@click.option("-ne", "--nhead-encoder", "nhead_encoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer encoder (Also used as linear dim of encoder in NaiveModel)")
-@click.option("-nd", "--nhead-decoder", "nhead_decoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer decoder (Also used as linear dim of decoder in NaiveModel)")
-@click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer")
-@click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks")
-@click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value")
-def main(train: bool, evaluate: Path, model: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+@click.option("-ne", "--nhead-encoder", "nhead_encoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer encoder (Also used as linear dim of encoder in NaiveModel).")
+@click.option("-nd", "--nhead-decoder", "nhead_decoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer decoder (Also used as linear dim of decoder in NaiveModel).")
+@click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
+@click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
+@click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
+    args = locals()
+
+    print("Parameters:")
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(args)
+
+    ts = time.time()
+    timestamp = datetime.datetime.fromtimestamp(ts).strftime(
+        '%Y-%m-%d_%H:%M:%S'
+    )
+    p = Path("logs", f"{timestamp}.json")
+    if not p.parent.exists():
+        p.parent.mkdir(parents=True)
+    with open(p, "w") as fp:
+        json.dump(args, fp, indent=4)
+
     if device == "cpu":
         print("Cuda was not found.")
         return
@@ -51,10 +68,6 @@ def main(train: bool, evaluate: Path, model: str, dataset: str, emb_length: int,
     if train:
         if model == "TVAE":
             for dataset in datasets:
-                ts = time.time()
-                timestamp = datetime.datetime.fromtimestamp(ts).strftime(
-                    '%Y-%m-%d_%H:%M:%S'
-                )
                 model = TVAE(
                     ntoken=dataset.vocab_size,
                     d_model=d_model,
@@ -82,10 +95,6 @@ def main(train: bool, evaluate: Path, model: str, dataset: str, emb_length: int,
 
         else:
             for dataset in datasets:
-                ts = time.time()
-                timestamp = datetime.datetime.fromtimestamp(ts).strftime(
-                    '%Y-%m-%d_%H:%M:%S'
-                )
                 model = NaiveVAE(
                     input_size=dataset.getInputSize(),
                     z_dim=z_dim,
