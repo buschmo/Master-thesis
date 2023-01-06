@@ -19,7 +19,7 @@ class BaseModel(nn.Module):
     def update_filepath(self, timestamp=""):
         dir_name = Path("checkpoints").absolute()
         self.filepath = Path(dir_name, self.foldername,
-                             self.__str__()+"_"+timestamp + "_model.pt")
+                             self.__str__()+"_"+timestamp, "model.pt")
 
     def save(self):
         if not self.filepath.parent.exists():
@@ -33,7 +33,7 @@ class BaseModel(nn.Module):
             self.filepath.parent.mkdir(parents=True)
 
         torch.save(self.state_dict(), self.filepath.with_stem(
-            f"{self.filepath.stem}_{epoch_num}"))
+            f"{epoch_num}"))
         print(f"Model checkpoint {self} saved for epoch {epoch_num}.")
 
     def load(self):
