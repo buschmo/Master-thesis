@@ -130,16 +130,20 @@ class DatasetWordPiece(BaseDataset):
                 "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned")
             self.path_normal_input = Path(
                 "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned")
-            self.path_easy = Path(f"data/SimpleWikipedia/WordPieceEasy{max_length}.pt")
-            self.path_normal = Path(f"data/SimpleWikipedia/WordPieceNormal{max_length}.pt")
+            self.path_easy = Path(
+                f"data/SimpleWikipedia/WordPieceEasy{max_length}.pt")
+            self.path_normal = Path(
+                f"data/SimpleWikipedia/WordPieceNormal{max_length}.pt")
             self.str = "SimpleWikipediaCorpus"
             model_name = "bert-base-uncased"
 
         else:
             self.path_easy_input = Path("data/SimpleGerman/fixed_easy.txt")
             self.path_normal_input = Path("data/SimpleGerman/fixed_normal.txt")
-            self.path_easy = Path(f"data/SimpleGerman/WordPieceEasy{max_length}.pt")
-            self.path_normal = Path(f"data/SimpleGerman/WordPieceNormal{max_length}.pt")
+            self.path_easy = Path(
+                f"data/SimpleGerman/WordPieceEasy{max_length}.pt")
+            self.path_normal = Path(
+                f"data/SimpleGerman/WordPieceNormal{max_length}.pt")
             self.str = "SimpleGermanCorpus"
             model_name = "deepset/gbert-base"
 
@@ -164,6 +168,9 @@ class DatasetWordPiece(BaseDataset):
         return self.str
 
     def createDataset(self):
+        self.over_model_length = 0
+        self.over_max_length = 0
+
         def generator(file):
             with open(file) as fp:
                 if self.large:
@@ -171,12 +178,14 @@ class DatasetWordPiece(BaseDataset):
                 else:
                     lines = [i.strip() for i in fp.readlines()]
             for line in lines:
-                line_token = self.tokenizer.encode(line, padding="max_length")
-                if len(line_token) > self.max_length:
+                line_tokens = self.tokenizer.encode(line, padding="max_length")
+                if len(line_tokens) > 512:
+                    self.over_model_length += 1
                     continue
-                tokens = line_token[:self.max_length-1]
-                tokens.append(line_token[-1])
-                yield tokens
+                if line_tokens[self.max_length-1] not in [self.PAD, self.SEP]:
+                    self.over_max_length += 1
+                    continue
+                yield line_tokens
 
         if not self.path_easy.exists():
             g1 = generator(self.path_easy_input)
@@ -188,3 +197,6 @@ class DatasetWordPiece(BaseDataset):
             normal_embeddings = [i for i in tqdm(g2, desc=f"Normal {self}")]
             t = torch.LongTensor(normal_embeddings)
             torch.save(t, self.path_normal)
+        print(
+            f"Lines longer than model length: {self.over_model_length}\nLines longer than max length: {self.over_max_length}")
+
