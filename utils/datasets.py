@@ -143,6 +143,7 @@ class DatasetWordPiece(BaseDataset):
             self.str = "SimpleGermanCorpus"
             model_name = "deepset/gbert-base"
 
+        self.str += str(max_length)
         self.max_length = max_length
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.vocab_size = len(self.tokenizer.get_vocab())
