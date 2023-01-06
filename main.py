@@ -14,8 +14,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 @click.command()
+@click.option("-t", "--train", "train", type=bool, default=False, show_default=True, help="")
+@click.option("-e", "--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
 @click.option("-M", "--model", "model", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
 @click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="All", show_default=True, help="Determine the dataset(s) to be used.")
+@click.option("-L", "--emb-length", "emb_length", type=int, default=512, show_default=True, help="Sets the length of the WordPiece embedding.")
 @click.option("-N", "--num-epochs", type=int, default=50, show_default=True, help="Number of epochs to be trained.")
 @click.option("-B", "--batch-size", "batch_size", type=int, default=32, show_default=True, help="Size of the batches to be trained.")
 @click.option("--reg/--no-reg", "use_reg_loss", default=True,  show_default=True, help="Use regualarization as defined by ")
@@ -27,9 +30,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer")
 @click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value")
-@click.option("-e", "--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
-@click.option("-t", "--train", "train", type=bool, default=False, show_default=True, help="")
-def main(train: bool, evaluate: Path, model: str, dataset: str, num_epochs: int, batch_size: int, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(train: bool, evaluate: Path, model: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     if device == "cpu":
         print("Cuda was not found.")
         return
