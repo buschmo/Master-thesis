@@ -59,13 +59,15 @@ class SimpleGermanDatasetBERT(BaseDataset):
         if not self.path_easy.exists():
             g1 = generator("data/SimpleGerman/fixed_easy.txt")
             # use CLS embedding as sentence embedding
-            easy_embeddings = [i[0][0] for i in tqdm(pipe(g1), desc="German Easy embeddings")]
+            easy_embeddings = [i[0][0] for i in tqdm(
+                pipe(g1), desc="German Easy embeddings")]
             t = torch.tensor(easy_embeddings)
             torch.save(t, self.path_easy)
         if not self.path_normal.exists():
             g2 = generator("data/SimpleGerman/fixed_normal.txt")
             # use CLS embedding as sentence embedding
-            normal_embeddings = [i[0][0] for i in tqdm(pipe(g2), desc="German Normal embeddings")]
+            normal_embeddings = [i[0][0] for i in tqdm(
+                pipe(g2), desc="German Normal embeddings")]
             t = torch.tensor(normal_embeddings)
             torch.save(t, self.path_normal)
 
@@ -106,28 +108,46 @@ class SimpleWikipediaDatasetBERT(BaseDataset):
             g1 = generator(
                 "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned", model_name)
             # use CLS embedding as sentence embedding
-            easy_embeddings = [i[0][0] for i in tqdm(pipe(g1), desc="Wikipedia Easy embeddings")]
+            easy_embeddings = [i[0][0] for i in tqdm(
+                pipe(g1), desc="Wikipedia Easy embeddings")]
             t = torch.tensor(easy_embeddings)
             torch.save(t, self.path_easy)
         if not self.path_normal.exists():
             g2 = generator(
                 "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned", model_name)
             # use CLS embedding as sentence embedding
-            normal_embeddings = [i[0][0] for i in tqdm(pipe(g2), desc="Wikipedia Normal embeddings")]
-            t=torch.tensor(normal_embeddings)
+            normal_embeddings = [i[0][0] for i in tqdm(
+                pipe(g2), desc="Wikipedia Normal embeddings")]
+            t = torch.tensor(normal_embeddings)
             torch.save(t, self.path_normal)
 
 
-class SimpleGermanDatasetWordPiece(BaseDataset):
-    def __init__(self, max_length: int=None):
-        self.path_easy = Path("data/SimpleGerman/WordPieceEasy.pt")
-        self.path_normal = Path("data/SimpleGerman/WordPieceNormal.pt")
+class DatasetWordPiece(BaseDataset):
+    def __init__(self, large: bool = False, max_length: int = 512):
+        self.large = large
+        if large:
+            self.path_easy_input = Path(
+                "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned")
+            self.path_normal_input = Path(
+                "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned")
+            self.path_easy = Path(f"data/SimpleWikipedia/WordPieceEasy{max_length}.pt")
+            self.path_normal = Path(f"data/SimpleWikipedia/WordPieceNormal{max_length}.pt")
+            self.str = "SimpleWikipediaCorpus"
+            model_name = "bert-base-uncased"
 
-        model_name = "deepset/gbert-base"
+        else:
+            self.path_easy_input = Path("data/SimpleGerman/fixed_easy.txt")
+            self.path_normal_input = Path("data/SimpleGerman/fixed_normal.txt")
+            self.path_easy = Path(f"data/SimpleGerman/WordPieceEasy{max_length}.pt")
+            self.path_normal = Path(f"data/SimpleGerman/WordPieceNormal{max_length}.pt")
+            self.str = "SimpleGermanCorpus"
+            model_name = "deepset/gbert-base"
+
+        self.max_length = max_length
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.vocab_size = len(self.tokenizer.get_vocab())
-        self.max_length = max_length
-        self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]") # symbols for start, pad and end
+        # Save symbols for start, pad and end. Needed for trainer
+        self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]")
 
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
@@ -137,15 +157,18 @@ class SimpleGermanDatasetWordPiece(BaseDataset):
         self.embeddings = torch.cat(
             [t_easy, t_normal])
         self.labels = torch.cat(
-            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])]).view((-1,1))
+            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])]).view((-1, 1))
 
     def __str__(self):
-        return "SimpleGermanCorpus"
+        return self.str
 
     def createDataset(self):
         def generator(file):
             with open(file) as fp:
-                lines = [i.strip() for i in fp.readlines()]
+                if self.large:
+                    lines = [i.split("\t")[-1].strip() for i in fp.readlines()]
+                else:
+                    lines = [i.strip() for i in fp.readlines()]
             for line in lines:
                 line_token = self.tokenizer.encode(line, padding="max_length")
                 if len(line_token) > self.max_length:
@@ -155,62 +178,12 @@ class SimpleGermanDatasetWordPiece(BaseDataset):
                 yield tokens
 
         if not self.path_easy.exists():
-            easy_embeddings = [i for i in tqdm(
-                generator("data/SimpleGerman/fixed_easy.txt"), desc="Easy German")]
+            g1 = generator(self.path_easy_input)
+            easy_embeddings = [i for i in tqdm(g1, desc=f"Easy {self}")]
             t = torch.LongTensor(easy_embeddings)
             torch.save(t, self.path_easy)
         if not self.path_normal.exists():
-            normal_embeddings = [i for i in tqdm(generator(
-                "data/SimpleGerman/fixed_normal.txt"), desc="Normal German")]
-            t = torch.LongTensor(normal_embeddings)
-            torch.save(t, self.path_normal)
-
-
-class SimpleWikipediaDatasetWordPiece(BaseDataset):
-    def __init__(self):
-        self.path_easy = Path("data/SimpleWikipedia/WordPieceEasy.pt")
-        self.path_normal = Path("data/SimpleWikipedia/WordPieceNormal.pt")
-
-        # English BERT from https://huggingface.co/bert-base-uncased
-        model_name = "bert-base-uncased"
-        self.tokenizer = BertTokenizer.from_pretrained(model_name)
-        self.vocab_size = len(self.tokenizer.get_vocab())
-        self.CLS, self.PAD, self.SEP = self.tokenizer.encode("[PAD]") # symbols for start, pad and end
-
-        if not self.path_easy.exists() or not self.path_normal.exists():
-            self.createDataset()
-        t_easy = torch.load(self.path_easy).long()
-        t_normal = torch.load(self.path_normal).long()
-
-        self.embeddings = torch.cat(
-            [t_easy, t_normal])
-        self.labels = torch.cat(
-            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])]).view((-1,1))
-
-    def __str__(self):
-        return "SimpleWikipediaCorpus"
-
-    def createDataset(self):
-        def generator(file):
-            with open(file) as fp:
-                lines = [i.split("\t")[-1].strip() for i in fp.readlines()]
-            for line in lines:
-                line_token = self.tokenizer.encode(line, padding="max_length")
-                if len(line_token) > 512:
-                    continue
-                yield line_token
-
-        if not self.path_easy.exists():
-            g1 = generator(
-                "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned")
-            # use CLS embedding as sentence embedding
-            easy_embeddings = [i for i in tqdm(g1, desc="Wikipedia Easy")]
-            t = torch.LongTensor(easy_embeddings)
-            torch.save(t, self.path_easy)
-        if not self.path_normal.exists():
-            g2 = generator(
-                "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned")
-            # use CLS embedding as sentence embedding
-            normal_embeddings = [i for i in tqdm(g2, desc="Wikipedia Normal")]
+            g2 = generator(self.path_normal_input)
+            normal_embeddings = [i for i in tqdm(g2, desc=f"Normal {self}")]
             t = torch.LongTensor(normal_embeddings)
             torch.save(t, self.path_normal)
