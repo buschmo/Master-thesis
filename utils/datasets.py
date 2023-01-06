@@ -1,3 +1,4 @@
+import click
 import numpy as np
 import os
 import pandas as pd
@@ -200,3 +201,19 @@ class DatasetWordPiece(BaseDataset):
         print(
             f"Lines longer than model length: {self.over_model_length}\nLines longer than max length: {self.over_max_length}")
 
+
+@click.command()
+@click.option("-w", "--wordpiece", "wordpiece", type=bool, is_flag=True, help="Create WordPiece datasets.")
+@click.option("-l", "--emb-length", "emb_length", type=int, default=512, help="Set the maximum length of WordPiece embedding")
+@click.option("-b", "--bert", "bert", type=bool, is_flag=True, help="Create BERT embedding datasets.")
+def main(wordpiece: bool, emb_length: int, bert: bool):
+    if wordpiece:
+        DatasetWordPiece(large=False, max_length=emb_length)
+        DatasetWordPiece(large=True, max_length=emb_length)
+    if bert:
+        SimpleGermanDatasetBERT()
+        SimpleWikipediaDatasetBERT()
+
+
+if __name__ == "__main__":
+    main()
