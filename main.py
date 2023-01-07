@@ -69,10 +69,12 @@ def main(dry_run: bool, train: bool, evaluate: Path, model: str, dataset: str, e
 
     if evaluate:
         eval(evaluate)
-
+        
     if train:
-        if model == "TVAE":
-            for dataset in datasets:
+        for dataset in datasets:
+            folderpath = Path(str(dataset), "_".join([str(model), timestamp, "Reg"+str(use_reg_loss)]))
+
+            if model == "TVAE":
                 model = TVAE(
                     ntoken=dataset.vocab_size,
                     d_model=d_model,
@@ -84,22 +86,10 @@ def main(dry_run: bool, train: bool, evaluate: Path, model: str, dataset: str, e
                     dropout=dropout,
                     use_gru=False,
                     foldername=dataset.__str__(),
-                    timestamp=timestamp)
-                trainer = TVAETrainer(
-                    dataset=dataset,
-                    model=model,
-                    checkpoint_index=checkpoint_index,
-                    use_reg_loss=use_reg_loss,
                     timestamp=timestamp
                 )
-
-                trainer.train_model(
-                    batch_size=batch_size,
-                    num_epochs=num_epochs
-                )
-
-        else:
-            for dataset in datasets:
+                Trainer = TVAETrainer
+            else:
                 model = NaiveVAE(
                     input_size=dataset.getInputSize(),
                     z_dim=z_dim,
@@ -108,18 +98,22 @@ def main(dry_run: bool, train: bool, evaluate: Path, model: str, dataset: str, e
                     foldername=dataset.__str__(),
                     timestamp=timestamp
                 )
-                trainer = NaiveTrainer(
-                    dataset=dataset,
-                    model=model,
-                    checkpoint_index=checkpoint_index,
-                    use_reg_loss=use_reg_loss,
-                    timestamp=timestamp
-                )
+                Trainer = NaiveTrainer
+            
+            trainer = Trainer(
+                dataset=dataset,
+                model=model,
+                checkpoint_index=checkpoint_index,
+                use_reg_loss=use_reg_loss,
+                folderpath=folderpath
+            )
 
-                trainer.train_model(
-                    batch_size=batch_size,
-                    num_epochs=num_epochs
-                )
+            model.update_filepath(folderpath=folderpath)
+
+            trainer.train_model(
+                batch_size=batch_size,
+                num_epochs=num_epochs
+            )
 
 
 def eval(path):

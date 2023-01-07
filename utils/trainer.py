@@ -22,12 +22,9 @@ ATTRIBUTE_DIMENSIONS = {
 
 
 class Trainer():
-    def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, timestamp=""):
+    def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
         # from trainer
-        self.writer = SummaryWriter(
-            log_dir=Path("runs", dataset.__str__(),  "_".join(
-                [model.__str__(), "Reg"+str(use_reg_loss), timestamp]))
-        )
+        self.writer = SummaryWriter(log_dir=Path("runs", folderpath))
 
         self.dataset = dataset
         self.model = model
