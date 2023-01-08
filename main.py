@@ -14,7 +14,6 @@ from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT, 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-
 @click.command()
 @click.option("--dry-run", "dry_run", is_flag=True, type=bool, default=False, help="Do not train/evaluate any model.")
 @click.option("-t", "--train", "train", is_flag=True, type=bool, default=False, help="Flag, if a model is to be trained.")
@@ -24,7 +23,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 @click.option("-L", "--emb-length", "emb_length", type=int, default=512, show_default=True, help="Sets the length of the WordPiece embedding.")
 @click.option("-N", "--num-epochs", type=int, default=50, show_default=True, help="Number of epochs to be trained.")
 @click.option("-B", "--batch-size", "batch_size", type=int, default=32, show_default=True, help="Size of the batches to be trained.")
-@click.option("--reg", "use_reg_loss", is_flag=True, type=bool, default=True,  help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
+@click.option("--no-reg", "use_reg_loss", is_flag=True, type=bool, default=True, show_default=True  help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
 @click.option("-C", "--checkpoint-index", "checkpoint_index", type=int, default=0, show_default=True, help="Frequency of checkpoint creation. 0 disables checkpoints.")
 @click.option("-d", "--d-model", "d_model", type=int, default=256, show_default=True, help="Internal dimension size of the TVAE model. Each sublayer produces this output size.")
 @click.option("-z", "--z-dim", "z_dim", type=int, default=64, show_default=True, help="Size of the latent dimension.")
