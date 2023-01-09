@@ -79,6 +79,10 @@ class Trainer():
                 "loss/training", mean_loss_train, epoch_index)
             self.writer.add_scalar(
                 "loss/validation", mean_loss_val, epoch_index)
+            self.writer.add_scalar(
+                "accuracy/training", mean_accuracy_train, epoch_index)
+            self.writer.add_scalar(
+                "accuracy/validation", mean_accuracy_val, epoch_index)
 
             data_element = {
                 'epoch_index': epoch_index,
