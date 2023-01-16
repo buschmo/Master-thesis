@@ -12,17 +12,19 @@ from models.tvae_model import TVAE
 from models.tvae_trainer import TVAETrainer
 from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT, DatasetWordPiece
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
 @click.command()
-@click.option("--dry-run", "dry_run", is_flag=True, type=bool, default=False, help="Do not train/evaluate any model.")
-@click.option("-t", "--train", "train", is_flag=True, type=bool, default=False, help="Flag, if a model is to be trained.")
-@click.option("-e", "--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
-@click.option("-M", "--model", "model", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
-@click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="All", show_default=True, help="Determine the dataset(s) to be used.")
-@click.option("-L", "--emb-length", "emb_length", type=int, default=512, show_default=True, help="Sets the length of the WordPiece embedding.")
-@click.option("-N", "--num-epochs", type=int, default=50, show_default=True, help="Number of epochs to be trained.")
-@click.option("-B", "--batch-size", "batch_size", type=int, default=32, show_default=True, help="Size of the batches to be trained.")
+@click.option("--dry-run", "dry_run", is_flag=True, type=bool, default=False, show_default=True, help="Do not train/evaluate any model.")
+@click.option("--train", "train", is_flag=True, type=bool, default=False, show_default=True, help="Flag, if a model is to be trained.")
+@click.option("--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
+@click.option("-M", "--model", "model_selection", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
+@click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="German", show_default=True, help="Determine the dataset(s) to be used.")
+@click.option("-E", "--emb-length", "emb_length", type=int, default=128, show_default=True, help="Sets the length of the WordPiece embedding.")
+@click.option("-N", "--num-epochs", "--epochs", "num_epochs", type=int, default=25, show_default=True, help="Number of epochs to be trained.")
+@click.option("-B", "--batch-size", "batch_size", type=int, default=16, show_default=True, help="Size of the batches to be trained.")
+@click.option("-L", "--learning-rate", "learning_rate", type=float, default=[1e-4], multiple=True, show_default=True, help="Learning rate(s), multiple option possible")
+@click.option("-Be", "--beta", "beta", type=float, default=[4.0], multiple=True, show_default=True, help="Beta, impact of kld on loss")
+@click.option("-Ga", "--gamma", "gamma", type=float, default=[10.0], multiple=True, show_default=True, help="Gamma, impact of regularization on loss")
 @click.option("--no-reg", "use_reg_loss", is_flag=True, type=bool, default=True, show_default=True, help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
 @click.option("-C", "--checkpoint-index", "checkpoint_index", type=int, default=0, show_default=True, help="Frequency of checkpoint creation. 0 disables checkpoints.")
 @click.option("-d", "--d-model", "d_model", type=int, default=256, show_default=True, help="Internal dimension size of the TVAE model. Each sublayer produces this output size.")
@@ -32,87 +34,114 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
 @click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
-def main(dry_run: bool, train: bool, evaluate: Path, model: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, learning_rate: float, beta:float, gamma:float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+    # TODO assert value must adhere to specific ranges
+    # e.g. 0 < lr < 10 for example 
+
     args = locals()
 
     print("Parameters:")
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(args)
 
-    ts = time.time()
-    timestamp = datetime.datetime.fromtimestamp(ts).strftime(
-        '%Y-%m-%d_%H:%M:%S'
-    )
-    p = Path("logs", f"{timestamp}.json")
-    if not p.parent.exists():
-        p.parent.mkdir(parents=True)
-    with open(p, "w") as fp:
-        json.dump(args, fp, indent=4)
-
-    if device == "cpu":
+    if not torch.cuda.is_available():
         print("Cuda was not found.")
         return
 
     if dataset == "German":
-        datasets = [DatasetWordPiece(large=False, max_length=emb_length)] if model == "TVAE" else [
+        datasets = [DatasetWordPiece(large=False, max_length=emb_length)] if model_selection == "TVAE" else [
             SimpleGermanDatasetBERT()]
     elif dataset == "Wikipedia":
-        datasets = [DatasetWordPiece(large=True, max_length=emb_length)] if model == "TVAE" else [
+        datasets = [DatasetWordPiece(large=True, max_length=emb_length)] if model_selection == "TVAE" else [
             SimpleGermanDatasetBERT()]
     elif dataset == "All":
-        datasets = [DatasetWordPiece(large=False, max_length=emb_length), DatasetWordPiece(large=True, max_length=emb_length)] if model == "TVAE" else [
+        datasets = [DatasetWordPiece(large=False, max_length=emb_length), DatasetWordPiece(large=True, max_length=emb_length)] if model_selection == "TVAE" else [
             SimpleGermanDatasetBERT(), SimpleWikipediaDatasetBERT()]
 
-    if dry_run:
+    if dry_run or not (train or evaluate):
         return
 
     if evaluate:
         eval(evaluate)
-        
+
+    ts = time.time()
+    timestamp = datetime.datetime.fromtimestamp(ts).strftime(
+        '%Y-%m-%d_%H:%M:%S'
+    )
+    
+    p = Path("logs", f"{timestamp}_{model_selection}_{str(dataset)}_summary.json")
+    folder_path = Path(f"{timestamp}_{model_selection}_{str(dataset)}")
+    folder_log = Path("logs", folder_path)
+    if not folder_log.exists():
+        folder_log.mkdir(parents=True)
+    with open(p, "w") as fp:
+        json.dump(args, fp, indent=4)    
+
     if train:
-        for dataset in datasets:
-            folderpath = Path(str(dataset), "_".join([str(model), timestamp, "Reg"+str(use_reg_loss)]))
+        for lr in learning_rate:
+            for ga in gamma:
+                for be in beta:
+                    for dataset in datasets:
+                        args["dataset"] = str(dataset)
+                        args["learning_rate"] = lr
+                        args["gamma"] = ga
+                        args["beta"] = be
 
-            if model == "TVAE":
-                model = TVAE(
-                    ntoken=dataset.vocab_size,
-                    d_model=d_model,
-                    z_dim=z_dim,
-                    nhead_encoder=nhead_encoder,
-                    nhead_decoder=nhead_decoder,
-                    d_hid=d_hid,
-                    nlayers=nlayers,
-                    dropout=dropout,
-                    use_gru=False,
-                    foldername=dataset.__str__(),
-                    timestamp=timestamp
-                )
-                Trainer = TVAETrainer
-            else:
-                model = NaiveVAE(
-                    input_size=dataset.getInputSize(),
-                    z_dim=z_dim,
-                    encoder_dim=nhead_encoder,
-                    decoder_dim=nhead_decoder,
-                    foldername=dataset.__str__(),
-                    timestamp=timestamp
-                )
-                Trainer = NaiveTrainer
-            
-            trainer = Trainer(
-                dataset=dataset,
-                model=model,
-                checkpoint_index=checkpoint_index,
-                use_reg_loss=use_reg_loss,
-                folderpath=folderpath
-            )
+                        ts = time.time()
+                        timestamp = datetime.datetime.fromtimestamp(ts).strftime(
+                            '%Y-%m-%d_%H:%M:%S'
+                        )
 
-            model.update_filepath(folderpath=folderpath)
+                        if model_selection == "TVAE":
+                            model = TVAE(
+                                ntoken=dataset.vocab_size,
+                                d_model=d_model,
+                                z_dim=z_dim,
+                                nhead_encoder=nhead_encoder,
+                                nhead_decoder=nhead_decoder,
+                                d_hid=d_hid,
+                                nlayers=nlayers,
+                                dropout=dropout,
+                                use_gru=False,
+                                foldername=dataset.__str__(),
+                                timestamp=timestamp
+                            )
+                            Trainer = TVAETrainer
+                        else:
+                            model = NaiveVAE(
+                                input_size=dataset.getInputSize(),
+                                z_dim=z_dim,
+                                encoder_dim=nhead_encoder,
+                                decoder_dim=nhead_decoder,
+                                foldername=dataset.__str__(),
+                                timestamp=timestamp
+                            )
+                            Trainer = NaiveTrainer
+                        
+                        p = Path(folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
+                        with open(p, "w") as fp:
+                            json.dump(args, fp, indent=4)    
 
-            trainer.train_model(
-                batch_size=batch_size,
-                num_epochs=num_epochs
-            )
+                        path = Path(str(dataset), folder_path, "_".join(
+                            [timestamp, str(model), "Reg"+str(use_reg_loss)]))
+
+                        trainer = Trainer(
+                            dataset=dataset,
+                            model=model,
+                            checkpoint_index=checkpoint_index,
+                            lr=lr,
+                            beta=be,
+                            gamma=ga,
+                            use_reg_loss=use_reg_loss,
+                            folderpath=path
+                        )
+
+                        model.update_filepath(folderpath=path)
+
+                        trainer.train_model(
+                            batch_size=batch_size,
+                            num_epochs=num_epochs
+                        )
 
 
 def eval(path):
@@ -168,7 +197,6 @@ def eval(path):
 
                 model.eval()
                 trainer.eval_model(data_loader, epoch_num)
-
 
 if __name__ == "__main__":
     main()
