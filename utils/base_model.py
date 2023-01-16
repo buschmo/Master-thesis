@@ -4,10 +4,9 @@ from pathlib import Path
 
 
 class BaseModel(nn.Module):
-
-    def __init__(self, foldername = "", timestamp=""):
+    def __init__(self, foldername="", timestamp=""):
         super().__init__()
-        folderpath = Path(foldername, "_".join([self.__str__(), timestamp]))
+        folderpath = Path(foldername, "_".join([timestamp, self.__str__()]))
         self.update_filepath(folderpath)
 
     def __repr__(self):
