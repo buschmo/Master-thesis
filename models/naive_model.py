@@ -33,7 +33,7 @@ class NaiveVAE(BaseModel):
         self.init_weights()
 
     def __str__(self):
-        return f"NaiveModel_{self.encoder_dim}_{self.z_dim}_{self.decoder_dim}"
+        return "NaiveModel"
 
     def encode(self, x):
         hidden = self.encoder(x)

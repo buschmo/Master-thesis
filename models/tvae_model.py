@@ -70,7 +70,7 @@ class TVAE(BaseModel):
         # self.init_weights()
 
     def __str__(self):
-        return f"TVAE_{self.d_model}_{self.z_dim}_{self.nhead_encoder}_{self.nhead_decoder}_{self.d_hid}_{self.nlayers}_{self.dropout}"
+        return "TVAE"
 
     def encode(self, x: Tensor, padding_mask: Tensor) -> Tensor:
         x = self.embedder(x)
