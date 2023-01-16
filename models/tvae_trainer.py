@@ -106,8 +106,11 @@ class TVAETrainer(Trainer):
     @staticmethod
     def mean_accuracy(weights, targets):
         weights = torch.argmax(weights, dim=-1)
-        mask = targets.ge(0.5) # remove [PAD] label from accuracy calculation
-        numerator = torch.sum(targets.masked_select(mask) == weights.masked_select(mask))
+        # remove [PAD] label from accuracy calculation
+        # [PAD] == 0
+        mask = targets.ge(0.5)
+        numerator = torch.sum(targets.masked_select(
+            mask) == weights.masked_select(mask))
         denominator = len(targets.masked_select(mask))
         acc = numerator / denominator
         return acc
