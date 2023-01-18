@@ -5,6 +5,8 @@ import click
 import pprint
 import json
 from pathlib import Path
+from itertools import product
+from tqdm import tqdm
 
 from models.naive_model import NaiveVAE
 from models.naive_trainer import NaiveTrainer
@@ -78,70 +80,70 @@ def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, datas
         json.dump(args, fp, indent=4)    
 
     if train:
-        for lr in learning_rate:
-            for ga in gamma:
-                for be in beta:
-                    for dataset in datasets:
-                        args["dataset"] = str(dataset)
-                        args["learning_rate"] = lr
-                        args["gamma"] = ga
-                        args["beta"] = be
+        for lr, ga, be, ca, dataset in tqdm(product(learning_rate, gamma, beta, capacity, datasets), desc="Models"):
+            args["dataset"] = str(dataset)
+            args["learning_rate"] = lr
+            args["gamma"] = ga
+            args["beta"] = be
+            args["capacity"] = ca
 
-                        ts = time.time()
-                        timestamp = datetime.datetime.fromtimestamp(ts).strftime(
-                            '%Y-%m-%d_%H:%M:%S'
-                        )
+            ts = time.time()
+            timestamp = datetime.datetime.fromtimestamp(ts).strftime(
+                '%Y-%m-%d_%H:%M:%S'
+            )
 
-                        if model_selection == "TVAE":
-                            model = TVAE(
-                                ntoken=dataset.vocab_size,
-                                d_model=d_model,
-                                z_dim=z_dim,
-                                nhead_encoder=nhead_encoder,
-                                nhead_decoder=nhead_decoder,
-                                d_hid=d_hid,
-                                nlayers=nlayers,
-                                dropout=dropout,
-                                use_gru=False,
-                                foldername=dataset.__str__(),
-                                timestamp=timestamp
-                            )
-                            Trainer = TVAETrainer
-                        else:
-                            model = NaiveVAE(
-                                input_size=dataset.getInputSize(),
-                                z_dim=z_dim,
-                                encoder_dim=nhead_encoder,
-                                decoder_dim=nhead_decoder,
-                                foldername=dataset.__str__(),
-                                timestamp=timestamp
-                            )
-                            Trainer = NaiveTrainer
-                        
-                        p = Path(folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
-                        with open(p, "w") as fp:
-                            json.dump(args, fp, indent=4)    
+            if model_selection == "TVAE":
+                model = TVAE(
+                    ntoken=dataset.vocab_size,
+                    d_model=d_model,
+                    z_dim=z_dim,
+                    nhead_encoder=nhead_encoder,
+                    nhead_decoder=nhead_decoder,
+                    d_hid=d_hid,
+                    nlayers=nlayers,
+                    dropout=dropout,
+                    use_gru=False,
+                    foldername=dataset.__str__(),
+                    timestamp=timestamp
+                )
+                Trainer = TVAETrainer
+            else:
+                model = NaiveVAE(
+                    input_size=dataset.getInputSize(),
+                    z_dim=z_dim,
+                    encoder_dim=nhead_encoder,
+                    decoder_dim=nhead_decoder,
+                    foldername=dataset.__str__(),
+                    timestamp=timestamp
+                )
+                Trainer = NaiveTrainer
 
-                        path = Path(str(dataset), folder_path, "_".join(
-                            [timestamp, str(model), "Reg"+str(use_reg_loss)]))
+            p = Path(
+                folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
+            with open(p, "w") as fp:
+                json.dump(args, fp, indent=4)
 
-                        trainer = Trainer(
-                            dataset=dataset,
-                            model=model,
-                            checkpoint_index=checkpoint_index,
-                            lr=lr,
-                            beta=be,
-                            gamma=ga,
-                            use_reg_loss=use_reg_loss,
-                            folderpath=path
-                        )
+            path = Path(str(dataset), folder_path, "_".join(
+                [timestamp, str(model), "Reg"+str(use_reg_loss)]))
 
-                        model.update_filepath(folderpath=path)
+            trainer = Trainer(
+                dataset=dataset,
+                model=model,
+                checkpoint_index=checkpoint_index,
+                lr=lr,
+                beta=be,
+                gamma=ga,
+                capacity=ca,
+                use_reg_loss=use_reg_loss,
+                folderpath=path
+            )
 
-                        trainer.train_model(
-                            batch_size=batch_size,
-                            num_epochs=num_epochs
-                        )
+            model.update_filepath(folderpath=path)
+
+            trainer.train_model(
+                batch_size=batch_size,
+                num_epochs=num_epochs
+            )
 
 
 def eval(path):
