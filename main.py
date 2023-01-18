@@ -26,6 +26,7 @@ from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT, 
 @click.option("-B", "--batch-size", "batch_size", type=int, default=16, show_default=True, help="Size of the batches to be trained.")
 @click.option("-L", "--learning-rate", "learning_rate", type=float, default=[1e-4], multiple=True, show_default=True, help="Learning rate(s), multiple option possible")
 @click.option("-Be", "--beta", "beta", type=float, default=[4.0], multiple=True, show_default=True, help="Beta, impact of kld on loss")
+@click.option("-Ca", "--capacity", "capacity", type=float, default=[0.0], multiple=True, show_default=True, help="Capacity, impact of regularization on loss")
 @click.option("-Ga", "--gamma", "gamma", type=float, default=[10.0], multiple=True, show_default=True, help="Gamma, impact of regularization on loss")
 @click.option("--no-reg", "use_reg_loss", is_flag=True, type=bool, default=True, show_default=True, help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
 @click.option("-C", "--checkpoint-index", "checkpoint_index", type=int, default=0, show_default=True, help="Frequency of checkpoint creation. 0 disables checkpoints.")
@@ -36,9 +37,9 @@ from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT, 
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
 @click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
-def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, learning_rate: float, beta:float, gamma:float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, learning_rate: float, beta: float, capacity: float, gamma: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     # TODO assert value must adhere to specific ranges
-    # e.g. 0 < lr < 10 for example 
+    # e.g. 0 < lr < 10 for example
 
     args = locals()
 
@@ -70,14 +71,15 @@ def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, datas
     timestamp = datetime.datetime.fromtimestamp(ts).strftime(
         '%Y-%m-%d_%H:%M:%S'
     )
-    
-    p = Path("logs", f"{timestamp}_{model_selection}_{str(dataset)}_summary.json")
+
+    p = Path(
+        "logs", f"{timestamp}_{model_selection}_{str(dataset)}_summary.json")
     folder_path = Path(f"{timestamp}_{model_selection}_{str(dataset)}")
     folder_log = Path("logs", folder_path)
     if not folder_log.exists():
         folder_log.mkdir(parents=True)
     with open(p, "w") as fp:
-        json.dump(args, fp, indent=4)    
+        json.dump(args, fp, indent=4)
 
     if train:
         for lr, ga, be, ca, dataset in tqdm(product(learning_rate, gamma, beta, capacity, datasets), desc="Models"):
@@ -199,6 +201,7 @@ def eval(path):
 
                 model.eval()
                 trainer.eval_model(data_loader, epoch_num)
+
 
 if __name__ == "__main__":
     main()
