@@ -56,7 +56,7 @@ class Trainer():
         for epoch_index in tqdm(range(num_epochs), desc="Epochs"):
             # Train the model
             self.model.train()
-            mean_loss_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
+            mean_loss_dict_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
                 data_loader=generator_train,
                 epoch_num=epoch_index,
                 train=True
@@ -64,7 +64,7 @@ class Trainer():
 
             # Evaluate the model
             self.model.eval()
-            mean_loss_val, mean_accuracy_val = self.loss_and_acc_on_epoch(
+            mean_loss_dict_val, mean_accuracy_val = self.loss_and_acc_on_epoch(
                 data_loader=generator_val,
                 epoch_num=epoch_index,
                 train=False
@@ -75,10 +75,12 @@ class Trainer():
                 epoch_num=epoch_index
             )
 
-            self.writer.add_scalar(
-                "loss/training", mean_loss_train, epoch_index)
-            self.writer.add_scalar(
-                "loss/validation", mean_loss_val, epoch_index)
+            for k in mean_loss_dict_train:
+                self.writer.add_scalar(
+                    f"loss_{k}/training", mean_loss_dict_train[k], epoch_index)
+                self.writer.add_scalar(
+                    f"loss_{k}/validation", mean_loss_dict_val[k], epoch_index)
+            
             self.writer.add_scalar(
                 "accuracy/training", mean_accuracy_train, epoch_index)
             self.writer.add_scalar(
@@ -87,9 +89,9 @@ class Trainer():
             data_element = {
                 'epoch_index': epoch_index,
                 'num_epochs': num_epochs,
-                'mean_loss_train': mean_loss_train,
+                'mean_loss_train': mean_loss_dict_train["sum"],
                 'mean_accuracy_train': mean_accuracy_train,
-                'mean_loss_val': mean_loss_val,
+                'mean_loss_val': mean_loss_dict_val["sum"],
                 'mean_accuracy_val': mean_accuracy_val
             }
             self.print_epoch_stats(**data_element)
@@ -101,7 +103,7 @@ class Trainer():
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):
         # from trainer
-        mean_loss = 0
+        mean_loss_dict = {}
         mean_accuracy = 0
         # for batch_num, batch in tqdm(enumerate(data_loader), desc="Batch"):
         for batch_num, batch in enumerate(data_loader):
@@ -109,21 +111,25 @@ class Trainer():
 
             self.optimizer.zero_grad()
 
-            loss, accuracy = self.loss_and_acc_for_batch(
+            loss_dict, accuracy = self.loss_and_acc_for_batch(
                 batch_data, epoch_num, batch_num, train=train
             )
+
+            loss = loss_dict["sum"]
 
             if train:
                 loss.backward()
                 self.optimizer.step()
 
-            mean_loss += utl.to_numpy(loss.mean())
+            for k,v in loss_dict.items():
+                mean_loss_dict[k] = utl.to_numpy(loss_dict[k].mean()) + mean_loss_dict.setdefault(k, 0)
             if accuracy is not None:
                 mean_accuracy += utl.to_numpy(accuracy)
 
-        mean_loss /= len(data_loader)
+        for k,v in mean_loss_dict.items():
+            mean_loss_dict[k] = v / len(data_loader)
         mean_accuracy /= len(data_loader)
-        return (mean_loss, mean_accuracy)
+        return (mean_loss_dict, mean_accuracy)
 
     def loss_and_acc_for_batch(self, batch, epoch_num=None, batch_num=None, train=True):
         raise NotImplementedError

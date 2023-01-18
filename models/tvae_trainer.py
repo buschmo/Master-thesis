@@ -91,8 +91,15 @@ class TVAETrainer(Trainer):
             weights=torch.sigmoid(prob),
             targets=tgt_true
         )
+        
+        loss_dict = {
+            "sum": loss,
+            "reconstruction": recons_loss,
+            "KLD": dist_loss,
+            "regularization": reg_loss
+        }
 
-        return loss, accuracy
+        return loss_dict, accuracy
 
     @staticmethod
     def reconstruction_loss(input, target):

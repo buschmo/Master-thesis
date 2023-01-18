@@ -67,8 +67,15 @@ class NaiveTrainer(Trainer):
             weights=torch.sigmoid(outputs),
             targets=inputs
         )
+        
+        loss_dict={
+            "sum": loss,
+            "reconstruction": recons_loss,
+            "KLD": dist_loss,
+            "regularization": reg_loss
+        }
 
-        return loss, accuracy
+        return loss_dict, accuracy
 
     # TODO staticmethod necessary? maybe move to other module?
 
