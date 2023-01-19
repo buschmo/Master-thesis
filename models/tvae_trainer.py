@@ -66,7 +66,7 @@ class TVAETrainer(Trainer):
         recons_loss = self.reconstruction_loss(prob, tgt_true)
 
         # compute KLD loss
-        dist_loss = self.compute_kld_loss(
+        dist_loss, kld = self.compute_kld_loss(
             z_dist, prior_dist, beta=self.beta, c=self.capacity
         )
 
@@ -91,11 +91,12 @@ class TVAETrainer(Trainer):
             weights=torch.sigmoid(prob),
             targets=tgt_true
         )
-        
+
         loss_dict = {
             "sum": loss,
             "reconstruction": recons_loss,
             "KLD": dist_loss,
+            "KLD_unscaled": kld,
             "regularization": reg_loss
         }
 
@@ -113,8 +114,7 @@ class TVAETrainer(Trainer):
     @staticmethod
     def mean_accuracy(weights, targets):
         weights = torch.argmax(weights, dim=-1)
-        # remove [PAD] label from accuracy calculation
-        # [PAD] == 0
+        # remove [PAD] label (== 0) from accuracy calculation
         mask = targets.ge(0.5)
         numerator = torch.sum(targets.masked_select(
             mask) == weights.masked_select(mask))
@@ -129,7 +129,7 @@ class TVAETrainer(Trainer):
         for sample_id, batch in enumerate(data_loader):
             batch_data = self.process_batch_data(batch)
             src, tgt, tgt_true, tgt_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch_data
-            labels = labels.to("cpu")
+            labels = labels.to("cpu")  # for numpy conversion later on
             _, _, _, z_tilde, _ = self.model(
                 src=src,
                 tgt=tgt,

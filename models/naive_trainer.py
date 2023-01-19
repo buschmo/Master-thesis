@@ -42,7 +42,7 @@ class NaiveTrainer(Trainer):
         recons_loss = self.reconstruction_loss(outputs, inputs)
 
         # compute KLD loss
-        dist_loss = self.compute_kld_loss(
+        dist_loss, kld = self.compute_kld_loss(
             z_dist, prior_dist, beta=self.beta, c=self.capacity
         )
 
@@ -67,11 +67,12 @@ class NaiveTrainer(Trainer):
             weights=torch.sigmoid(outputs),
             targets=inputs
         )
-        
-        loss_dict={
+
+        loss_dict = {
             "sum": loss,
             "reconstruction": recons_loss,
             "KLD": dist_loss,
+            "KLD_unscaled": kld,
             "regularization": reg_loss
         }
 
