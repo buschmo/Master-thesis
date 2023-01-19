@@ -64,23 +64,24 @@ class Trainer():
 
             # Evaluate the model
             self.model.eval()
-            mean_loss_dict_val, mean_accuracy_val = self.loss_and_acc_on_epoch(
-                data_loader=generator_val,
-                epoch_num=epoch_index,
-                train=False
-            )
+            with torch.no_grad():
+                mean_loss_dict_val, mean_accuracy_val = self.loss_and_acc_on_epoch(
+                    data_loader=generator_val,
+                    epoch_num=epoch_index,
+                    train=False
+                )
 
-            self.eval_model(
-                data_loader=generator_val,
-                epoch_num=epoch_index
-            )
+                self.eval_model(
+                    data_loader=generator_val,
+                    epoch_num=epoch_index
+                )
 
             for k in mean_loss_dict_train:
                 self.writer.add_scalar(
                     f"loss_{k}/training", mean_loss_dict_train[k], epoch_index)
                 self.writer.add_scalar(
                     f"loss_{k}/validation", mean_loss_dict_val[k], epoch_index)
-            
+
             self.writer.add_scalar(
                 "accuracy/training", mean_accuracy_train, epoch_index)
             self.writer.add_scalar(
@@ -121,12 +122,13 @@ class Trainer():
                 loss.backward()
                 self.optimizer.step()
 
-            for k,v in loss_dict.items():
-                mean_loss_dict[k] = utl.to_numpy(loss_dict[k].mean()) + mean_loss_dict.setdefault(k, 0)
+            for k, v in loss_dict.items():
+                mean_loss_dict[k] = utl.to_numpy(
+                    loss_dict[k].mean()) + mean_loss_dict.setdefault(k, 0)
             if accuracy is not None:
                 mean_accuracy += utl.to_numpy(accuracy)
 
-        for k,v in mean_loss_dict.items():
+        for k, v in mean_loss_dict.items():
             mean_loss_dict[k] = v / len(data_loader)
         mean_accuracy /= len(data_loader)
         return (mean_loss_dict, mean_accuracy)
@@ -144,9 +146,9 @@ class Trainer():
     def compute_kld_loss(z_dist, prior_dist, beta, c=0.0):
         # from trainer
         kld = torch.distributions.kl.kl_divergence(z_dist, prior_dist)
-        kld = kld.sum(1).mean()
-        kld = beta * (kld - c).abs()
-        return kld
+        kld_loss = kld.sum(1).mean()
+        kld_loss = beta * (kld_loss - c).abs()
+        return kld_loss, kld
 
     @staticmethod
     def compute_reg_loss(z, labels, reg_dim, gamma, factor=1.0):
