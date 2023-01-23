@@ -38,8 +38,7 @@ class TVAETrainer(Trainer):
         tgt[tgt == self.dataset.SEP] = self.dataset.PAD
         size = tgt.shape[-1]
         # Attention mask
-        tgt_mask = torch.triu(torch.ones(size, size) *
-                              float('-inf'), diagonal=1)
+        tgt_mask = torch.triu(torch.ones(size, size), diagonal=1).bool()
 
         # right-shift for later comparison
         tgt_true = tokens[:, 1:]
@@ -113,6 +112,7 @@ class TVAETrainer(Trainer):
 
     @staticmethod
     def mean_accuracy(weights, targets):
+        # get predicted label
         weights = torch.argmax(weights, dim=-1)
         # remove [PAD] label (== 0) from accuracy calculation
         mask = targets.ge(0.5)
