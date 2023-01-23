@@ -51,7 +51,7 @@
     - gamma 0, 10
     - capacity 0, 10
     - epochs 25
-- 2023-01-23 23:23:47 Wikipedia128 lab35
+- 2023-01-23 23:37:40 Wikipedia128 lab35
     - Learning rate Sieger. Dieses Mal mit korrektem Datensatz von 128 Länge
     - test, ob Wikipedia auch das gleiche Ergebnis gibt
     - learning rate 1e-4
@@ -59,3 +59,10 @@
     - gamma 0, 10
     - capacity 0, 10
     - epochs 25
+- 2023-01-24_00:40:07 German128 lab36
+    - very, very large epoch number
+    - learning rate 1e-4
+    - beta 1
+    - gamma 10
+    - capacity 0
+    - epochs 1000
