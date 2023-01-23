@@ -12,7 +12,7 @@ from models.naive_model import NaiveVAE
 from models.naive_trainer import NaiveTrainer
 from models.tvae_model import TVAE
 from models.tvae_trainer import TVAETrainer
-from utils.datasets import SimpleGermanDatasetBERT, SimpleWikipediaDatasetBERT, DatasetWordPiece
+from utils.datasets import DatasetBERT, DatasetWordPiece
 
 
 @click.command()
@@ -53,14 +53,20 @@ def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, datas
         return
 
     if dataset == "German":
-        datasets = [DatasetWordPiece(large=False, max_length=emb_length)] if model_selection == "TVAE" else [
-            SimpleGermanDatasetBERT()]
+        if model_selection == "TVAE":
+            datasets = [DatasetWordPiece(large=False, max_length=emb_length)]
+        else:
+            datasets= [DatasetBERT(large=False)]
     elif dataset == "Wikipedia":
-        datasets = [DatasetWordPiece(large=True, max_length=emb_length)] if model_selection == "TVAE" else [
-            SimpleGermanDatasetBERT()]
+        if model_selection == "TVAE":
+            datasets = [DatasetWordPiece(large=True, max_length=emb_length)]
+        else:
+            datasets=[DatasetBERT(large=True)]
     elif dataset == "All":
-        datasets = [DatasetWordPiece(large=False, max_length=emb_length), DatasetWordPiece(large=True, max_length=emb_length)] if model_selection == "TVAE" else [
-            SimpleGermanDatasetBERT(), SimpleWikipediaDatasetBERT()]
+        if model_selection == "TVAE":
+            datasets = [DatasetWordPiece(large=False, max_length=emb_length), DatasetWordPiece(large=True, max_length=emb_length)]
+        else:
+            datasets= [DatasetBERT(large=False), DatasetBERT(large=True)]
 
     if dry_run or not (train or evaluate):
         return
