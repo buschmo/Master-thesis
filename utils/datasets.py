@@ -151,27 +151,34 @@ class DatasetWordPiece(BaseDataset):
                 else:
                     lines = [i.strip() for i in fp.readlines()]
             for line in lines:
-                line_tokens = self.tokenizer.encode(line, padding="max_length")
-                if len(line_tokens) > 512:
-                    self.over_model_length += 1
-                    continue
-                if line_tokens[self.max_length-1] not in [self.PAD, self.SEP]:
-                    self.over_max_length += 1
+                line_tokens = self.encode(line)
+                if not line_tokens:
                     continue
                 yield line_tokens
 
         if not self.path_easy.exists():
             g1 = generator(self.path_easy_input)
             easy_embeddings = [i for i in tqdm(g1, desc=f"Easy {self}")]
-            t = torch.LongTensor(easy_embeddings)
+            t = torch.IntTensor(easy_embeddings)
             torch.save(t, self.path_easy)
         if not self.path_normal.exists():
             g2 = generator(self.path_normal_input)
             normal_embeddings = [i for i in tqdm(g2, desc=f"Normal {self}")]
-            t = torch.LongTensor(normal_embeddings)
+            t = torch.IntTensor(normal_embeddings)
             torch.save(t, self.path_normal)
         print(
             f"Lines longer than model length: {self.over_model_length}\nLines longer than max length: {self.over_max_length}")
+
+    def encode(self, line):
+        line_tokens = self.tokenizer.encode(line, padding="max_length")
+        if len(line_tokens) > 512:
+            self.over_model_length += 1
+            return None
+        if line_tokens[self.max_length-1] not in [self.PAD, self.SEP]:
+            # content is over max_length
+            self.over_max_length += 1
+            return None
+        return line_tokens[:self.max_length]
 
 
 @click.command()
