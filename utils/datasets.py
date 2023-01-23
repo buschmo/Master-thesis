@@ -182,16 +182,16 @@ class DatasetWordPiece(BaseDataset):
 
 
 @click.command()
-@click.option("-w", "--wordpiece", "wordpiece", type=bool, is_flag=True, help="Create WordPiece datasets.")
-@click.option("-l", "--emb-length", "emb_length", type=int, default=512, help="Set the maximum length of WordPiece embedding")
-@click.option("-b", "--bert", "bert", type=bool, is_flag=True, help="Create BERT embedding datasets.")
+@click.option("-w", "--wordpiece", "wordpiece", type=bool, is_flag=True, show_default=True, help="Create WordPiece datasets.")
+@click.option("-l", "--emb-length", "emb_length", type=int, default=512, show_default=True, help="Set the maximum length of WordPiece embedding")
+@click.option("-b", "--bert", "bert", type=bool, is_flag=True, show_default=True, help="Create BERT embedding datasets.")
 def main(wordpiece: bool, emb_length: int, bert: bool):
     if wordpiece:
         DatasetWordPiece(large=False, max_length=emb_length)
         DatasetWordPiece(large=True, max_length=emb_length)
     if bert:
-        SimpleGermanDatasetBERT()
-        SimpleWikipediaDatasetBERT()
+        DatasetBERT(large=False)
+        DatasetBERT(large=True)
 
 
 if __name__ == "__main__":
