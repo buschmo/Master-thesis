@@ -1,0 +1,61 @@
+# Runs
+- 2023-01-13 21:45 Wikipedia128
+    - learning rates 1e-2 to 1e-7
+    - Result: Mem errors, etc pp
+- 2023-01-13 19:13 German128 (unfixed)
+    - learning rates 1e-4
+    - beta
+    - gamma
+- 2023-01-15 19:58 German128 (unfixed)
+    - learning rates 1e-4
+    - beta
+    - gamma
+- 2023-01-18 02:05 Wikipedia128
+    - Vergleich mit Optimum von 2023-01-15 19:58 
+    - learning rate 1e-4
+    - beta 1, 4
+    - gamma 10, 20
+- 2023-01-18 02:10 German128 (unfixed)
+    - Learning rate einkesseln, Losses in Tensorboard ausklamüsern
+    - learning rate 1e-3,1e-4,1e-5
+    - beta 1
+    - gamma 10, 20
+    - capacity 0, 0.1, 1
+    - Result: lr 1e-4 scheint Sieger zu sein
+- 2023-01-19 16:13 German128 (unfixed) lab36
+    - Learning rate Sieger auf langem lauf testen 
+    - learning rate 1e-4
+    - beta 1
+    - gamma 0, 10
+    - capacity 0, 10
+    - epochs 100
+- 2023-01-20 17:38:26 German128 (unfixed)
+    - Learning rate Sieger, Sehr langer lauf
+    - lr 1e-4
+    - beta 1
+    - capacity 0
+    - gamma 10
+    - epochs 300
+    - Result: kein starkes Overfitting erkennbar
+- 2023-01-20 20:44:29 German128 (unfixed)
+    - test, ob gutes Ergebnis wirklich gut war oder nur zufall
+    - lr 1e-3, 1e-4, 1e-5
+    - beta 1, 4, 10
+    - capacity 0
+    - gamma 1, 10, 20
+    - epochs 25
+- 2023-01-23 23:23:47 German128 lab33
+    - Learning rate Sieger. Dieses Mal mit korrektem Datensatz von 128 Länge
+    - learning rate 1e-4
+    - beta 1
+    - gamma 0, 10
+    - capacity 0, 10
+    - epochs 25
+- 2023-01-23 23:23:47 Wikipedia128 lab35
+    - Learning rate Sieger. Dieses Mal mit korrektem Datensatz von 128 Länge
+    - test, ob Wikipedia auch das gleiche Ergebnis gibt
+    - learning rate 1e-4
+    - beta 1
+    - gamma 0, 10
+    - capacity 0, 10
+    - epochs 25
