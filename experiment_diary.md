@@ -66,3 +66,23 @@
     - gamma 10
     - capacity 0
     - epochs 1000
+- 2023-01-24 17:24:18 German128 lab33
+    - Learning rate Sieger. Erhöhe die Layers auf 2
+    - learning rate 1e-4
+    - beta 1
+    - gamma 0, 10
+    - capacity 0, 10
+    - nlayers 2
+    - epochs 25
+    - result: no real improvement
+- 2023-01-25 18:24:21 German128 lab35
+    - Siegerwerte. Erhöhe die Layers auf 2. Werte von Controllable
+    - d-model 256
+    - z-dim 256
+    - d-hid 1024
+    - learning rate 1e-4
+    - beta 1
+    - gamma 10
+    - capacity 0
+    - nlayers 1
+    - epochs 25
