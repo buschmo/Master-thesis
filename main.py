@@ -19,6 +19,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("--dry-run", "dry_run", is_flag=True, type=bool, default=False, show_default=True, help="Do not train/evaluate any model.")
 @click.option("--train", "train", is_flag=True, type=bool, default=False, show_default=True, help="Flag, if a model is to be trained.")
 @click.option("--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
+@click.option("--no-log", "no_log", is_flag=True, type=bool, default=False, show_default=True, help="Toggle logging.")
 @click.option("-M", "--model", "model_selection", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
 @click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="German", show_default=True, help="Determine the dataset(s) to be used.")
 @click.option("-E", "--emb-length", "emb_length", type=int, default=128, show_default=True, help="Sets the length of the WordPiece embedding.")
@@ -38,7 +39,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
 @click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
-def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, learning_rate: float, beta: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(dry_run: bool, train: bool, evaluate: Path, no_log:bool, model_selection: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, learning_rate: float, beta: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     # TODO assert value must adhere to specific ranges
     # e.g. 0 < lr < 10 for example
 
@@ -83,10 +84,11 @@ def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, datas
         "logs", f"{timestamp}_{model_selection}_{str(dataset)}_summary.json")
     folder_path = Path(f"{timestamp}_{model_selection}_{str(dataset)}")
     folder_log = Path("logs", folder_path)
-    if not folder_log.exists():
-        folder_log.mkdir(parents=True)
-    with open(p, "w") as fp:
-        json.dump(args, fp, indent=4)
+    if not no_log:
+        if not folder_log.exists():
+            folder_log.mkdir(parents=True)
+        with open(p, "w") as fp:
+            json.dump(args, fp, indent=4)
 
     if train:
         for lr, ga, be, ca, dataset in tqdm(product(learning_rate, gamma, beta, capacity, datasets), desc="Models"):
@@ -127,13 +129,17 @@ def main(dry_run: bool, train: bool, evaluate: Path, model_selection: str, datas
                 )
                 Trainer = NaiveTrainer
 
-            p = Path(
-                folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
-            with open(p, "w") as fp:
-                json.dump(args, fp, indent=4)
+            if not no_log:
+                p = Path(
+                    folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
+                with open(p, "w") as fp:
+                    json.dump(args, fp, indent=4)
 
-            path = Path(str(dataset), folder_path, "_".join(
-                [timestamp, str(model), "Reg"+str(use_reg_loss)]))
+            if not no_log:
+                path = Path(str(dataset), folder_path, "_".join(
+                    [timestamp, str(model), "Reg"+str(use_reg_loss)]))
+            else:
+                path=""
 
             trainer = Trainer(
                 dataset=dataset,
