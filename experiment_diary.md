@@ -86,3 +86,23 @@
     - capacity 0
     - nlayers 1
     - epochs 25
+- 2023-01-25 18:51:55 German128 lab32
+    - Siegerwerte. Loss beinhaltet [PAD]
+    - lr 1e-4
+    - beta 1
+    - capacity 0
+    - gamma 10
+    - epochs 25
+- 2023-01-28 19:51:21 German128 lab36
+    - Älterer Run. Test ob NaN auftaucht. see `error`
+    - lr 1e-2
+    - beta 1, 4, 10
+    - gamma 1, 10, 20
+- 2023-02-01 22:00:53 German128 lab34
+    - Siegerwerte. Größere Batchsize, Word-level sampling, metrics on subset of 10 batches 
+    - lr 1e-4
+    - beta 1
+    - capacity 0
+    - gamma 10
+    - epochs 25
+    - batch-size 64
