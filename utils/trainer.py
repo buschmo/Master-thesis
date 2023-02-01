@@ -24,7 +24,10 @@ ATTRIBUTE_DIMENSIONS = {
 class Trainer():
     def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
         # from trainer
-        self.writer = SummaryWriter(log_dir=Path("runs", folderpath))
+        if folderpath:
+            self.writer = SummaryWriter(log_dir=Path("runs", folderpath))
+        else:
+            self.writer = None
 
         self.dataset = dataset
         self.model = model
@@ -76,16 +79,17 @@ class Trainer():
                     epoch_num=epoch_index
                 )
 
-            for k in mean_loss_dict_train:
-                self.writer.add_scalar(
-                    f"loss_{k}/training", mean_loss_dict_train[k], epoch_index)
-                self.writer.add_scalar(
-                    f"loss_{k}/validation", mean_loss_dict_val[k], epoch_index)
+            if self.writer:
+                for k in mean_loss_dict_train:
+                    self.writer.add_scalar(
+                        f"loss_{k}/training", mean_loss_dict_train[k], epoch_index)
+                    self.writer.add_scalar(
+                        f"loss_{k}/validation", mean_loss_dict_val[k], epoch_index)
 
-            self.writer.add_scalar(
-                "accuracy/training", mean_accuracy_train, epoch_index)
-            self.writer.add_scalar(
-                "accuracy/validation", mean_accuracy_val, epoch_index)
+                self.writer.add_scalar(
+                    "accuracy/training", mean_accuracy_train, epoch_index)
+                self.writer.add_scalar(
+                    "accuracy/validation", mean_accuracy_val, epoch_index)
 
             data_element = {
                 'epoch_index': epoch_index,
@@ -95,12 +99,13 @@ class Trainer():
                 'mean_loss_val': mean_loss_dict_val["sum"],
                 'mean_accuracy_val': mean_accuracy_val
             }
-            self.print_epoch_stats(**data_element)
+            # self.print_epoch_stats(**data_element)
 
-            if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0):
+            if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.writer:
                 self.model.save_checkpoint(epoch_index)
 
-        self.model.save()
+        if self.writer:
+            self.model.save()
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):
         # from trainer
@@ -199,11 +204,11 @@ class Trainer():
                                    self.metrics["Separated Attribute Predictability"], epoch_num)
             self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
                                    self.metrics["Spearman's Rank Correlation"], epoch_num)
-        else:
-            if not results_fp.parent.exists():
-                results_fp.parent.mkdir(parents=True)
-            with open(results_fp, 'w') as outfile:
-                json.dump(self.metrics, outfile, indent=2)
+        # else:
+        #     if not results_fp.parent.exists():
+        #         results_fp.parent.mkdir(parents=True)
+        #     with open(results_fp, 'w') as outfile:
+        #         json.dump(self.metrics, outfile, indent=2)
         return self.metrics
 
     def compute_eval_metrics(self, data_loader):
