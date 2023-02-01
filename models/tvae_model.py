@@ -35,7 +35,8 @@ class TVAE(BaseModel):
         )
         self.encoder = nn.TransformerEncoder(
             encoder_layer=self.encoder_layer,
-            num_layers=nlayers
+            num_layers=nlayers,
+            enable_nested_tensor= False # Turn of quirky optimization. leads to errors in evaluation
         )
 
         # TODO two linear layers?
@@ -73,6 +74,7 @@ class TVAE(BaseModel):
         return "TVAE"
 
     def encode(self, x: Tensor, padding_mask: Tensor) -> Tensor:
+        # [batch, sequence] -> [batch, sequence, d_model]
         x = self.embedder(x)
         x = self.pos_encoder(x)
         hidden = self.encoder(
@@ -81,9 +83,17 @@ class TVAE(BaseModel):
         )
 
         # TODO this needs to be reconsidered
-        hidden_mean = torch.mean(hidden, dim=1)
-        z_mean = self.enc_mean(hidden_mean)
-        z_log_std = self.enc_log_std(hidden_mean)
+        # [batch, sequence, d_model] -> [batch, d_model]
+        # hidden_mean = torch.mean(hidden, dim=1)
+        # [batch, d_model] -> [batch, z_dim]
+        # z_mean = self.enc_mean(hidden_mean)
+        # [batch, d_model] -> [batch, z_dim]
+        # z_log_std = self.enc_log_std(hidden_mean)
+
+        # [batch, sequence, d_model] -> [batch, sequence, z_dim]
+        z_mean = self.enc_mean(hidden)
+        # [batch, sequence, d_model] -> [batch, sequence, z_dim]
+        z_log_std = self.enc_log_std(hidden)
         z_distribution = distributions.Normal(
             loc=z_mean, scale=torch.exp(z_log_std))
 
@@ -98,24 +108,40 @@ class TVAE(BaseModel):
         z_prior = prior_dist.sample()
         return z_tilde, z_prior, prior_dist
 
-    def forward(self, src: Tensor, tgt: Tensor, tgt_mask: Tensor, src_key_padding_mask: Tensor, tgt_key_padding_mask: Tensor) -> Tensor:
+    def forward(self, src: Tensor, tgt: Tensor, tgt_mask: Tensor, memory_mask: Tensor, src_key_padding_mask: Tensor, tgt_key_padding_mask: Tensor) -> Tensor:
         z_dist = self.encode(src, src_key_padding_mask)
 
         z_tilde, z_prior, prior_dist = self.reparametrize(z_dist)
 
         tgt = self.embedder(tgt)
 
-        # memory = z_tilde
-        memory_small = self.latent2hidden(z_tilde)
-        memory = memory_small.view(memory_small.shape[0], 1, memory_small.shape[1]).repeat(1,tgt.shape[1],1)
+        memory = z_tilde
+        # memory_small = self.latent2hidden(z_tilde)
+        # memory = memory_small.view(memory_small.shape[0], 1, memory_small.shape[1]).repeat(1,tgt.shape[1],1)
 
+        memory = self.latent2hidden(z_tilde)
 
-        logits = self.decoder(
-            tgt=tgt,
-            memory=memory,
-            tgt_mask=tgt_mask,
-            tgt_key_padding_mask=tgt_key_padding_mask
-        )
+        try:
+            logits = self.decoder(
+                tgt=tgt,
+                memory=memory,
+                tgt_mask=tgt_mask,
+                memory_mask=memory_mask,
+                tgt_key_padding_mask=tgt_key_padding_mask,
+                memory_key_padding_mask=src_key_padding_mask
+            )
+        except RuntimeError as err:
+            print(err)
+            print(f"\tz_tilde.shape: {z_tilde.shape}")
+            print(f"\tz_dist: {z_dist}")
+            print(f"\tsrc={src.shape}")
+            print(f"\ttgt={tgt.shape}")
+            print(f"\tmemory={memory.shape}")
+            print(f"\ttgt_mask={tgt_mask.shape}")
+            print(f"\tmemory_mask={memory_mask.shape}")
+            print(f"\ttgt_key_padding_mask={tgt_key_padding_mask.shape}")
+            print(f"\tmemory_key_padding_mask={src_key_padding_mask.shape}")
+            raise err
         logits = self.generator(logits)
         return logits, z_dist, prior_dist, z_tilde, z_prior
 

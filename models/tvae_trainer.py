@@ -36,9 +36,12 @@ class TVAETrainer(Trainer):
         # Remove the last symbol in each target sentence
         tgt = tokens[:, :-1].clone()
         tgt[tgt == self.dataset.SEP] = self.dataset.PAD
-        size = tgt.shape[-1]
+        seq_length = tgt.shape[-1]
         # Attention mask
-        tgt_mask = torch.triu(torch.ones(size, size), diagonal=1).bool()
+        tgt_mask = torch.triu(torch.ones(
+            seq_length, seq_length), diagonal=1).bool()
+        memory_mask = torch.triu(torch.ones(
+            seq_length, seq_length+1), diagonal=1).bool()
 
         # right-shift for later comparison
         tgt_true = tokens[:, 1:]
@@ -47,20 +50,27 @@ class TVAETrainer(Trainer):
         src_key_padding_mask = (src == self.dataset.PAD)
         tgt_key_padding_mask = (tgt == self.dataset.PAD)
 
+        # repeat labels for sequence length
+        labels = labels.repeat_interleave(seq_length).view(-1, 1)
+
         # TODO no memory_key_padding? no src_masking?
-        return (src.to("cuda"), tgt.to("cuda"), tgt_true.to("cuda"), tgt_mask.to("cuda"), src_key_padding_mask.to("cuda"), tgt_key_padding_mask.to("cuda"), labels.to("cuda"))
+        return (src.to("cuda"), tgt.to("cuda"), tgt_true.to("cuda"), tgt_mask.to("cuda"), memory_mask.to("cuda"), src_key_padding_mask.to("cuda"), tgt_key_padding_mask.to("cuda"), labels.to("cuda"))
 
     def loss_and_acc_for_batch(self, batch, epoch_num=None, batch_num=None, train=True):
-        src, tgt, tgt_true, tgt_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch
+        src, tgt, tgt_true, tgt_mask, memory_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch
 
-        prob, z_dist, prior_dist, z_tilde, z_prior = self.model(
-            src=src,
-            tgt=tgt,
-            tgt_mask=tgt_mask,
-            src_key_padding_mask=src_key_padding_mask,
-            tgt_key_padding_mask=tgt_key_padding_mask
-        )
-
+        try:
+            prob, z_dist, prior_dist, z_tilde, z_prior = self.model(
+                src=src,
+                tgt=tgt,
+                tgt_mask=tgt_mask,
+                memory_mask=memory_mask,
+                src_key_padding_mask=src_key_padding_mask,
+                tgt_key_padding_mask=tgt_key_padding_mask
+            )
+        except RuntimeError as err:
+            print(f"Epoch-Batch: {epoch_num}-{batch_num}")
+            raise err
         # compute reconstruction loss
         recons_loss = self.reconstruction_loss(prob, tgt_true)
 
@@ -76,6 +86,8 @@ class TVAETrainer(Trainer):
         if self.use_reg_loss:
             reg_loss = 0.0
             if type(self.reg_dim) == tuple:
+                z_tilde = z_tilde[:, :-1, :]
+                z_tilde = z_tilde.reshape(-1, z_tilde.shape[-1])
                 for dim in self.reg_dim:
                     reg_loss += self.compute_reg_loss(
                         z_tilde, labels[:, dim], dim, gamma=self.gamma, factor=self.delta)
@@ -128,16 +140,19 @@ class TVAETrainer(Trainer):
         # for sample_id, batch in tqdm(enumerate(data_loader)):
         for sample_id, batch in enumerate(data_loader):
             batch_data = self.process_batch_data(batch)
-            src, tgt, tgt_true, tgt_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch_data
+            src, tgt, tgt_true, tgt_mask, memory_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch_data
             labels = labels.to("cpu")  # for numpy conversion later on
             _, _, _, z_tilde, _ = self.model(
                 src=src,
                 tgt=tgt,
                 tgt_mask=tgt_mask,
+                memory_mask=memory_mask,
                 src_key_padding_mask=src_key_padding_mask,
                 tgt_key_padding_mask=tgt_key_padding_mask
             )
 
+            z_tilde = z_tilde[:, :-1, :]
+            z_tilde = z_tilde.reshape([-1, z_tilde.shape[-1]])
             latent_codes.append(utl.to_numpy(z_tilde))
             attr_values.append(labels)
             # if sample_id == 200:
