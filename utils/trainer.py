@@ -22,7 +22,7 @@ ATTRIBUTE_DIMENSIONS = {
 
 
 class Trainer():
-    def __init__(self, dataset, model, checkpoint_index=0, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
+    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
         # from trainer
         if folderpath:
             self.writer = SummaryWriter(log_dir=Path("runs", folderpath))
@@ -31,6 +31,9 @@ class Trainer():
 
         self.dataset = dataset
         self.model = model
+        
+        self.M = M
+        self.R = R
 
         if torch.cuda.is_available():
             self.model.cuda()
@@ -113,6 +116,8 @@ class Trainer():
         mean_accuracy = 0
         # for batch_num, batch in tqdm(enumerate(data_loader), desc="Batch"):
         for batch_num, batch in enumerate(data_loader):
+            self.beta = self.kl_annealing(batch_num, len(data_loader))
+
             batch_data = self.process_batch_data(batch)
 
             self.optimizer.zero_grad()
@@ -228,6 +233,15 @@ class Trainer():
             evl.compute_correlation_score(latent_codes, attributes))
         # metrics.update(self.test_model(batch_size=batch_size))
         return metrics
+
+    def kl_annealing(self, t, T):
+        tau = (t-1 % np.ceil(T / self.M)) / (T / self.M)
+        if tau <= self.R:
+            # TODO might be useful to replace with other functions
+            beta = tau / self.R
+        else:
+            beta = 1
+        return beta
 
     def compute_representations(self, data_loader):
         raise NotImplementedError

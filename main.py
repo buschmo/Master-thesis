@@ -25,11 +25,12 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-E", "--emb-length", "emb_length", type=int, default=128, show_default=True, help="Sets the length of the WordPiece embedding.")
 @click.option("-N", "--num-epochs", "--epochs", "num_epochs", type=int, default=25, show_default=True, help="Number of epochs to be trained.")
 @click.option("-B", "--batch-size", "batch_size", type=int, default=16, show_default=True, help="Size of the batches to be trained.")
-@click.option("-L", "--learning-rate", "learning_rate", type=float, default=[1e-4], multiple=True, show_default=True, help="Learning rate(s), multiple option possible")
-@click.option("-Be", "--beta", "beta", type=float, default=[4.0], multiple=True, show_default=True, help="Beta, impact of kld on loss")
-@click.option("-Ca", "--capacity", "capacity", type=float, default=[0.0], multiple=True, show_default=True, help="Capacity, capacity of kld's bottleneck channel")
-@click.option("-Ga", "--gamma", "gamma", type=float, default=[10.0], multiple=True, show_default=True, help="Gamma, impact of ar-regularization on loss")
-@click.option("-De", "--delta", "delta", type=float, default=[0.0], multiple=True, show_default=True, help="Delta, tuning the spread of the posterior distribution in ar-regularization")
+@click.option("-klM", "--kl-cycles", "kl_M", type=int, default=[4], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible")
+@click.option("-klR", "--kl-proportion", "kl_R", type=float, default=[0.5], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible")
+@click.option("-L", "--learning-rate", "learning_rate", type=float, default=[1e-4], multiple=True, show_default=True, help="Learning rate(s); multiple values possible")
+@click.option("-Ca", "--capacity", "capacity", type=float, default=[0.0], multiple=True, show_default=True, help="Capacity, capacity of kld's bottleneck channel; multiple values possible")
+@click.option("-Ga", "--gamma", "gamma", type=float, default=[10.0], multiple=True, show_default=True, help="Gamma, impact of ar-regularization on loss; multiple values possible")
+@click.option("-De", "--delta", "delta", type=float, default=[0.0], multiple=True, show_default=True, help="Delta, tuning the spread of the posterior distribution in ar-regularization; multiple values possible")
 @click.option("--no-reg", "use_reg_loss", is_flag=True, type=bool, default=True, show_default=True, help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
 @click.option("-C", "--checkpoint-index", "checkpoint_index", type=int, default=0, show_default=True, help="Frequency of checkpoint creation. 0 disables checkpoints.")
 @click.option("-d", "--d-model", "d_model", type=int, default=256, show_default=True, help="Internal dimension size of the TVAE model. Each sublayer produces this output size.")
@@ -39,7 +40,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
 @click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
-def main(dry_run: bool, train: bool, evaluate: Path, no_log:bool, model_selection: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, learning_rate: float, beta: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selection: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, kl_M: int, kl_R: float, learning_rate: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     # TODO assert value must adhere to specific ranges
     # e.g. 0 < lr < 10 for example
 
@@ -57,17 +58,18 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log:bool, model_selectio
         if model_selection == "TVAE":
             datasets = [DatasetWordPiece(large=False, max_length=emb_length)]
         else:
-            datasets= [DatasetBERT(large=False)]
+            datasets = [DatasetBERT(large=False)]
     elif dataset == "Wikipedia":
         if model_selection == "TVAE":
             datasets = [DatasetWordPiece(large=True, max_length=emb_length)]
         else:
-            datasets=[DatasetBERT(large=True)]
+            datasets = [DatasetBERT(large=True)]
     elif dataset == "All":
         if model_selection == "TVAE":
-            datasets = [DatasetWordPiece(large=False, max_length=emb_length), DatasetWordPiece(large=True, max_length=emb_length)]
+            datasets = [DatasetWordPiece(large=False, max_length=emb_length), DatasetWordPiece(
+                large=True, max_length=emb_length)]
         else:
-            datasets= [DatasetBERT(large=False), DatasetBERT(large=True)]
+            datasets = [DatasetBERT(large=False), DatasetBERT(large=True)]
 
     if dry_run or not (train or evaluate):
         return
@@ -91,11 +93,12 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log:bool, model_selectio
             json.dump(args, fp, indent=4)
 
     if train:
-        for lr, ga, be, ca, dataset in tqdm(product(learning_rate, gamma, beta, capacity, datasets), desc="Models"):
+        for kl_M, kl_R, lr, ga, ca, dataset in tqdm(product(kl_M, kl_R, learning_rate, gamma, capacity, datasets), desc="Models"):
             args["dataset"] = str(dataset)
+            args["kl_M"] = kl_M
+            args["kl_R"] = kl_R
             args["learning_rate"] = lr
             args["gamma"] = ga
-            args["beta"] = be
             args["capacity"] = ca
 
             ts = time.time()
@@ -139,14 +142,15 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log:bool, model_selectio
                 path = Path(str(dataset), folder_path, "_".join(
                     [timestamp, str(model), "Reg"+str(use_reg_loss)]))
             else:
-                path=""
+                path = ""
 
             trainer = Trainer(
                 dataset=dataset,
                 model=model,
                 checkpoint_index=checkpoint_index,
+                M=kl_M,
+                R=kl_R,
                 lr=lr,
-                beta=be,
                 gamma=ga,
                 capacity=ca,
                 use_reg_loss=use_reg_loss,
