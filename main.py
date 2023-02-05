@@ -22,8 +22,9 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("--no-log", "no_log", is_flag=True, type=bool, default=False, show_default=True, help="Toggle logging.")
 @click.option("-M", "--model", "model_selection", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
 @click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="German", show_default=True, help="Determine the dataset(s) to be used.")
+@click.option("-N", "--name", "name", type=str, default="", show_default=True, help="Alternative name of the output folders.")
 @click.option("-E", "--emb-length", "emb_length", type=int, default=128, show_default=True, help="Sets the length of the WordPiece embedding.")
-@click.option("-N", "--num-epochs", "--epochs", "num_epochs", type=int, default=25, show_default=True, help="Number of epochs to be trained.")
+@click.option("--num-epochs", "--epochs", "num_epochs", type=int, default=25, show_default=True, help="Number of epochs to be trained.")
 @click.option("-B", "--batch-size", "batch_size", type=int, default=16, show_default=True, help="Size of the batches to be trained.")
 @click.option("-klM", "--kl-cycles", "kl_M", type=int, default=[4], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible")
 @click.option("-klR", "--kl-proportion", "kl_R", type=float, default=[0.5], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible")
@@ -40,7 +41,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
 @click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
-def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selection: str, dataset: str, emb_length: int, num_epochs: int, batch_size: int, kl_M: int, kl_R: float, learning_rate: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selection: str, dataset: str, name:str, emb_length: int, num_epochs: int, batch_size: int, kl_M: int, kl_R: float, learning_rate: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     # TODO assert value must adhere to specific ranges
     # e.g. 0 < lr < 10 for example
 
@@ -82,9 +83,12 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selecti
         '%Y-%m-%d_%H:%M:%S'
     )
 
+    if not name:
+        folder_path = Path(f"{timestamp}_{model_selection}_{str(dataset)}")
+    else:
+        folder_path = Path(f"{timestamp}_{name}")
     p = Path(
-        "logs", f"{timestamp}_{model_selection}_{str(dataset)}_summary.json")
-    folder_path = Path(f"{timestamp}_{model_selection}_{str(dataset)}")
+        "logs", f"{folder_path.stem}_summary.json")
     folder_log = Path("logs", folder_path)
     if not no_log:
         if not folder_log.exists():
@@ -139,7 +143,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selecti
                     json.dump(args, fp, indent=4)
 
             if not no_log:
-                path = Path(str(dataset), folder_path, "_".join(
+                path = Path(folder_path, "_".join(
                     [timestamp, str(model), "Reg"+str(use_reg_loss)]))
             else:
                 path = ""
