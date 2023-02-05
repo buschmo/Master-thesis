@@ -157,7 +157,7 @@ class TVAETrainer(Trainer):
             z_tilde = z_tilde.reshape([-1, z_tilde.shape[-1]])
             latent_codes.append(utl.to_numpy(z_tilde))
             attr_values.append(labels)
-            if sample_id >= 9:
+            if sample_id >= np.ceil(len(data_loader) / 4):
                 # TODO how about the whole dataset?
                 break
         # turn lists into matrices
