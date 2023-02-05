@@ -7,6 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 import json
+from multiprocessing import Queue, Process
 
 # own packages
 import utils.utilitites as utl
@@ -22,7 +23,7 @@ ATTRIBUTE_DIMENSIONS = {
 
 
 class Trainer():
-    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, beta=4.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
+    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
         # from trainer
         if folderpath:
             self.writer = SummaryWriter(log_dir=Path("runs", folderpath))
@@ -31,7 +32,7 @@ class Trainer():
 
         self.dataset = dataset
         self.model = model
-        
+
         self.M = M
         self.R = R
 
@@ -44,7 +45,6 @@ class Trainer():
         )
 
         self.checkpoint_index = checkpoint_index
-        self.beta = beta
         self.gamma = gamma
         self.delta = delta
         self.capacity = capacity
@@ -59,54 +59,62 @@ class Trainer():
         generator_train = DataLoader(dataset_train, batch_size=batch_size)
         generator_val = DataLoader(dataset_val, batch_size=batch_size)
 
-        for epoch_index in tqdm(range(num_epochs), desc="Epochs"):
-            # Train the model
-            self.model.train()
-            mean_loss_dict_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
-                data_loader=generator_train,
-                epoch_num=epoch_index,
-                train=True
-            )
+        processes = []
 
-            # Evaluate the model
-            self.model.eval()
-            with torch.no_grad():
-                mean_loss_dict_val, mean_accuracy_val = self.loss_and_acc_on_epoch(
-                    data_loader=generator_val,
+        try:
+            for epoch_index in tqdm(range(num_epochs), desc="Epochs"):
+                # Train the model
+                self.model.train()
+                mean_loss_dict_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
+                    data_loader=generator_train,
                     epoch_num=epoch_index,
-                    train=False
+                    train=True
                 )
 
-                self.eval_model(
-                    data_loader=generator_val,
-                    epoch_num=epoch_index
-                )
+                # Evaluate the model
+                self.model.eval()
+                with torch.no_grad():
+                    mean_loss_dict_val, mean_accuracy_val = self.loss_and_acc_on_epoch(
+                        data_loader=generator_val,
+                        epoch_num=epoch_index,
+                        train=False
+                    )
 
-            if self.writer:
-                for k in mean_loss_dict_train:
+                    process = self.eval_model(
+                        data_loader=generator_val,
+                        epoch_num=epoch_index
+                    )
+                    processes.append(process)
+
+                if self.writer:
+                    for k in mean_loss_dict_train:
+                        self.writer.add_scalar(
+                            f"loss_{k}/training", mean_loss_dict_train[k], epoch_index)
+                        self.writer.add_scalar(
+                            f"loss_{k}/validation", mean_loss_dict_val[k], epoch_index)
+
                     self.writer.add_scalar(
-                        f"loss_{k}/training", mean_loss_dict_train[k], epoch_index)
+                        "accuracy/training", mean_accuracy_train, epoch_index)
                     self.writer.add_scalar(
-                        f"loss_{k}/validation", mean_loss_dict_val[k], epoch_index)
+                        "accuracy/validation", mean_accuracy_val, epoch_index)
 
-                self.writer.add_scalar(
-                    "accuracy/training", mean_accuracy_train, epoch_index)
-                self.writer.add_scalar(
-                    "accuracy/validation", mean_accuracy_val, epoch_index)
+                data_element = {
+                    'epoch_index': epoch_index,
+                    'num_epochs': num_epochs,
+                    'mean_loss_train': mean_loss_dict_train["sum"],
+                    'mean_accuracy_train': mean_accuracy_train,
+                    'mean_loss_val': mean_loss_dict_val["sum"],
+                    'mean_accuracy_val': mean_accuracy_val
+                }
+                # self.print_epoch_stats(**data_element)
 
-            data_element = {
-                'epoch_index': epoch_index,
-                'num_epochs': num_epochs,
-                'mean_loss_train': mean_loss_dict_train["sum"],
-                'mean_accuracy_train': mean_accuracy_train,
-                'mean_loss_val': mean_loss_dict_val["sum"],
-                'mean_accuracy_val': mean_accuracy_val
-            }
-            # self.print_epoch_stats(**data_element)
+                if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.writer:
+                    self.model.save_checkpoint(epoch_index)
+        except KeyboardInterrupt:
+            print("Exiting saving metric results...")
 
-            if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.writer:
-                self.model.save_checkpoint(epoch_index)
-
+        self.save_evaluations(processes)
+        
         if self.writer:
             self.model.save()
 
@@ -190,49 +198,83 @@ class Trainer():
     def mean_accuracy(weights, targets):
         raise NotImplementedError
 
+    def save_evaluations(self, processes):
+        for (epoch_num, p,q) in tqdm(processes, desc="Saving metrics"):
+            metrics = q.get()
+            p.join()
+            if self.writer:
+                self.writer.add_scalars("Disentanglement/Interpretability", {
+                                        k: v[1] for k, v in metrics["Interpretability"].items()}, epoch_num)
+                self.writer.add_scalar("Disentanglement/Mutual Information Gap",
+                                       metrics["Mutual Information Gap"], epoch_num)
+                self.writer.add_scalar("Disentanglement/Separated Attribute Predictability",
+                                       metrics["Separated Attribute Predictability"], epoch_num)
+                self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
+                                       metrics["Spearman's Rank Correlation"], epoch_num)
+            # else:
+            #     if not results_fp.parent.exists():
+            #         results_fp.parent.mkdir(parents=True)
+            #     with open(results_fp, 'w') as outfile:
+            #         json.dump(self.metrics, outfile, indent=2)
+
     def eval_model(self, data_loader, epoch_num=0):
         # From image_vae_trainer.compute_eval_metrics
         results_fp = self.model.filepath.with_stem(
             f"{self.model.filepath.stem}_{epoch_num}").with_suffix(".json")
         if results_fp.exists():
             with open(results_fp, 'r') as infile:
-                self.metrics = json.load(infile)
+                metrics = json.load(infile)
         else:
-            self.metrics = self.compute_eval_metrics(data_loader)
+            latent_codes, attributes, attr_list = self.compute_representations(
+                data_loader)
+            q = Queue()
+            p = Process(
+                target=self.compute_eval_metrics,
+                args=(latent_codes, attributes, attr_list, q)
+            )
+            p.start()
 
-        if self.writer:
-            self.writer.add_scalars("Disentanglement/Interpretability", {
-                                    k: v[1] for k, v in self.metrics["Interpretability"].items()}, epoch_num)
-            self.writer.add_scalar("Disentanglement/Mutual Information Gap",
-                                   self.metrics["Mutual Information Gap"], epoch_num)
-            self.writer.add_scalar("Disentanglement/Separated Attribute Predictability",
-                                   self.metrics["Separated Attribute Predictability"], epoch_num)
-            self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
-                                   self.metrics["Spearman's Rank Correlation"], epoch_num)
-        # else:
-        #     if not results_fp.parent.exists():
-        #         results_fp.parent.mkdir(parents=True)
-        #     with open(results_fp, 'w') as outfile:
-        #         json.dump(self.metrics, outfile, indent=2)
-        return self.metrics
+        return (epoch_num,p,q)
 
-    def compute_eval_metrics(self, data_loader):
-        latent_codes, attributes, attr_list = self.compute_representations(
-            data_loader)
-        interp_metrics = evl.compute_interpretability_metric(
-            latent_codes, attributes, attr_list
-        )
-        metrics = {
-            "Interpretability": interp_metrics
-        }
-        # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
-        metrics.update(evl.compute_mig(latent_codes, attributes))
-        metrics.update(
-            evl.compute_sap_score(latent_codes, attributes))
-        metrics.update(
-            evl.compute_correlation_score(latent_codes, attributes))
-        # metrics.update(self.test_model(batch_size=batch_size))
-        return metrics
+    @staticmethod
+    def compute_eval_metrics(latent_codes, attributes, attr_list, queue):
+        # interp_metrics = evl.compute_interpretability_metric(
+        #     latent_codes, attributes, attr_list
+        # )
+        # metrics = {
+        #     "Interpretability": interp_metrics
+        # }
+        # # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
+        # metrics.update(evl.compute_mig(latent_codes, attributes))
+        # metrics.update(
+        #     evl.compute_sap_score(latent_codes, attributes))
+        # metrics.update(
+        #     evl.compute_correlation_score(latent_codes, attributes))
+        # # metrics.update(self.test_model(batch_size=batch_size))
+        
+        metrics = {}
+        q = Queue()
+        processes = [
+            Process(target=evl.compute_interpretability_metric,
+                    args=(latent_codes, attributes, attr_list, queue)),
+            Process(target=evl.compute_mig,
+                    args=(latent_codes, attributes, queue)),
+            Process(target=evl.compute_sap_score,
+                    args=(latent_codes, attributes, queue)),
+            Process(target=evl.compute_correlation_score,
+                    args=(latent_codes, attributes, queue))
+        ]
+        for p in processes:
+            p.start()
+            
+        for _ in range(len(processes)):
+            result = q.get()
+            metrics.update(result)
+        
+        for p in processes:
+            p.join()
+        
+        queue.put(metrics)
 
     def kl_annealing(self, t, T):
         tau = (t-1 % np.ceil(T / self.M)) / (T / self.M)

@@ -8,6 +8,7 @@ import scipy
 
 # Typing
 from typing import Tuple
+from multiprocessing import Queue
 
 """ Code primarily taken from ar-vae evaluation.py """
 
@@ -194,7 +195,7 @@ def _compute_correlation_matrix(mus: Tensor, ys: Tensor) -> np.array:
 """ Actual Metrics """
 
 
-def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, attr_list: list[str]) -> dict[str, Tuple[int, float]]:
+def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, attr_list: list[str], queue: Queue) -> dict[str, dict[str, float]]:
     """ Computes the interpretability score
 
     Based on Adel et al (2018) - Discovering Interpretable Representations for Both Deep Generative and Discriminative Models
@@ -204,6 +205,7 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
         latent_codes (Tensor): latent code z
         attributes (Tensor): attributes to be interpreted
         attr_list (list[str]): names for the attributes
+        queue (Queue): to return the result in a parallelized call
 
     Returns:
         dict[str, Tuple[int, float]]: mapping attribute names to tuple of dimension and value. Also containt key "mean" with dimension -1
@@ -224,10 +226,14 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
         interpretability_metrics[attr_name] = (int(dim), float(score))
         total += float(score)
     interpretability_metrics["Mean"] = (-1, total/len(attr_list))
-    return interpretability_metrics
+    scores = {"Interpretability": interpretability_metrics}
+    if queue:
+        queue.put(scores)
+    else:
+        return scores
 
 
-def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
+def compute_mig(latent_codes: Tensor, attributes: Tensor, queue: Queue) -> dict[str, float]:
     """ Computes the mutual information gap for continuous attributes
 
     Based on Chen et al (2018) - Isolating Sources of Disentanglement in Variational Autoencoders
@@ -236,6 +242,7 @@ def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
     Args:
         latent_codes (Tensor): latent code z
         attributes (Tensor): attributes a
+        queue (Queue): to return the result in a parallelized call
 
     Returns:
         dict[str, float]: key "mig" with score
@@ -249,7 +256,10 @@ def compute_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
     scores = {
         "Mutual Information Gap": np.mean(np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
     }
-    return scores
+    if queue:
+        queue.put(scores)
+    else:
+        return scores
 
 
 def compute_discrete_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
@@ -270,7 +280,7 @@ def compute_discrete_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, 
     pass
 
 
-def compute_sap_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
+def compute_sap_score(latent_codes: Tensor, attributes: Tensor, queue: Queue) -> dict[str, float]:
     """ Computes the SAP score
 
     Based on Kumar et al (2018) - Variational Inference of Disentangled Latent Concepts from Unlabeled Observations
@@ -279,6 +289,7 @@ def compute_sap_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, flo
     Args:
         latent_codes (Tensor): latent code z
         attributes (Tensor): attributes a
+        queue (Queue): to return the result in a parallelized call
 
     Returns:
         dict[str, float]: key "SAP_score" with value
@@ -293,10 +304,13 @@ def compute_sap_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, flo
     scores = {
         "Separated Attribute Predictability": _compute_avg_diff_top_two(score_matrix)
     }
-    return scores
+    if queue:
+        queue.put(scores)
+    else:
+        return scores
 
 
-def compute_correlation_score(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
+def compute_correlation_score(latent_codes: Tensor, attributes: Tensor, queue: Queue) -> dict[str, float]:
     """ Calculate spearman's rank correlation
 
     Based on Spearman (1904) - The Proof and Measurement of Association between Two Things
@@ -304,6 +318,7 @@ def compute_correlation_score(latent_codes: Tensor, attributes: Tensor) -> dict[
     Args:
         latent_codes (Tensor): latent codes z
         attributes (Tensor): attributes a
+        queue (Queue): to return the result in a parallelized call
 
     Returns:
         dict[str, float]: key "Corr_score" giving the spearman score
@@ -312,4 +327,7 @@ def compute_correlation_score(latent_codes: Tensor, attributes: Tensor) -> dict[
     scores = {
         "Spearman's Rank Correlation": np.mean(np.max(corr_matrix, axis=0))
     }
-    return scores
+    if queue:
+        queue.put(scores)
+    else:
+        return scores
