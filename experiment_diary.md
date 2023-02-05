@@ -1,56 +1,141 @@
 # Runs
-- 2023-01-13 21:45 Wikipedia128
+This file documents the specific experiments
+
+## Named saves
+- varying learning rate
+    - 2023-01-13 03:19 & 12:32 & 21:44:50 German128 (unfixed)
+        - default values from startup
+        - lr 1e-2 to 1e-06
+    - 2023-01-13 21:43 SimpleGerman128 (unfixed)
+        - same as above, but two layers
+        - lr 1e-4
+- varying lr, beta, gamma
+    - 2023-01-15 19:56 German128 (unfixed)
+        - learning rates 1e-2, 1e-4, 1e-6, 1e-8
+        - beta 1,4,10
+        - gamma 1,10,20
+    - 2023-01-18 02:05 Wikipedia128 (unfixed)
+        - Vergleich mit Optimum von 2023-01-15 19:58 
+        - learning rate 1e-4
+        - beta 1, 4
+        - gamma 10, 20
+- pin down lr
+    - 2023-01-18 02:10 German128 (unfixed)
+        - Learning rate einkesseln, Losses in Tensorboard ausklamüsern
+        - learning rate 1e-3,1e-4,1e-5
+        - beta 1
+        - gamma 10, 20
+        - capacity 0, 0.1, 1
+        - Result: lr 1e-4 scheint Sieger zu sein
+    - 2023-01-20 20:44:29 German128 (unfixed)
+        - test, ob gutes Ergebnis wirklich gut war oder nur zufall
+        - lr 1e-3, 1e-4, 1e-5
+        - beta 1, 4, 10
+        - capacity 0
+        - gamma 1, 10, 20
+        - epochs 25
+- winner run
+    - 2023-01-19 16:13 German128 (unfixed) lab36
+        - Learning rate Sieger auf langem lauf testen 
+        - learning rate 1e-4
+        - beta 1
+        - gamma 0, 10
+        - capacity 0, 10
+        - epochs 100
+    - 2023-01-20 17:38:26 German128 (unfixed)
+        - Learning rate Sieger, Sehr langer lauf
+        - lr 1e-4
+        - beta 1
+        - capacity 0
+        - gamma 10
+        - epochs 300
+        - Result: kein starkes Overfitting erkennbar
+- fixed winner
+    - 2023-01-23 23:23:47 German128 lab33
+        - Learning rate Sieger. Dieses Mal mit korrektem Datensatz von 128 Länge
+        - learning rate 1e-4
+        - beta 1
+        - gamma 0, 10
+        - capacity 0, 10
+        - epochs 25
+    - 2023-01-24_00:40:07 German128 lab36
+        - very, very large epoch number
+        - learning rate 1e-4
+        - beta 1
+        - gamma 10
+        - capacity 0
+        - epochs 1000
+    - 2023-01-24 17:24:18 German128 lab33
+        - Learning rate Sieger. Erhöhe die Layers auf 2
+        - learning rate 1e-4
+        - beta 1
+        - gamma 0, 10
+        - capacity 0, 10
+        - nlayers 2
+        - epochs 25
+        - result: no real improvement
+    - 2023-01-25 18:24:21 German128 lab35
+        - Siegerwerte. Erhöhe die Layers auf 2. Werte von Controllable
+        - d-model 256
+        - z-dim 256
+        - d-hid 1024
+        - learning rate 1e-4
+        - beta 1
+        - gamma 10
+        - capacity 0
+        - nlayers 1
+        - epochs 25
+    - 2023-01-25 18:51:55 German128 lab32
+        - Siegerwerte. Loss beinhaltet [PAD]
+        - lr 1e-4
+        - beta 1
+        - capacity 0
+        - gamma 10
+        - epochs 25
+- Word level sampling
+    - 2023-02-01 22:00:53 German128 lab34
+        - Siegerwerte. Größere Batchsize, metrics on subset of 10 batches 
+        - Word-level sampling
+        - lr 1e-4
+        - beta 1
+        - capacity 0
+        - gamma 10
+        - epochs 25
+        - batch-size 64
+    - 2023-02-02 00:00:10 German128 lab34
+        - Siegerwerte. Größere Batchsize, metrics on subset of 1/4 batches. Default linear KL annealing
+        - Word-level sampling
+        - lr 1e-4
+        - capacity 0
+        - gamma 10
+        - epochs 25
+        - batch-size 64
+    - 2023-02-02 00:05:43 German128 lab35
+        - Siegerwerte. Größere Batchsize, metrics on whole set. Default linear KL annealing
+        - Word-level sampling
+        - lr 1e-4
+        - capacity 0
+        - gamma 10
+        - epochs 25
+        - batch-size 64
+    - 2023-02-02 15:24 German128 lab34
+        - Siegerwerte. langer run
+        - epochs 100
+        - batch-size 64
+
+## Diary
+
+DELETED ALL PREVIOUS RUNS
+
+- 2023-01-13 21:45 Wikipedia128 (unfixed) deleted
     - learning rates 1e-2 to 1e-7
     - Result: Mem errors, etc pp
-- 2023-01-13 19:13 German128 (unfixed)
+- 2023-01-13 19:13 German128 (unfixed) deleted
     - learning rates 1e-4
     - beta
     - gamma
-- 2023-01-15 19:58 German128 (unfixed)
-    - learning rates 1e-4
-    - beta
-    - gamma
-- 2023-01-18 02:05 Wikipedia128
-    - Vergleich mit Optimum von 2023-01-15 19:58 
-    - learning rate 1e-4
-    - beta 1, 4
-    - gamma 10, 20
-- 2023-01-18 02:10 German128 (unfixed)
-    - Learning rate einkesseln, Losses in Tensorboard ausklamüsern
-    - learning rate 1e-3,1e-4,1e-5
-    - beta 1
-    - gamma 10, 20
-    - capacity 0, 0.1, 1
-    - Result: lr 1e-4 scheint Sieger zu sein
-- 2023-01-19 16:13 German128 (unfixed) lab36
-    - Learning rate Sieger auf langem lauf testen 
-    - learning rate 1e-4
-    - beta 1
-    - gamma 0, 10
-    - capacity 0, 10
-    - epochs 100
-- 2023-01-20 17:38:26 German128 (unfixed)
-    - Learning rate Sieger, Sehr langer lauf
-    - lr 1e-4
-    - beta 1
-    - capacity 0
-    - gamma 10
-    - epochs 300
-    - Result: kein starkes Overfitting erkennbar
-- 2023-01-20 20:44:29 German128 (unfixed)
-    - test, ob gutes Ergebnis wirklich gut war oder nur zufall
-    - lr 1e-3, 1e-4, 1e-5
-    - beta 1, 4, 10
-    - capacity 0
-    - gamma 1, 10, 20
-    - epochs 25
-- 2023-01-23 23:23:47 German128 lab33
-    - Learning rate Sieger. Dieses Mal mit korrektem Datensatz von 128 Länge
-    - learning rate 1e-4
-    - beta 1
-    - gamma 0, 10
-    - capacity 0, 10
-    - epochs 25
+
+
 - 2023-01-23 23:37:40 Wikipedia128 lab35
     - Learning rate Sieger. Dieses Mal mit korrektem Datensatz von 128 Länge
     - test, ob Wikipedia auch das gleiche Ergebnis gibt
@@ -59,50 +144,33 @@
     - gamma 0, 10
     - capacity 0, 10
     - epochs 25
-- 2023-01-24_00:40:07 German128 lab36
-    - very, very large epoch number
-    - learning rate 1e-4
-    - beta 1
-    - gamma 10
-    - capacity 0
-    - epochs 1000
-- 2023-01-24 17:24:18 German128 lab33
-    - Learning rate Sieger. Erhöhe die Layers auf 2
-    - learning rate 1e-4
-    - beta 1
-    - gamma 0, 10
-    - capacity 0, 10
-    - nlayers 2
-    - epochs 25
-    - result: no real improvement
-- 2023-01-25 18:24:21 German128 lab35
-    - Siegerwerte. Erhöhe die Layers auf 2. Werte von Controllable
-    - d-model 256
-    - z-dim 256
-    - d-hid 1024
-    - learning rate 1e-4
-    - beta 1
-    - gamma 10
-    - capacity 0
-    - nlayers 1
-    - epochs 25
-- 2023-01-25 18:51:55 German128 lab32
-    - Siegerwerte. Loss beinhaltet [PAD]
-    - lr 1e-4
-    - beta 1
-    - capacity 0
-    - gamma 10
-    - epochs 25
 - 2023-01-28 19:51:21 German128 lab36
     - Älterer Run. Test ob NaN auftaucht. see `error`
     - lr 1e-2
     - beta 1, 4, 10
     - gamma 1, 10, 20
-- 2023-02-01 22:00:53 German128 lab34
-    - Siegerwerte. Größere Batchsize, Word-level sampling, metrics on subset of 10 batches 
+
+- 2023-02-03 16:26:21 German128 lab36
+    - Parameter search
+    - epochs 50
+    - lr 1e-3, 1e-4, 1e-5, 1e-6
+    - gamma 0.1, 1, 10
+    - capacity 0, 1, 10
+    - delta 0.1, 1, 10
+    - batch-size 64
+- 2023-02-05 15:10:03 German128 lab33
+    - Siegerwerte, unregularized
     - lr 1e-4
-    - beta 1
     - capacity 0
     - gamma 10
-    - epochs 25
+    - epochs 100
     - batch-size 64
+- 2023-02-05 18:18:03 Wikipedia lab32
+    - Siegerwerte
+    - epochs 50
+    - batch-size 64
+
+
+## To be started
+- bigger network on good parameters
+- without memory_mask
