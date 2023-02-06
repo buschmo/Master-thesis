@@ -84,6 +84,8 @@ class Trainer():
                         data_loader=generator_val,
                         epoch_num=epoch_index
                     )
+                    process = Process(target=self.eval_model,
+                                      args=(generator_val, epoch_index))
                     processes.append(process)
 
                 if self.writer:
@@ -111,9 +113,10 @@ class Trainer():
                 if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.writer:
                     self.model.save_checkpoint(epoch_index)
         except KeyboardInterrupt:
-            print("Exiting saving metric results...")
+            print("Exiting training...")
 
-        self.save_evaluations(processes)
+        for process in tqdm(processes, desc="Waiting for metrics"):
+            process.join()
         
         if self.writer:
             self.model.save()
@@ -197,11 +200,19 @@ class Trainer():
     @staticmethod
     def mean_accuracy(weights, targets):
         raise NotImplementedError
-
-    def save_evaluations(self, processes):
-        for (epoch_num, p,q) in tqdm(processes, desc="Saving metrics"):
-            metrics = q.get()
-            p.join()
+            
+    def eval_model(self, data_loader, epoch_num=0):
+        # From image_vae_trainer.compute_eval_metrics
+        results_fp = self.model.filepath.with_stem(
+            f"{self.model.filepath.stem}_{epoch_num}").with_suffix(".json")
+        if results_fp.exists():
+            with open(results_fp, 'r') as infile:
+                metrics = json.load(infile)
+        else:
+            latent_codes, attributes, attr_list = self.compute_representations(
+                data_loader)
+            
+            metrics = self.compute_eval_metrics(latent_codes, attributes, attr_list)
             if self.writer:
                 self.writer.add_scalars("Disentanglement/Interpretability", {
                                         k: v[1] for k, v in metrics["Interpretability"].items()}, epoch_num)
@@ -215,29 +226,13 @@ class Trainer():
             #     if not results_fp.parent.exists():
             #         results_fp.parent.mkdir(parents=True)
             #     with open(results_fp, 'w') as outfile:
-            #         json.dump(self.metrics, outfile, indent=2)
+            #         json.dump(metrics, outfile, indent=2)
 
-    def eval_model(self, data_loader, epoch_num=0):
-        # From image_vae_trainer.compute_eval_metrics
-        results_fp = self.model.filepath.with_stem(
-            f"{self.model.filepath.stem}_{epoch_num}").with_suffix(".json")
-        if results_fp.exists():
-            with open(results_fp, 'r') as infile:
-                metrics = json.load(infile)
-        else:
-            latent_codes, attributes, attr_list = self.compute_representations(
-                data_loader)
-            q = Queue()
-            p = Process(
-                target=self.compute_eval_metrics,
-                args=(latent_codes, attributes, attr_list, q)
-            )
-            p.start()
 
         return (epoch_num,p,q)
 
     @staticmethod
-    def compute_eval_metrics(latent_codes, attributes, attr_list, queue):
+    def compute_eval_metrics(latent_codes, attributes, attr_list):
         # interp_metrics = evl.compute_interpretability_metric(
         #     latent_codes, attributes, attr_list
         # )
@@ -253,28 +248,28 @@ class Trainer():
         # # metrics.update(self.test_model(batch_size=batch_size))
         
         metrics = {}
-        q = Queue()
+        queue = Queue()
         processes = [
             Process(target=evl.compute_interpretability_metric,
-                    args=(latent_codes, attributes, attr_list, q)),
+                    args=(latent_codes, attributes, attr_list, queue)),
             Process(target=evl.compute_mig,
-                    args=(latent_codes, attributes, q)),
+                    args=(latent_codes, attributes, queue)),
             Process(target=evl.compute_sap_score,
-                    args=(latent_codes, attributes, q)),
+                    args=(latent_codes, attributes, queue)),
             Process(target=evl.compute_correlation_score,
-                    args=(latent_codes, attributes, q))
+                    args=(latent_codes, attributes, queue))
         ]
-        for p in processes:
-            p.start()
+        for process in processes:
+            process.start()
             
         for _ in range(len(processes)):
-            result = q.get()
+            result = queue.get()
             metrics.update(result)
         
-        for p in processes:
-            p.join()
+        for process in processes:
+            process.join()
         
-        queue.put(metrics)
+        return metrics
 
     def kl_annealing(self, t, T):
         tau = (t-1 % np.ceil(T / self.M)) / (T / self.M)
