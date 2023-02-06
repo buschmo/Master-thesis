@@ -39,7 +39,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-ne", "--nhead-encoder", "nhead_encoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer encoder (Also used as linear dim of encoder in NaiveModel).")
 @click.option("-nd", "--nhead-decoder", "nhead_decoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer decoder (Also used as linear dim of decoder in NaiveModel).")
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
-@click.option("-nl", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
+@click.option("-nl", "--layers", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
 def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selection: str, dataset: str, name:str, emb_length: int, num_epochs: int, batch_size: int, kl_M: int, kl_R: float, learning_rate: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     # TODO assert value must adhere to specific ranges
