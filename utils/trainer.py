@@ -82,6 +82,7 @@ class Trainer():
 
                     process = Process(target=self.eval_model,
                                       args=(generator_val, epoch_index))
+                    process.start()
                     processes.append(process)
 
                 if self.writer:
