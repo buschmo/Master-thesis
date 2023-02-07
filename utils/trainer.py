@@ -80,10 +80,6 @@ class Trainer():
                         train=False
                     )
 
-                    process = self.eval_model(
-                        data_loader=generator_val,
-                        epoch_num=epoch_index
-                    )
                     process = Process(target=self.eval_model,
                                       args=(generator_val, epoch_index))
                     processes.append(process)
@@ -227,9 +223,6 @@ class Trainer():
             #         results_fp.parent.mkdir(parents=True)
             #     with open(results_fp, 'w') as outfile:
             #         json.dump(metrics, outfile, indent=2)
-
-
-        return (epoch_num,p,q)
 
     @staticmethod
     def compute_eval_metrics(latent_codes, attributes, attr_list):
