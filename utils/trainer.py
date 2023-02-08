@@ -110,9 +110,9 @@ class Trainer():
                     self.model.save_checkpoint(epoch_index)
         except KeyboardInterrupt:
             print("Exiting training...")
-
-        for process in tqdm(processes, desc="Waiting for metrics"):
-            process.join()
+        finally:
+            for process in tqdm(processes, desc="Waiting for metrics"):
+                process.join()
 
         if self.writer:
             self.model.save()
@@ -264,13 +264,14 @@ class Trainer():
         ]
         for process in processes:
             process.start()
-
-        for _ in range(len(processes)):
-            result = queue.get()
-            metrics.update(result)
-
-        for process in processes:
-            process.join()
+            
+        try:
+            for _ in range(len(processes)):
+                result = queue.get()
+                metrics.update(result)
+        finally:
+            for process in processes:
+                process.join()
 
         return metrics
 
