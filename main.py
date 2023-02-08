@@ -94,7 +94,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selecti
         if not folder_log.exists():
             folder_log.mkdir(parents=True)
         with open(p, "w") as fp:
-            json.dump(args, fp, indent=4)
+            json.dump(args, fp, indent=4, sort_keys=True)
 
     if train:
         for kl_M, kl_R, lr, ga, ca, dataset in tqdm(product(kl_M, kl_R, learning_rate, gamma, capacity, datasets), desc="Models"):
@@ -140,7 +140,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selecti
                 p = Path(
                     folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
                 with open(p, "w") as fp:
-                    json.dump(args, fp, indent=4)
+                    json.dump(args, fp, indent=4, sort_keys=True)
 
             if not no_log:
                 path = Path(folder_path, "_".join(
