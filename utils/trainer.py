@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 import json
-from multiprocessing import Queue, Process, Lock
+from multiprocessing import Queue, Process
 
 # own packages
 import utils.utilitites as utl
@@ -62,7 +62,8 @@ class Trainer():
         processes = []
 
         try:
-            lock = Lock()
+            queue = Queue()
+            process_counter = 0
             for epoch_index in tqdm(range(num_epochs), desc="Epochs"):
                 # Train the model
                 self.model.train()
@@ -81,8 +82,11 @@ class Trainer():
                         train=False
                     )
 
-                    process = self.eval_model(generator_val, epoch_index, lock)
+                    process = Process(target=self.eval_model, args=(generator_val, epoch_index, queue))
+                    process.daemon = True
+                    process.start()
                     processes.append(process)
+                    process_counter += 1
 
                 if self.writer:
                     for k in mean_loss_dict_train:
@@ -95,6 +99,12 @@ class Trainer():
                         "accuracy/training", mean_accuracy_train, epoch_index)
                     self.writer.add_scalar(
                         "accuracy/validation", mean_accuracy_val, epoch_index)
+
+                # save metrics if any is finished
+                while not queue.empty():
+                    i, metrics, = queue.get()
+                    save_metrics(metrics, i)
+                    process_counter -= 1
 
                 data_element = {
                     'epoch_index': epoch_index,
@@ -111,8 +121,17 @@ class Trainer():
         except KeyboardInterrupt:
             print("Exiting training...")
         finally:
-            for process in tqdm(processes, desc="Waiting for metrics"):
-                process.join()
+            try:
+                for _ in tqdm(range(process_counter), desc="Waiting for metrics"):
+                    i, metrics, = queue.get()
+                    save_metrics(metrics, i)
+                for process in processes:
+                    process.join()
+            except KeyboardInterrupt:
+                print("Terminating remaining processes.")
+                for process in processes:
+                    process.terminate()
+                
 
         if self.writer:
             self.model.save()
@@ -197,7 +216,7 @@ class Trainer():
     def mean_accuracy(weights, targets):
         raise NotImplementedError
 
-    def eval_model(self, data_loader, epoch_num, lock):
+    def eval_model(self, data_loader, epoch_num, queue):
         # From image_vae_trainer.compute_eval_metrics
         results_fp = self.model.filepath.with_stem(
             f"{self.model.filepath.stem}_{epoch_num}").with_suffix(".json")
@@ -207,27 +226,22 @@ class Trainer():
         else:
             latent_codes, attributes, attr_list = self.compute_representations(
                 data_loader)
-            process = Process(target=self._eval_parallel_and_save,
-                              args=(latent_codes, attributes, attr_list, lock))
-            process.start()
-            return process
+            metrics = self.compute_eval_metrics(
+                        latent_codes, attributes, attr_list)
 
-    def _eval_parallel_and_save(self, latent_codes, attributes, attr_list, lock):
-        metrics = self.compute_eval_metrics(
-            latent_codes, attributes, attr_list)
+            queue.put((epoch_num, metrics))
+
+
+    def save_metrics(self, metrics, epoch_num):
         if self.writer:
-            lock.acquire()
-            try:
-                self.writer.add_scalars("Disentanglement/Interpretability", {
-                                        k: v[1] for k, v in metrics["Interpretability"].items()}, epoch_num)
-                self.writer.add_scalar("Disentanglement/Mutual Information Gap",
-                                    metrics["Mutual Information Gap"], epoch_num)
-                self.writer.add_scalar("Disentanglement/Separated Attribute Predictability",
-                                    metrics["Separated Attribute Predictability"], epoch_num)
-                self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
-                                    metrics["Spearman's Rank Correlation"], epoch_num)
-            finally:
-                lock.release()
+            self.writer.add_scalars("Disentanglement/Interpretability", {
+                                    k: v[1] for k, v in metrics["Interpretability"].items()}, epoch_num)
+            self.writer.add_scalar("Disentanglement/Mutual Information Gap",
+                                metrics["Mutual Information Gap"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Separated Attribute Predictability",
+                                metrics["Separated Attribute Predictability"], epoch_num)
+            self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
+                                metrics["Spearman's Rank Correlation"], epoch_num)
         # else:
         #     if not results_fp.parent.exists():
         #         results_fp.parent.mkdir(parents=True)
