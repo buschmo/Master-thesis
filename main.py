@@ -26,12 +26,12 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-E", "--emb-length", "emb_length", type=int, default=128, show_default=True, help="Sets the length of the WordPiece embedding.")
 @click.option("--num-epochs", "--epochs", "num_epochs", type=int, default=25, show_default=True, help="Number of epochs to be trained.")
 @click.option("-B", "--batch-size", "batch_size", type=int, default=16, show_default=True, help="Size of the batches to be trained.")
-@click.option("-klM", "--kl-cycles", "kl_M", type=int, default=[4], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible")
-@click.option("-klR", "--kl-proportion", "kl_R", type=float, default=[0.5], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible")
-@click.option("-L", "--learning-rate", "learning_rate", type=float, default=[1e-4], multiple=True, show_default=True, help="Learning rate(s); multiple values possible")
-@click.option("-Ca", "--capacity", "capacity", type=float, default=[0.0], multiple=True, show_default=True, help="Capacity, capacity of kld's bottleneck channel; multiple values possible")
-@click.option("-Ga", "--gamma", "gamma", type=float, default=[10.0], multiple=True, show_default=True, help="Gamma, impact of ar-regularization on loss; multiple values possible")
-@click.option("-De", "--delta", "delta", type=float, default=[0.0], multiple=True, show_default=True, help="Delta, tuning the spread of the posterior distribution in ar-regularization; multiple values possible")
+@click.option("-klM", "--kl-cycles", "kl_Ms", type=int, default=[4], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible.")
+@click.option("-klR", "--kl-proportion", "kl_Rs", type=float, default=[0.5], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible.")
+@click.option("-L", "--learning-rate", "learning_rate", type=float, default=[1e-4], multiple=True, show_default=True, help="Learning rate(s); multiple values possible.")
+@click.option("-Ca", "--capacity", "capacity", type=float, default=[0.0], multiple=True, show_default=True, help="Capacity, capacity of kld's bottleneck channel; multiple values possible.")
+@click.option("-Ga", "--gamma", "gamma", type=float, default=[10.0], multiple=True, show_default=True, help="Gamma, impact of ar-regularization on loss; multiple values possible.")
+@click.option("-De", "--delta", "delta", type=float, default=[0.0], multiple=True, show_default=True, help="Delta, tuning the spread of the posterior distribution in ar-regularization; multiple values possible.")
 @click.option("--no-reg", "use_reg_loss", is_flag=True, type=bool, default=True, show_default=True, help="Use regularization as defined by Pati et al (2020) - 'Attribute-based Regularization of Latent Spaces for Variational Auto-Encoders'.")
 @click.option("-C", "--checkpoint-index", "checkpoint_index", type=int, default=0, show_default=True, help="Frequency of checkpoint creation. 0 disables checkpoints.")
 @click.option("-d", "--d-model", "d_model", type=int, default=256, show_default=True, help="Internal dimension size of the TVAE model. Each sublayer produces this output size.")
@@ -39,9 +39,9 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-ne", "--nhead-encoder", "nhead_encoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer encoder (Also used as linear dim of encoder in NaiveModel).")
 @click.option("-nd", "--nhead-decoder", "nhead_decoder", type=int, default=8, show_default=True, help="Number of attention heads in transformer decoder (Also used as linear dim of decoder in NaiveModel).")
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
-@click.option("-nl", "--layers", "--nlayers", "nlayers", type=int, default=1, show_default=True, help="Number of transformer blocks.")
+@click.option("-nl", "--layers", "--nlayers", "nlayers", type=int, default=[1], multiple=True, show_default=True, help="Number of transformer blocks; multiple values possible.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
-def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selection: str, dataset: str, name:str, emb_length: int, num_epochs: int, batch_size: int, kl_M: int, kl_R: float, learning_rate: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selection: str, dataset: str, name:str, emb_length: int, num_epochs: int, batch_size: int, kl_Ms: int, kl_Rs: float, learning_rate: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     # TODO assert value must adhere to specific ranges
     # e.g. 0 < lr < 10 for example
 
@@ -97,10 +97,11 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selecti
             json.dump(args, fp, indent=4, sort_keys=True)
 
     if train:
-        for kl_M, kl_R, lr, ga, ca, dataset in tqdm(product(kl_M, kl_R, learning_rate, gamma, capacity, datasets), desc="Models"):
+        for nlayer, kl_M, kl_R, lr, ga, ca, dataset in tqdm(product(nlayers, kl_Ms, kl_Rs, learning_rate, gamma, capacity, datasets), desc="Models"):
             args["dataset"] = str(dataset)
-            args["kl_M"] = kl_M
-            args["kl_R"] = kl_R
+            args["nlayers"] = nlayer
+            args["kl_Ms"] = kl_M
+            args["kl_Rs"] = kl_R
             args["learning_rate"] = lr
             args["gamma"] = ga
             args["capacity"] = ca
@@ -118,7 +119,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selecti
                     nhead_encoder=nhead_encoder,
                     nhead_decoder=nhead_decoder,
                     d_hid=d_hid,
-                    nlayers=nlayers,
+                    nlayers=nlayer,
                     dropout=dropout,
                     use_gru=False,
                     foldername=dataset.__str__(),
@@ -162,7 +163,6 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selecti
             )
 
             model.update_filepath(folderpath=path)
-
             trainer.train_model(
                 batch_size=batch_size,
                 num_epochs=num_epochs
