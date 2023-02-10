@@ -147,7 +147,7 @@ class Trainer():
             self.optimizer.zero_grad()
 
             loss_dict, accuracy = self.loss_and_acc_for_batch(
-                batch_data, epoch_num, batch_num, train=train
+                batch_data, epoch_num, batch_num, len(data_loader), train=train
             )
 
             loss = loss_dict["sum"]

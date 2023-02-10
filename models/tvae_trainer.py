@@ -56,7 +56,7 @@ class TVAETrainer(Trainer):
         # TODO no memory_key_padding? no src_masking?
         return (src.to("cuda"), tgt.to("cuda"), tgt_true.to("cuda"), tgt_mask.to("cuda"), memory_mask.to("cuda"), src_key_padding_mask.to("cuda"), tgt_key_padding_mask.to("cuda"), labels.to("cuda"))
 
-    def loss_and_acc_for_batch(self, batch, epoch_num=None, batch_num=None, train=True):
+    def loss_and_acc_for_batch(self, batch, epoch_num=None, batch_num=None, epoch_len=0, train=True):
         src, tgt, tgt_true, tgt_mask, memory_mask, src_key_padding_mask, tgt_key_padding_mask, labels = batch
 
         try:
@@ -78,6 +78,14 @@ class TVAETrainer(Trainer):
         dist_loss, kld = self.compute_kld_loss(
             z_dist, prior_dist, beta=self.beta, c=self.capacity
         )
+        if self.writer:
+            if train:
+                mode = "training"
+            else:
+                mode = "validation"
+            step = (epoch_num+1)*epoch_len + batch_num
+            self.writer.add_scalar(f"loss_KLD_batchwise/{mode}", dist_loss.mean(), step)
+            self.writer.add_scalar(f"loss_KLD_unscaled_batchwise/{mode}", kld.mean(), step)
 
         # add losses
         loss = recons_loss + dist_loss
