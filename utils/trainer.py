@@ -61,9 +61,9 @@ class Trainer():
 
         processes = []
 
+        queue = Queue()
+        process_counter = 0
         try:
-            queue = Queue()
-            process_counter = 0
             for epoch_index in tqdm(range(num_epochs), desc="Epochs"):
                 # Train the model
                 self.model.train()
@@ -82,9 +82,8 @@ class Trainer():
                         train=False
                     )
 
-                    process = Process(target=self.eval_model, args=(generator_val, epoch_index, queue))
-                    process.daemon = True
-                    process.start()
+                    process = self.eval_model(
+                        generator_val, epoch_index, queue)
                     processes.append(process)
                     process_counter += 1
 
@@ -103,7 +102,7 @@ class Trainer():
                 # save metrics if any is finished
                 while not queue.empty():
                     i, metrics, = queue.get()
-                    save_metrics(metrics, i)
+                    self.save_metrics(metrics, i)
                     process_counter -= 1
 
                 data_element = {
@@ -123,15 +122,14 @@ class Trainer():
         finally:
             try:
                 for _ in tqdm(range(process_counter), desc="Waiting for metrics"):
-                    i, metrics, = queue.get()
-                    save_metrics(metrics, i)
+                    i, metrics = queue.get()
+                    self.save_metrics(metrics, i)
                 for process in processes:
                     process.join()
             except KeyboardInterrupt:
                 print("Terminating remaining processes.")
                 for process in processes:
                     process.terminate()
-                
 
         if self.writer:
             self.model.save()
@@ -226,30 +224,28 @@ class Trainer():
         else:
             latent_codes, attributes, attr_list = self.compute_representations(
                 data_loader)
-            metrics = self.compute_eval_metrics(
-                        latent_codes, attributes, attr_list)
-
-            queue.put((epoch_num, metrics))
-
+            process = Process(target=self.compute_eval_metrics,
+                              args=(latent_codes, attributes, attr_list, epoch_num, queue))
+            process.start()
+            return process
 
     def save_metrics(self, metrics, epoch_num):
         if self.writer:
             self.writer.add_scalars("Disentanglement/Interpretability", {
                                     k: v[1] for k, v in metrics["Interpretability"].items()}, epoch_num)
             self.writer.add_scalar("Disentanglement/Mutual Information Gap",
-                                metrics["Mutual Information Gap"], epoch_num)
+                                   metrics["Mutual Information Gap"], epoch_num)
             self.writer.add_scalar("Disentanglement/Separated Attribute Predictability",
-                                metrics["Separated Attribute Predictability"], epoch_num)
+                                   metrics["Separated Attribute Predictability"], epoch_num)
             self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
-                                metrics["Spearman's Rank Correlation"], epoch_num)
-        # else:
-        #     if not results_fp.parent.exists():
-        #         results_fp.parent.mkdir(parents=True)
-        #     with open(results_fp, 'w') as outfile:
-        #         json.dump(metrics, outfile, indent=2)
+                                   metrics["Spearman's Rank Correlation"], epoch_num)
+        # if not results_fp.parent.exists():
+        #     results_fp.parent.mkdir(parents=True)
+        # with open(results_fp, 'w') as outfile:
+        #     json.dump(metrics, outfile, indent=2)
 
     @staticmethod
-    def compute_eval_metrics(latent_codes, attributes, attr_list):
+    def compute_eval_metrics(latent_codes, attributes, attr_list, epoch_num, queue):
         # interp_metrics = evl.compute_interpretability_metric(
         #     latent_codes, attributes, attr_list
         # )
@@ -265,29 +261,29 @@ class Trainer():
         # # metrics.update(self.test_model(batch_size=batch_size))
 
         metrics = {}
-        queue = Queue()
+        q = Queue()
         processes = [
             Process(target=evl.compute_interpretability_metric,
-                    args=(latent_codes, attributes, attr_list, queue)),
+                    args=(latent_codes, attributes, attr_list, q)),
             Process(target=evl.compute_mig,
-                    args=(latent_codes, attributes, queue)),
+                    args=(latent_codes, attributes, q)),
             Process(target=evl.compute_sap_score,
-                    args=(latent_codes, attributes, queue)),
+                    args=(latent_codes, attributes, q)),
             Process(target=evl.compute_correlation_score,
-                    args=(latent_codes, attributes, queue))
+                    args=(latent_codes, attributes, q))
         ]
         for process in processes:
             process.start()
-            
+
         try:
-            for _ in range(len(processes)):
-                result = queue.get()
+            for i in range(len(processes)):
+                result = q.get()
                 metrics.update(result)
         finally:
             for process in processes:
                 process.join()
 
-        return metrics
+        queue.put((epoch_num, metrics))
 
     def kl_annealing(self, t, T):
         tau = (t-1 % np.ceil(T / self.M)) / (T / self.M)
