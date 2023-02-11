@@ -20,7 +20,7 @@ class TVAE(BaseModel):
         self.nhead_encoder = nhead_encoder
         self.nhead_decoder = nhead_decoder
         self.d_hid = d_hid
-        self.nlayers= nlayers
+        self.nlayers = nlayers
         self.dropout = dropout
         super().__init__(**kwargs)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
@@ -36,7 +36,8 @@ class TVAE(BaseModel):
         self.encoder = nn.TransformerEncoder(
             encoder_layer=self.encoder_layer,
             num_layers=nlayers,
-            enable_nested_tensor= False # Turn of quirky optimization. leads to errors in evaluation
+            # Turn of quirky optimization. leads to errors in evaluation
+            enable_nested_tensor=False
         )
 
         # TODO two linear layers?
@@ -116,14 +117,15 @@ class TVAE(BaseModel):
         tgt = self.embedder(tgt)
 
         memory = self.latent2hidden(z_tilde)
-        memory = memory.view(memory.shape[0], 1, memory.shape[1]).repeat(1,tgt.shape[1],1)
+        memory = memory.view(memory.shape[0], 1, memory.shape[1]).repeat(
+            1, memory_mask.shape[1], 1)
 
         try:
             logits = self.decoder(
                 tgt=tgt,
                 memory=memory,
                 tgt_mask=tgt_mask,
-                memory_mask=memory_mask, # is memory masking necessary for avg pooling?
+                memory_mask=memory_mask,  # is memory masking necessary for avg pooling?
                 tgt_key_padding_mask=tgt_key_padding_mask,
                 memory_key_padding_mask=src_key_padding_mask
             )
