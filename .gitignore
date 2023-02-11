@@ -3,5 +3,6 @@ checkpoints/
 data/
 __pycache__/
 runs/
+results/
 Todo.md
 *.json
