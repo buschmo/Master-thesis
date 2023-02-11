@@ -83,9 +83,11 @@ class TVAETrainer(Trainer):
                 mode = "training"
             else:
                 mode = "validation"
-            step = (epoch_num+1)*epoch_len + batch_num
-            self.writer.add_scalar(f"loss_KLD_batchwise/{mode}", dist_loss.mean(), step)
-            self.writer.add_scalar(f"loss_KLD_unscaled_batchwise/{mode}", kld.mean(), step)
+            step = epoch_num*epoch_len + batch_num
+            self.writer.add_scalar(
+                f"loss_KLD_batchwise/{mode}", dist_loss.mean(), step)
+            self.writer.add_scalar(
+                f"loss_KLD_unscaled_batchwise/{mode}", kld.mean(), step)
 
         # add losses
         loss = recons_loss + dist_loss
