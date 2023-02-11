@@ -84,16 +84,16 @@ class TVAE(BaseModel):
 
         # TODO this needs to be reconsidered
         # [batch, sequence, d_model] -> [batch, d_model]
-        # hidden_mean = torch.mean(hidden, dim=1)
+        hidden_mean = torch.mean(hidden, dim=1)
         # [batch, d_model] -> [batch, z_dim]
-        # z_mean = self.enc_mean(hidden_mean)
+        z_mean = self.enc_mean(hidden_mean)
         # [batch, d_model] -> [batch, z_dim]
-        # z_log_std = self.enc_log_std(hidden_mean)
+        z_log_std = self.enc_log_std(hidden_mean)
 
-        # [batch, sequence, d_model] -> [batch, sequence, z_dim]
-        z_mean = self.enc_mean(hidden)
-        # [batch, sequence, d_model] -> [batch, sequence, z_dim]
-        z_log_std = self.enc_log_std(hidden)
+        # # [batch, sequence, d_model] -> [batch, sequence, z_dim]
+        # z_mean = self.enc_mean(hidden)
+        # # [batch, sequence, d_model] -> [batch, sequence, z_dim]
+        # z_log_std = self.enc_log_std(hidden)
         z_distribution = distributions.Normal(
             loc=z_mean, scale=torch.exp(z_log_std))
 
@@ -115,18 +115,15 @@ class TVAE(BaseModel):
 
         tgt = self.embedder(tgt)
 
-        memory = z_tilde
-        # memory_small = self.latent2hidden(z_tilde)
-        # memory = memory_small.view(memory_small.shape[0], 1, memory_small.shape[1]).repeat(1,tgt.shape[1],1)
-
         memory = self.latent2hidden(z_tilde)
+        memory = memory.view(memory.shape[0], 1, memory.shape[1]).repeat(1,tgt.shape[1],1)
 
         try:
             logits = self.decoder(
                 tgt=tgt,
                 memory=memory,
                 tgt_mask=tgt_mask,
-                memory_mask=memory_mask,
+                memory_mask=memory_mask, # is memory masking necessary for avg pooling?
                 tgt_key_padding_mask=tgt_key_padding_mask,
                 memory_key_padding_mask=src_key_padding_mask
             )
