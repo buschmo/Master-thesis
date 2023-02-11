@@ -20,13 +20,14 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("--train", "train", is_flag=True, type=bool, default=False, show_default=True, help="Flag, if a model is to be trained.")
 @click.option("--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
 @click.option("--no-log", "no_log", is_flag=True, type=bool, default=False, show_default=True, help="Toggle logging.")
+@click.option("--iteration", "iteration", type=int, default=1, show_default=True, help="How many times the program is repeated.")
 @click.option("-M", "--model", "model_selection", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
 @click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="German", show_default=True, help="Determine the dataset(s) to be used.")
 @click.option("-N", "--name", "name", type=str, default="", show_default=True, help="Alternative name of the output folders.")
 @click.option("-E", "--emb-length", "emb_length", type=int, default=128, show_default=True, help="Sets the length of the WordPiece embedding.")
 @click.option("--num-epochs", "--epochs", "num_epochs", type=int, default=25, show_default=True, help="Number of epochs to be trained.")
 @click.option("-B", "--batch-size", "batch_size", type=int, default=16, show_default=True, help="Size of the batches to be trained.")
-@click.option("-klM", "--kl-cycles", "kl_Ms", type=int, default=[4], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible.")
+@click.option("-klM", "--kl-cycles", "kl_Ms", type=int, default=[2], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible.")
 @click.option("-klR", "--kl-proportion", "kl_Rs", type=float, default=[0.5], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible.")
 @click.option("-L", "--learning-rate", "learning_rate", type=float, default=[1e-4], multiple=True, show_default=True, help="Learning rate(s); multiple values possible.")
 @click.option("-Ca", "--capacity", "capacity", type=float, default=[0.0], multiple=True, show_default=True, help="Capacity, capacity of kld's bottleneck channel; multiple values possible.")
@@ -41,7 +42,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=512, show_default=True, help="Dimension of transformer's linear layer.")
 @click.option("-nl", "--layers", "--nlayers", "nlayers", type=int, default=[1], multiple=True, show_default=True, help="Number of transformer blocks; multiple values possible.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
-def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selection: str, dataset: str, name:str, emb_length: int, num_epochs: int, batch_size: int, kl_Ms: int, kl_Rs: float, learning_rate: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, iteration:int, model_selection: str, dataset: str, name:str, emb_length: int, num_epochs: int, batch_size: int, kl_Ms: int, kl_Rs: float, learning_rate: float, capacity: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     # TODO assert value must adhere to specific ranges
     # e.g. 0 < lr < 10 for example
 
@@ -96,77 +97,79 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, model_selecti
         with open(p, "w") as fp:
             json.dump(args, fp, indent=4, sort_keys=True)
 
+    parameters = [i for i in product(nlayers, kl_Ms, kl_Rs, learning_rate, gamma, capacity, datasets)]
     if train:
-        for nlayer, kl_M, kl_R, lr, ga, ca, dataset in tqdm(product(nlayers, kl_Ms, kl_Rs, learning_rate, gamma, capacity, datasets), desc="Models"):
-            args["dataset"] = str(dataset)
-            args["nlayers"] = nlayer
-            args["kl_Ms"] = kl_M
-            args["kl_Rs"] = kl_R
-            args["learning_rate"] = lr
-            args["gamma"] = ga
-            args["capacity"] = ca
+        for _ in tqdm(range(iteration), desc="Repetitions"):
+            for nlayer, kl_M, kl_R, lr, ga, ca, dataset in tqdm(parameters, desc="Models"):
+                args["dataset"] = str(dataset)
+                args["nlayers"] = nlayer
+                args["kl_Ms"] = kl_M
+                args["kl_Rs"] = kl_R
+                args["learning_rate"] = lr
+                args["gamma"] = ga
+                args["capacity"] = ca
 
-            ts = time.time()
-            timestamp = datetime.datetime.fromtimestamp(ts).strftime(
-                '%Y-%m-%d_%H:%M:%S'
-            )
-
-            if model_selection == "TVAE":
-                model = TVAE(
-                    ntoken=dataset.vocab_size,
-                    d_model=d_model,
-                    z_dim=z_dim,
-                    nhead_encoder=nhead_encoder,
-                    nhead_decoder=nhead_decoder,
-                    d_hid=d_hid,
-                    nlayers=nlayer,
-                    dropout=dropout,
-                    use_gru=False,
-                    foldername=dataset.__str__(),
-                    timestamp=timestamp
+                ts = time.time()
+                timestamp = datetime.datetime.fromtimestamp(ts).strftime(
+                    '%Y-%m-%d_%H:%M:%S'
                 )
-                Trainer = TVAETrainer
-            else:
-                model = NaiveVAE(
-                    input_size=dataset.getInputSize(),
-                    z_dim=z_dim,
-                    encoder_dim=nhead_encoder,
-                    decoder_dim=nhead_decoder,
-                    foldername=dataset.__str__(),
-                    timestamp=timestamp
+
+                if model_selection == "TVAE":
+                    model = TVAE(
+                        ntoken=dataset.vocab_size,
+                        d_model=d_model,
+                        z_dim=z_dim,
+                        nhead_encoder=nhead_encoder,
+                        nhead_decoder=nhead_decoder,
+                        d_hid=d_hid,
+                        nlayers=nlayer,
+                        dropout=dropout,
+                        use_gru=False,
+                        foldername=dataset.__str__(),
+                        timestamp=timestamp
+                    )
+                    Trainer = TVAETrainer
+                else:
+                    model = NaiveVAE(
+                        input_size=dataset.getInputSize(),
+                        z_dim=z_dim,
+                        encoder_dim=nhead_encoder,
+                        decoder_dim=nhead_decoder,
+                        foldername=dataset.__str__(),
+                        timestamp=timestamp
+                    )
+                    Trainer = NaiveTrainer
+
+                if not no_log:
+                    p = Path(
+                        folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
+                    with open(p, "w") as fp:
+                        json.dump(args, fp, indent=4, sort_keys=True)
+
+                if not no_log:
+                    path = Path(folder_path, "_".join(
+                        [timestamp, str(model), "Reg"+str(use_reg_loss)]))
+                else:
+                    path = ""
+
+                trainer = Trainer(
+                    dataset=dataset,
+                    model=model,
+                    checkpoint_index=checkpoint_index,
+                    M=kl_M,
+                    R=kl_R,
+                    lr=lr,
+                    gamma=ga,
+                    capacity=ca,
+                    use_reg_loss=use_reg_loss,
+                    folderpath=path
                 )
-                Trainer = NaiveTrainer
 
-            if not no_log:
-                p = Path(
-                    folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
-                with open(p, "w") as fp:
-                    json.dump(args, fp, indent=4, sort_keys=True)
-
-            if not no_log:
-                path = Path(folder_path, "_".join(
-                    [timestamp, str(model), "Reg"+str(use_reg_loss)]))
-            else:
-                path = ""
-
-            trainer = Trainer(
-                dataset=dataset,
-                model=model,
-                checkpoint_index=checkpoint_index,
-                M=kl_M,
-                R=kl_R,
-                lr=lr,
-                gamma=ga,
-                capacity=ca,
-                use_reg_loss=use_reg_loss,
-                folderpath=path
-            )
-
-            model.update_filepath(folderpath=path)
-            trainer.train_model(
-                batch_size=batch_size,
-                num_epochs=num_epochs
-            )
+                model.update_filepath(folderpath=path)
+                trainer.train_model(
+                    batch_size=batch_size,
+                    num_epochs=num_epochs
+                )
 
 
 def eval(path):
