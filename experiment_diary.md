@@ -6,7 +6,7 @@ This file documents the specific experiments
     - 2023-01-13 03:19 & 12:32 & 21:44:50 German128 (unfixed)
         - default values from startup
         - lr 1e-2 to 1e-06
-    - 2023-01-13 21:43 SimpleGerman128 (unfixed)
+    - 2023-01-13 21:43 SimpleGerman128 (unfixed) crashed
         - same as above, but two layers
         - lr 1e-4
 - varying lr, beta, gamma
@@ -50,6 +50,7 @@ This file documents the specific experiments
         - gamma 10
         - epochs 300
         - Result: kein starkes Overfitting erkennbar
+### Fixed embedding
 - fixed winner
     - 2023-01-23 23:23:47 German128 lab33
         - Learning rate Sieger. Dieses Mal mit korrektem Datensatz von 128 Länge
@@ -92,6 +93,7 @@ This file documents the specific experiments
         - capacity 0
         - gamma 10
         - epochs 25
+### Word level sampling
 - Word level sampling
     - 2023-02-01 22:00:53 German128 lab34
         - Siegerwerte. Größere Batchsize, metrics on subset of 10 batches 
@@ -118,10 +120,40 @@ This file documents the specific experiments
         - gamma 10
         - epochs 25
         - batch-size 64
-    - 2023-02-02 15:24 German128 lab34
+    - 2023-02-02 15:24 German128 lab34 Default linear KL
         - Siegerwerte. langer run
         - epochs 100
         - batch-size 64
+### With KL annealing
+- Parameter hunt
+    - 2023-02-03 16:26:21 German128 lab36
+        - Parameter search
+        - epochs 50
+        - lr 1e-3, 1e-4, 1e-5, 1e-6
+        - gamma 0.1, 1, 10
+        - capacity 0, 1, 10
+        - delta 0.1, 1, 10
+        - batch-size 64
+- Counterfactual parameters
+    - 2023-02-06 18:13:25 One layer
+        - No regularization used
+        - d_model, z_dim 256
+        - d_hid 1024
+        - nlayers 1
+        - lr 1e-4
+        - capacity 0
+        - gamma 10
+        - delta 0
+    - 2023-02-06 18:15:01 Two layers
+        - No regularization used
+        - d_model, z_dim 256
+        - d_hid 1024
+        - nlayers 2
+        - lr 1e-4
+        - capacity 0
+        - gamma 10
+        - delta 0
+    - 
 
 ## Diary
 
@@ -150,14 +182,7 @@ DELETED ALL PREVIOUS RUNS
     - beta 1, 4, 10
     - gamma 1, 10, 20
 
-- 2023-02-03 16:26:21 German128 lab36
-    - Parameter search
-    - epochs 50
-    - lr 1e-3, 1e-4, 1e-5, 1e-6
-    - gamma 0.1, 1, 10
-    - capacity 0, 1, 10
-    - delta 0.1, 1, 10
-    - batch-size 64
+
 - 2023-02-05 15:10:03 German128 lab33
     - Siegerwerte, unregularized
     - lr 1e-4
