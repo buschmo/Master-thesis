@@ -6,6 +6,8 @@ import os
 import pandas as pd
 from tensorflow.python.summary.summary_iterator import summary_iterator
 
+import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.chdir(Path(os.environ["MASTER"]))
 
 """
