@@ -66,22 +66,32 @@ def convert_tb_data(root_dir, sort_by=None):
 def parallel(input_dir, output_dir):
     df = convert_tb_data(input_dir)
     for name in set(df["name"]):
-        output_file = Path(output_dir, name.replace("/", "_")+".csv")
+        output_file = Path(output_dir, name.replace("/", "_")+".dat")
         values = list(map(lambda x: (x[2],x[3]), df[df["name"] == name].to_numpy()))
         if not output_file.exists():
             with open(output_file, "w") as fp:
                 fp.write(str(values)[1:-1])
 
-if __name__ == "__main__":
+def get_file_list():
     root_path = Path(os.environ["MASTER"], "save")
     dirs = [dir for dir in root_path.iterdir()]
-    
+
     l = []
     for dir in dirs:
         for input_dir in Path(dir, "runs").iterdir():
-            output_dir = Path(os.environ["MASTER"], "results", dir.name, input_dir.name)
-            if not output_dir.exists():
-                output_dir.mkdir(parents=True)
-            l.append((input_dir, output_dir))
+            l.extend(input_dir.iterdir())
+    return l
+
+if __name__ == "__main__":
+    input_dirs = get_file_list()
+    
+    l = []
+    for input_dir in input_dirs:
+        output_dir = Path(os.environ["MASTER"],
+                        "results", input_dir.parents[2].name, input_dir.name)
+
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True)
+        l.append((input_dir, output_dir))
     with Pool() as pool:
         pool.starmap(parallel, l)
