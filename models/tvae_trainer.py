@@ -72,7 +72,7 @@ class TVAETrainer(Trainer):
             print(f"Epoch-Batch: {epoch_num}-{batch_num}")
             raise err
         # compute reconstruction loss
-        recons_loss = self.reconstruction_loss(prob, tgt_true)
+        recons_loss = self.reconstruction_loss(prob, tgt_true, self.alpha)
 
         # compute KLD loss
         dist_loss, kld = self.compute_kld_loss(
@@ -127,9 +127,9 @@ class TVAETrainer(Trainer):
         return loss_dict, accuracy
 
     @staticmethod
-    def reconstruction_loss(input, target):
+    def reconstruction_loss(input, target, alpha):
         input = input.permute(0, 2, 1)
-        return F.cross_entropy(
+        return alpha * F.cross_entropy(
             input=input,
             target=target,
             ignore_index=0  # ignore the padding label

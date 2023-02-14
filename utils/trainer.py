@@ -23,7 +23,7 @@ ATTRIBUTE_DIMENSIONS = {
 
 
 class Trainer():
-    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
+    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, alpha=1.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
         # from trainer
         if folderpath:
             self.writer = SummaryWriter(log_dir=Path("runs", folderpath))
@@ -45,6 +45,7 @@ class Trainer():
         )
 
         self.checkpoint_index = checkpoint_index
+        self.alpha = alpha
         self.gamma = gamma
         self.delta = delta
         self.capacity = capacity
@@ -173,7 +174,7 @@ class Trainer():
     def process_batch_data(self, batch):
         raise NotImplementedError
 
-    def reconstruction_loss(input, target):
+    def reconstruction_loss(input, target, alpha):
         raise NotImplementedError
 
     @staticmethod
