@@ -108,7 +108,7 @@ class TVAETrainer(Trainer):
                     "Regularization dimension must be a tuple of integers")
             loss += reg_loss
         else:
-            reg_loss = torch.Tensor([-len(batch[0])])
+            reg_loss = torch.Tensor([0])
 
         # compute accuracy
         accuracy = self.mean_accuracy(
