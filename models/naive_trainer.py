@@ -43,7 +43,7 @@ class NaiveTrainer(Trainer):
 
         # compute KLD loss
         dist_loss, kld = self.compute_kld_loss(
-            z_dist, prior_dist, beta=self.beta, c=self.capacity
+            z_dist, prior_dist, beta=self.beta, beta_kl=self.beta_kl, c=self.capacity
         )
 
         # add losses

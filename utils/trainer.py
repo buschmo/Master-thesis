@@ -23,7 +23,7 @@ ATTRIBUTE_DIMENSIONS = {
 
 
 class Trainer():
-    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, alpha=1.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
+    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, alpha=1.0, beta=1.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
         # from trainer
         if folderpath:
             self.writer = SummaryWriter(log_dir=Path("runs", folderpath))
@@ -46,6 +46,7 @@ class Trainer():
 
         self.checkpoint_index = checkpoint_index
         self.alpha = alpha
+        self.beta = beta
         self.gamma = gamma
         self.delta = delta
         self.capacity = capacity
@@ -141,7 +142,7 @@ class Trainer():
         mean_accuracy = 0
         # for batch_num, batch in tqdm(enumerate(data_loader), desc="Batch"):
         for batch_num, batch in enumerate(data_loader):
-            self.beta = self.kl_annealing(batch_num, len(data_loader))
+            self.beta_kl = self.kl_annealing(batch_num, len(data_loader))
 
             batch_data = self.process_batch_data(batch)
 
@@ -178,11 +179,11 @@ class Trainer():
         raise NotImplementedError
 
     @staticmethod
-    def compute_kld_loss(z_dist, prior_dist, beta, c=0.0):
+    def compute_kld_loss(z_dist, prior_dist, beta, beta_kl, c=0.0):
         # from trainer
         kld = torch.distributions.kl.kl_divergence(z_dist, prior_dist)
         kld_loss = kld.sum(1).mean()
-        kld_loss = beta * (kld_loss - c).abs()
+        kld_loss = beta * beta_kl * (kld_loss - c).abs()
         return kld_loss, kld
 
     @staticmethod
