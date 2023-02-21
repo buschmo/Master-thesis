@@ -10,8 +10,7 @@ import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.chdir(Path(os.environ["MASTER"]))
 
-"""
-    convert_tfevent, parse_tfevent, convert_tb_data
+""" convert_tfevent, parse_tfevent, convert_tb_data
     Taken from https://gist.github.com/laszukdawid/62656cf7b34cac35b325ba21d46ecfcd
     https://laszukdawid.com/blog/2021/01/26/parsing-tensorboard-data-locally/
 """
@@ -97,18 +96,16 @@ def convert_tb_data(root_dir):
     try:
         batch_training_df = pd.DataFrame.from_dict(batch_training_dict)
     except ValueError:
-        print(list(map(lambda x: f"{x[0]} {len(x[1])}", batch_training_dict.items())))
+        print(
+            list(map(lambda x: f"{x[0]} {len(x[1])}", batch_training_dict.items())))
         exit()
     try:
         batch_validation_df = pd.DataFrame.from_dict(batch_validation_dict)
     except ValueError:
-        print(list(map(lambda x: f"{x[0]} {len(x[1])}", batch_validation_dict.items())))
+        print(
+            list(map(lambda x: f"{x[0]} {len(x[1])}", batch_validation_dict.items())))
         exit()
     return epoch_df, batch_training_df, batch_validation_df
-
-
-def convert(l):
-    s = ""
 
 
 def parallel(input_dir, output_file):
