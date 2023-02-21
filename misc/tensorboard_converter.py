@@ -11,68 +11,117 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.chdir(Path(os.environ["MASTER"]))
 
 """
+    convert_tfevent, parse_tfevent, convert_tb_data
     Taken from https://gist.github.com/laszukdawid/62656cf7b34cac35b325ba21d46ecfcd
     https://laszukdawid.com/blog/2021/01/26/parsing-tensorboard-data-locally/
 """
 
-def convert_tfevent(filepath):
+
+def convert_tfevent(filepath, name_suffix=""):
     return pd.DataFrame([
-        parse_tfevent(e) for e in summary_iterator(filepath) if len(e.summary.value)
+        parse_tfevent(e, name_suffix) for e in summary_iterator(filepath) if len(e.summary.value)
     ])
 
-def parse_tfevent(tfevent):
+
+def parse_tfevent(tfevent, name_suffix=""):
+    name = f"{tfevent.summary.value[0].tag} {name_suffix}" if name_suffix else tfevent.summary.value[0].tag
     return dict(
         wall_time=tfevent.wall_time,
-        name=tfevent.summary.value[0].tag,
+        name=name,
         step=tfevent.step,
         value=float(tfevent.summary.value[0].simple_value),
     )
 
-def convert_tb_data(root_dir, sort_by=None):
+
+def convert_tb_data(root_dir):
     """Convert local TensorBoard data into Pandas DataFrame.
-     
+
     Function takes the root directory path and recursively parses
     all events data.    
     If the `sort_by` value is provided then it will use that column
     to sort values; typically `wall_time` or `step`.
-    
+
     *Note* that the whole data is converted into a DataFrame.
     Depending on the data size this might take a while. If it takes
     too long then narrow it to some sub-directories.
-    
+
     Paramters:
         root_dir: (str) path to root dir with tensorboard data.
         sort_by: (optional str) column name to sort by.
-    
+
     Returns:
         pandas.DataFrame with [wall_time, name, step, value] columns.
-    
+
     """
     columns_order = ['wall_time', 'name', 'step', 'value']
-    
+
     out = []
-    for (root, _, filenames) in os.walk(root_dir):
+    for (root, folders, filenames) in os.walk(root_dir):
         for filename in filenames:
             if "events.out.tfevents" not in filename:
                 continue
+
             file_full_path = os.path.join(root, filename)
             out.append(convert_tfevent(file_full_path))
+            for folder in folders:
+                name_suffix = folder.split("_")[-1]
+                for path in Path(root, folder).iterdir():
+                    out.append(convert_tfevent(str(path), name_suffix))
+            break
+        else:
+            continue
+        break
 
     # Concatenate (and sort) all partial individual dataframes
-    all_df = pd.concat(out)[columns_order]
-    if sort_by is not None:
-        all_df = all_df.sort_values(sort_by)
-        
-    return all_df.reset_index(drop=True)
+    df = pd.concat(out)[columns_order]
 
-def parallel(input_dir, output_dir):
-    df = convert_tb_data(input_dir)
-    for name in set(df["name"]):
-        output_file = Path(output_dir, name.replace("/", "_")+".dat")
-        values = list(map(lambda x: (x[2],x[3]), df[df["name"] == name].to_numpy()))
-        if not output_file.exists():
-            with open(output_file, "w") as fp:
-                fp.write(str(values)[1:-1])
+    epoch_dict = {}
+    batch_training_dict = {}
+    batch_validation_dict = {}
+    for name in sorted(set(df["name"])):
+        if "batchwise" in name:
+            if "training" in name:
+                batch_training_dict[name.replace(
+                    "/", "_")] = list(df[df["name"] == name]["value"])
+            else:
+                batch_validation_dict[name.replace(
+                    "/", "_")] = list(df[df["name"] == name]["value"])
+        else:
+            epoch_dict[name.replace(
+                "/", "_")] = list(df[df["name"] == name]["value"])
+    try:
+        epoch_df = pd.DataFrame.from_dict(epoch_dict)
+    except ValueError:
+        print(list(map(lambda x: f"{x[0]} {len(x[1])}", epoch_dict.items())))
+        exit()
+    try:
+        batch_training_df = pd.DataFrame.from_dict(batch_training_dict)
+    except ValueError:
+        print(list(map(lambda x: f"{x[0]} {len(x[1])}", batch_training_dict.items())))
+        exit()
+    try:
+        batch_validation_df = pd.DataFrame.from_dict(batch_validation_dict)
+    except ValueError:
+        print(list(map(lambda x: f"{x[0]} {len(x[1])}", batch_validation_dict.items())))
+        exit()
+    return epoch_df, batch_training_df, batch_validation_df
+
+
+def convert(l):
+    s = ""
+
+
+def parallel(input_dir, output_file):
+    epoch_df, batch_training_df, batch_validation_df = convert_tb_data(
+        input_dir)
+
+    epoch_df.to_csv(output_file, sep="\t", index_label="step")
+    if not (batch_training_df.empty or batch_validation_df.empty):
+        batch_training_df.to_csv(output_file.with_stem(
+            output_file.stem + "_batchwise_training"), sep="\t", index_label="step")
+        batch_validation_df.to_csv(output_file.with_stem(
+            output_file.stem + "_batchwise_validation"), sep="\t", index_label="step")
+
 
 def get_file_list():
     root_path = Path(os.environ["MASTER"], "save")
@@ -84,16 +133,17 @@ def get_file_list():
             l.extend(input_dir.iterdir())
     return l
 
+
 if __name__ == "__main__":
     input_dirs = get_file_list()
-    
+
     l = []
     for input_dir in input_dirs:
-        output_dir = Path(os.environ["MASTER"],
-                        "results", input_dir.parents[2].name, input_dir.name)
+        output_file = Path(os.environ["MASTER"],
+                           "csv", input_dir.parents[2].name, input_dir.name+".csv")
 
-        if not output_dir.exists():
-            output_dir.mkdir(parents=True)
-        l.append((input_dir, output_dir))
+        if not output_file.parent.exists():
+            output_file.parent.mkdir(parents=True)
+        l.append((input_dir, output_file))
     with Pool() as pool:
         pool.starmap(parallel, l)
