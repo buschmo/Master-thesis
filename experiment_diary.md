@@ -128,7 +128,7 @@ This file documents the specific experiments
         - epochs 100
         - batch-size 64
 ### With KL annealing on batches
-- Parameter hunt
+- Parameter hunt (delta not fixed!!!)
     - 2023-02-03 16:26:21 German128 lab36
         - Parameter search
         - epochs 50
@@ -137,7 +137,7 @@ This file documents the specific experiments
         - capacity 0, 1, 10
         - delta 0.1, 1, 10
         - batch-size 64
-- Counterfactual parameters
+- Counterfactual parameters (delta not fixed!!!)
     - 2023-02-06 18:13:25 One layer (unregularized)
     - 2023-02-06 18:15:01 Two layers (unregularized)
     - 2023-02-08 02:01:47 One layer (regularized)

@@ -100,10 +100,10 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, iteration: in
             json.dump(args, fp, indent=4, sort_keys=True)
 
     parameters = [i for i in product(
-        nlayers, kl_Ms, kl_Rs, learning_rate, alpha, beta, gamma, capacity, datasets)]
+        nlayers, kl_Ms, kl_Rs, learning_rate, alpha, beta, gamma, delta, capacity, datasets)]
     if train:
         for _ in tqdm(range(iteration), desc="Repetitions"):
-            for nlayer, kl_M, kl_R, lr, al, be, ga, ca, dataset in tqdm(parameters, desc="Models"):
+            for nlayer, kl_M, kl_R, lr, al, be, ga, de, ca, dataset in tqdm(parameters, desc="Models"):
                 args["dataset"] = str(dataset)
                 args["nlayers"] = nlayer
                 args["kl_Ms"] = kl_M
@@ -112,6 +112,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, iteration: in
                 args["alpha"] = al
                 args["beta"] = be
                 args["gamma"] = ga
+                args["delta"] = de
                 args["capacity"] = ca
 
                 ts = time.time()
@@ -165,8 +166,9 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, iteration: in
                     R=kl_R,
                     lr=lr,
                     alpha=al,
-                    beta = be,
+                    beta=be,
                     gamma=ga,
+                    delta=de,
                     capacity=ca,
                     use_reg_loss=use_reg_loss,
                     folderpath=path
