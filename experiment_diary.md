@@ -135,7 +135,7 @@ This file documents the specific experiments
         - lr 1e-3, 1e-4, 1e-5, 1e-6
         - gamma 0.1, 1, 10
         - capacity 0, 1, 10
-        - delta 0.1, 1, 10
+        - delta 0.1, 1, 10 (1)
         - batch-size 64
 - Counterfactual parameters (delta not fixed!!!)
     - 2023-02-06 18:13:25 One layer (unregularized)
@@ -154,21 +154,21 @@ This file documents the specific experiments
         - lr 1e-4
         - capacity 0
         - gamma 10
-        - delta 0
+        - delta 0 (1)
 ### Sentence level sampling
-- Comparison for Counterfactualparameters
+- Comparison for Counterfactualparameters (delta not fixed!!!)
     - 2023-02-11 13:10:37 One/Two x2 Reg
     - 2023-02-11 13:10:47 One/Two x2 NoReg
     - 2023-02-11 13:10:58 One/Two Reg
     - 2023-02-11 22:34:18 One/Two NoReg
         - kl_Ms 2
         - Rest akin to Counterparameters
-- Various Hyperparameters / Variants
+- Various Hyperparameters / Variants (delta not fixed!!!)
     - 2023-02-14 16:50:27 Alpha variation
     - 2023-02-14 17:12:18 Alpha / Activation func on latent
     - 2023-02-14 17:17:07 Alpha Large Values / Activation func on latent
     - 2023-02-14 23:21:04 Beta Small
-- HyperParameter Wikipedia
+- HyperParameter Wikipedia (delta not fixed!!!)
     - 2023-02-15 00:06:05
     - 2023-02-15 00:06:21
     - 2023-02-15 00:07:02
