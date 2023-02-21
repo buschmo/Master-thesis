@@ -1,6 +1,9 @@
 # Runs
 This file documents the specific experiments
 
+**BEWARE: Default runs prior to 23.01.2023 used defaults of small network**
+
+
 ## Named saves
 - varying learning rate
     - 2023-01-13 03:19 & 12:32 & 21:44:50 German128 (unfixed)
@@ -124,7 +127,7 @@ This file documents the specific experiments
         - Siegerwerte. langer run
         - epochs 100
         - batch-size 64
-### With KL annealing
+### With KL annealing on batches
 - Parameter hunt
     - 2023-02-03 16:26:21 German128 lab36
         - Parameter search
@@ -135,7 +138,15 @@ This file documents the specific experiments
         - delta 0.1, 1, 10
         - batch-size 64
 - Counterfactual parameters
-    - 2023-02-06 18:13:25 One layer
+    - 2023-02-06 18:13:25 One layer (unregularized)
+    - 2023-02-06 18:15:01 Two layers (unregularized)
+    - 2023-02-08 02:01:47 One layer (regularized)
+    - 2023-02-08 02:01:50 Two layers (regularized)
+    - 2023-02-11 00:12:50 One/Two layers (regularized)
+    - 2023-02-11 00:12:59 One/Two layers (regularized)
+    - 2023-02-11 00:13:17 One/Two layers (unregularized)
+    - 2023-02-11 00:13:18 One/Two layers (unregularized)
+        - kl_Ms 4
         - No regularization used
         - d_model, z_dim 256
         - d_hid 1024
@@ -144,16 +155,29 @@ This file documents the specific experiments
         - capacity 0
         - gamma 10
         - delta 0
-    - 2023-02-06 18:15:01 Two layers
-        - No regularization used
-        - d_model, z_dim 256
-        - d_hid 1024
-        - nlayers 2
-        - lr 1e-4
-        - capacity 0
-        - gamma 10
-        - delta 0
-    - 
+### Sentence level sampling
+- Comparison for Counterfactualparameters
+    - 2023-02-11 13:10:37 One/Two x2 Reg
+    - 2023-02-11 13:10:47 One/Two x2 NoReg
+    - 2023-02-11 13:10:58 One/Two Reg
+    - 2023-02-11 22:34:18 One/Two NoReg
+        - kl_Ms 2
+        - Rest akin to Counterparameters
+- Various Hyperparameters / Variants
+    - 2023-02-14 16:50:27 Alpha variation
+    - 2023-02-14 17:12:18 Alpha / Activation func on latent
+    - 2023-02-14 17:17:07 Alpha Large Values / Activation func on latent
+    - 2023-02-14 23:21:04 Beta Small
+- HyperParameter Wikipedia
+    - 2023-02-15 00:06:05
+    - 2023-02-15 00:06:21
+    - 2023-02-15 00:07:02
+    - 2023-02-15 12:13:39
+    - 2023-02-15 12:13:47
+    - 2023-02-15 12:14:19
+    - 2023-02-15 21:59:06
+    - 2023-02-15 21:59:25
+    - 2023-02-15 21:59:42
 
 ## Diary
 
@@ -194,6 +218,11 @@ DELETED ALL PREVIOUS RUNS
     - Siegerwerte
     - epochs 50
     - batch-size 64
+
+
+### KL Annealing on epochs
+- 2023-02-17 HyperParametersuche
+    - KL annealing wurde angepasst auf 
 
 
 ## To be started
