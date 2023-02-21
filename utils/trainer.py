@@ -69,6 +69,7 @@ class Trainer():
             for epoch_index in tqdm(range(num_epochs), desc="Epochs"):
                 # Train the model
                 self.model.train()
+                self.beta_kl = self.kl_annealing(epoch_index, num_epochs)
                 mean_loss_dict_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
                     data_loader=generator_train,
                     epoch_num=epoch_index,
@@ -142,8 +143,6 @@ class Trainer():
         mean_accuracy = 0
         # for batch_num, batch in tqdm(enumerate(data_loader), desc="Batch"):
         for batch_num, batch in enumerate(data_loader):
-            self.beta_kl = self.kl_annealing(batch_num, len(data_loader))
-
             batch_data = self.process_batch_data(batch)
 
             self.optimizer.zero_grad()
