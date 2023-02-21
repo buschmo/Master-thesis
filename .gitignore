@@ -4,6 +4,7 @@ data/
 __pycache__/
 runs/
 results/
+figures/
+csv/
 Todo.md
 *.json
-csv/
