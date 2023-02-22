@@ -14,6 +14,11 @@ try:
     PATH_FIGURES= Path(os.environ["PATH_FIGURES"])
 except KeyError:
     PATH_FIGURES= Path()
+    
+try:
+    PATH_TABLES= Path(os.environ["PATH_TABLES"])
+except KeyError:
+    PATH_TABLES= Path("tables.json")
 
 all_keys = [
     'Disentanglement/Interpretability',
@@ -194,7 +199,7 @@ def make_picture(tables):
 
 def main():
     # load data frame, calculate boxplot / mean, output it into (single) named thingy
-    with open("tables.json") as fp:
+    with open(PATH_TABLES) as fp:
         tables = json.load(fp)
     make_picture(tables)
 
