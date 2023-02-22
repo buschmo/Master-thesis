@@ -138,6 +138,8 @@ if __name__ == "__main__":
         output_file = Path(os.environ["MASTER"],
                            "csv", input_dir.parents[2].name, input_dir.name+".csv")
 
+        if output_file.exists():
+            continue
         if not output_file.parent.exists():
             output_file.parent.mkdir(parents=True)
         l.append((input_dir, output_file))
