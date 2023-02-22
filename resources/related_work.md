@@ -14,9 +14,8 @@
 ## VAE
 - Higgins et al (2017) - [beta-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework](https://openreview.net/forum?id=Sy2fzU9gl)
   - introduce beta-VAE
-- Cho et al (2014) - [Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation
-](https://arxiv.org/abs/1406.1078)
-  - RNN-based VAE (R-VAE)
+- Cho et al (2014) - [Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation](https://arxiv.org/abs/1406.1078)
+  - RNN-based VAE (R-VAE), used by John et al 2019
 - Wang et al (2019) - [Controllable Unsupervised Text Attribute Transfer via Editing Entangled Latent Representation](https://proceedings.neurips.cc/paper/2019/hash/8804f94e16ba5b680e239a554a08f7d2-Abstract.html)
   - Transformer AE (T-AE)
   - based on Vaswani et al (2017) - [Attention is all you need](https://arxiv.org/abs/1706.03762) (Transformer Paper)
@@ -102,7 +101,8 @@
 
 # Latent space disentanglement
 ## Text
-- John et al (2018) - [Disentangled Representation Learning for Non-Parallel Text Style Transfer](https://arxiv.org/abs/1808.04339)
+- John et al (2019) - [Disentangled Representation Learning for Non-Parallel Text Style Transfer](https://aclanthology.org/P19-1041)
+  - uses "Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation"
   - Goal: disentangle style and content in VAEs
   - Split latent into style and content space
   - yields comparison metrics
@@ -112,7 +112,7 @@
     - binary sentiment tag -> might be transferable to simplification
 - Bao et al (2019) - [Generating Sentences from Disentangled Syntactic and Semantic Spaces](https://arxiv.org/abs/1907.05789)
   - Goal: split latent space into syntactic and semantic space
-  - Expand John et al (2018)
+  - Expand John et al (2019)
   - Content:
     - split latent space into z_semantic and z_syntactic
     - may sample from syntactic, but infer in semantic space for sentence with same meaning but different syntax
@@ -120,7 +120,7 @@
     - non-parallel
 - Cheng et al (2020) - [Improving Disentangled Text Representation Learning with Information-Theoretic Guidance](https://arxiv.org/abs/2006.00693)
   - Use Mutual Information
-  - Expand John et al (2018)
+  - Expand John et al (2019)
 - Li et al (2022) - [Variational Autoencoder with Disentanglement Priors for Low-Resource](https://arxiv.org/abs/2202.13363)
   - split latent space into content and task-specific one encoding the labels
   - use mixture Gaussian for content, Gaussian prior for each label
