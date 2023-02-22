@@ -10,6 +10,10 @@ from shutil import copyfile
 p = pprint.PrettyPrinter(indent=4)
 os.chdir(Path(os.environ["MASTER"]))
 
+try:
+    PATH_FIGURES= Path(os.environ["PATH_FIGURES"])
+except KeyError:
+    PATH_FIGURES= Path()
 
 all_keys = [
     'Disentanglement/Interpretability',
@@ -34,52 +38,95 @@ all_keys = [
     'loss_sum/validation'
 ]
 
-keys = [
-    "Disentanglement_Interpretability Mean",
-    "Disentanglement_Interpretability Simplicity",
-    "Disentanglement_Mutual Information Gap",
-    "Disentanglement_Separated Attribute Predictability",
-    "Disentanglement_Spearman's Rank Correlation",
-    "accuracy_training",
-    "accuracy_validation",
-    "loss_KLD_training",
-    "loss_KLD_validation",
-    "loss_KLD_unscaled_training",
-    "loss_KLD_unscaled_validation",
-    "loss_reconstruction_training",
-    "loss_reconstruction_validation",
-    "loss_regularization_training",
-    "loss_regularization_validation",
-    "loss_sum_training",
-    "loss_sum_validation"
-]
+# keys = [
+#     "Disentanglement_Interpretability Mean",
+#     "Disentanglement_Interpretability Simplicity",
+#     "Disentanglement_Mutual Information Gap",
+#     "Disentanglement_Separated Attribute Predictability",
+#     "Disentanglement_Spearman's Rank Correlation",
+#     "accuracy_training",
+#     "accuracy_validation",
+#     "loss_KLD_training",
+#     "loss_KLD_validation",
+#     "loss_KLD_unscaled_training",
+#     "loss_KLD_unscaled_validation",
+#     "loss_reconstruction_training",
+#     "loss_reconstruction_validation",
+#     "loss_regularization_training",
+#     "loss_regularization_validation",
+#     "loss_sum_training",
+#     "loss_sum_validation"
+# ]
+
+keys = {
+    "Disentanglement_Interpretability_Mean": "Interpretability Mean",
+    "Disentanglement_Interpretability_Simplicity": "Interpretability Simplicity",
+    "Disentanglement_Mutual_Information_Gap": "Mutual Information Gap",
+    "Disentanglement_Separated_Attribute_Predictability": "Separated Attribute Predictability",
+    "Disentanglement_Spearman's_Rank_Correlation": "Spearman's Rank Correlation",
+    "accuracy_training": "Accuracy on training set",
+    "accuracy_validation": "Accuracy on validation set",
+    "loss_KLD_training": "KLD loss on training set",
+    "loss_KLD_validation": "KLD loss on validation set",
+    "loss_KLD_unscaled_training": "KLD loss (unscaled) on training set",
+    "loss_KLD_unscaled_validation": "KLD loss (unscaled) on validation set",
+    "loss_reconstruction_training": "Reconstruction loss on training set",
+    "loss_reconstruction_validation": "Reconstruction loss on validation set",
+    "loss_regularization_training": "Regularization loss on training set",
+    "loss_regularization_validation": "Regularization loss on validation set",
+    "loss_sum_training": "Loss on training set",
+    "loss_sum_validation": "Loss on validation set"
+}
+
+ylabels = {
+    "Disentanglement_Interpretability_Mean": "Score",
+    "Disentanglement_Interpretability_Simplicity": "Score",
+    "Disentanglement_Mutual_Information_Gap": "Score",
+    "Disentanglement_Separated_Attribute_Predictability": "Score",
+    "Disentanglement_Spearman's_Rank_Correlation": "Score",
+    "accuracy_training": "Score",
+    "accuracy_validation": "Score",
+    "loss_KLD_training": "Loss",
+    "loss_KLD_validation": "Loss",
+    "loss_KLD_unscaled_training": "Loss",
+    "loss_KLD_unscaled_validation": "Loss",
+    "loss_reconstruction_training": "Loss",
+    "loss_reconstruction_validation": "Loss",
+    "loss_regularization_training": "Loss",
+    "loss_regularization_validation": "Loss",
+    "loss_sum_training": "Loss",
+    "loss_sum_validation": "Loss"
+}
 
 # LaTeX table
 
 
 def add_plot(path, colour="blue", key="accuracy_training", dots=False):
     if dots:
-        mark = "dots"
+        line = "dotted"
     else:
-        mark = "line"
-    plot = f"    \\addplot[\n        color={colour},\n        mark={mark},\n        ]\n        table[x=step, y={key}] {{{str(path)}}};\n"
+        line = "solid"
+    plot = f"    \\addplot[\n        color={colour},\n        {line}\n        ]\n        table[x=step, y={key}] {{{str(path.relative_to(PATH_FIGURES.parent))}}};\n"
     return plot
 
 
-def add_figures(path_list, colour="blue", key="accuracy_training"):
+def add_figures(path_list, colour="blue", key="accuracy_training", legendentry="LEGEND"):
     axis = ""
     for i, path in enumerate(path_list):
         if i < 1:
             axis += add_plot(path, colour, key)
+            # axis += f"    \\addlegendentry{{{legendentry}}}\n"
         else:
             axis += add_plot(path, colour, key, dots=True)
+            # axis += "    \\addlegendentry{}\n"
     return axis
 
 
-def get_figure_path(title, key):
-    title = title.replace(" ", "_")
-    path_figure = Path(f"figures/{title}/{key}.tex")
-    path_csv = Path(f"figures/data/{title}.csv")
+def get_figure_path(fig_label, legend, key):
+    fig_label = fig_label.replace(" ", "_")
+    legend = legend.replace(" ", "_")
+    path_figure = Path(PATH_FIGURES, f"{fig_label}/{key}.tex")
+    path_csv = Path(PATH_FIGURES, f"data/{fig_label}_{legend}.csv")
     if not path_figure.parent.exists():
         path_figure.parent.mkdir(parents=True)
     if not path_csv.parent.exists():
@@ -103,33 +150,44 @@ def merge(paths, path_csv):
 
 
 def make_picture(tables):
-    for title, figure in tables.items():
-        for key in keys:
-            path_figure, path_csv = get_figure_path(title, key)
-            description = figure["Description"]
+    for fig_label, figure in tables.items():
+        for key, title in keys.items():
+            # description = figure["Description"]
 
             xlabel = figure.get("xlabel", "epochs")
-            ylabel = figure.get("ylabel", "value")
+            ylabel = ylabels[key]
             xmax = figure.get("xmax", "100")
             ymax = figure.get("ymax", "1")
             xtick = figure.get("xtick", "{0,20,40,60,80,100}")
             ytick = figure.get("ytick", "{0,0.2,0.4,0.6,0.8,1}")
-            legend_pos = figure.get("legend pos", "north west")
+            # legend_pos = figure.get("legend pos", "north west")
 
-            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        title={title},\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin=0, ymax=1,\n        xtick={xtick},\n        %ytick={ytick},\n        legend pos={legend_pos},\n        ymajorgrids=true,\n        grid style=dashed,\n    ]\n\n"
-            for axis in figure["Axis"].values():
-                colour = axis.get("Axis", "blue")
+            figures = []
+            legend_str = ""
+            for legend, axis in figure["Axis"].items():
+                path_figure, path_csv = get_figure_path(fig_label, legend, key)
+
+                colour = axis.get("Colour", "blue")
                 path_df = axis["Path"]
                 if isinstance(path_df, list):
                     path_df = merge(path_df, path_csv)
                 else:
+                    path_df = Path(path_df)
+                    path_csv = path_csv.with_stem(path_df.stem)
                     copyfile(path_df, path_csv)
                     path_df = [path_csv]
+                legend_str += legend
+                legend_str += ","*len(path_df)
 
-                figure_str += add_figures(path_df, colour, key)
+                figures.append(add_figures(path_df, colour, key, legend))
 
-            legend = ",".join(figure["Axis"].keys())
-            figure_str += f"    \\legend{{{legend}}}\n    \\end{{axis}}\n\\end{{tikzpicture}}"
+            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        title={title},\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin=0, ymax={ymax},\n        xtick={xtick},\n        ytick={ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{figure_{fig_label}}},\n        ymajorgrids=true,\n        grid style=dashed,\n    ]\n\n"
+            
+            figure_str += "".join(figures)
+
+            # legend_str = ",".join(figure["Axis"].keys())
+            # figure_str += f"    \\legend{{{legend_str}}}\n"
+            figure_str += "    \\end{axis}\n\\end{tikzpicture}"
             with open(path_figure, "w") as fp:
                 fp.write(figure_str)
 
