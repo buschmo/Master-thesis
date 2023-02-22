@@ -11,14 +11,14 @@ p = pprint.PrettyPrinter(indent=4)
 os.chdir(Path(os.environ["MASTER"]))
 
 try:
-    PATH_FIGURES= Path(os.environ["PATH_FIGURES"])
+    PATH_FIGURES = Path(os.environ["PATH_FIGURES"])
 except KeyError:
-    PATH_FIGURES= Path()
-    
+    PATH_FIGURES = Path()
+
 try:
-    PATH_TABLES= Path(os.environ["PATH_TABLES"])
+    PATH_TABLES = Path(os.environ["PATH_TABLES"])
 except KeyError:
-    PATH_TABLES= Path("tables.json")
+    PATH_TABLES = Path("tables.json")
 
 all_keys = [
     'Disentanglement/Interpretability',
@@ -127,16 +127,21 @@ def add_figures(path_list, colour="blue", key="accuracy_training", legendentry="
     return axis
 
 
-def get_figure_path(fig_label, legend, key):
+def get_figure_path(fig_label, key):
     fig_label = fig_label.replace(" ", "_")
-    legend = legend.replace(" ", "_")
     path_figure = Path(PATH_FIGURES, f"{fig_label}/{key}.tex")
-    path_csv = Path(PATH_FIGURES, f"data/{fig_label}_{legend}.csv")
     if not path_figure.parent.exists():
         path_figure.parent.mkdir(parents=True)
+    return path_figure
+
+
+def get_csv_path(fig_label, legend):
+    fig_label = fig_label.replace(" ", "_")
+    legend = legend.replace(" ", "_")
+    path_csv = Path(PATH_FIGURES, f"data/{fig_label}_{legend}.csv")
     if not path_csv.parent.exists():
         path_csv.parent.mkdir(parents=True)
-    return path_figure, path_csv
+    return path_csv
 
 
 def merge(paths, path_csv):
@@ -169,9 +174,9 @@ def make_picture(tables):
 
             figures = []
             legend_str = ""
+            path_figure = get_figure_path(fig_label, key)
             for legend, axis in figure["Axis"].items():
-                path_figure, path_csv = get_figure_path(fig_label, legend, key)
-
+                path_csv = get_csv_path(fig_label, legend)
                 colour = axis.get("Colour", "blue")
                 path_df = axis["Path"]
                 if isinstance(path_df, list):
@@ -187,7 +192,7 @@ def make_picture(tables):
                 figures.append(add_figures(path_df, colour, key, legend))
 
             figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        title={title},\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin=0, ymax={ymax},\n        xtick={xtick},\n        ytick={ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{figure_{fig_label}}},\n        ymajorgrids=true,\n        grid style=dashed,\n    ]\n\n"
-            
+
             figure_str += "".join(figures)
 
             # legend_str = ",".join(figure["Axis"].keys())
