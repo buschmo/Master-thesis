@@ -23,12 +23,13 @@ ATTRIBUTE_DIMENSIONS = {
 
 
 class Trainer():
-    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, alpha=1.0, beta=1.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, folderpath=""):
+    def __init__(self, dataset, model, checkpoint_index=0, M=4, R=0.5, lr=1e-4, alpha=1.0, beta=1.0, gamma=10.0, capacity=0.0, delta=1.0, use_reg_loss=True, save_model=True, folderpath=""):
         # from trainer
         if folderpath:
             self.writer = SummaryWriter(log_dir=Path("runs", folderpath))
         else:
             self.writer = None
+        self.save_model = save_model
 
         self.dataset = dataset
         self.model = model
@@ -118,7 +119,7 @@ class Trainer():
                 }
                 # self.print_epoch_stats(**data_element)
 
-                if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.writer:
+                if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.writer and self.save_model:
                     self.model.save_checkpoint(epoch_index)
         except KeyboardInterrupt:
             print("Exiting training...")
@@ -134,7 +135,7 @@ class Trainer():
                 for process in processes:
                     process.terminate()
 
-        if self.writer:
+        if self.writer and self.save_model:
             self.model.save()
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):

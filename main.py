@@ -20,6 +20,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("--train", "train", is_flag=True, type=bool, default=False, show_default=True, help="Flag, if a model is to be trained.")
 @click.option("--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
 @click.option("--no-log", "no_log", is_flag=True, type=bool, default=False, show_default=True, help="Toggle logging.")
+@click.option("--save-model", "save_model", is_flag=True, type=bool, default=False, show_default=True, help="Toggle model saving.")
 @click.option("--iteration", "iteration", type=int, default=1, show_default=True, help="How many times the program is repeated.")
 @click.option("-M", "--model", "model_selection", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
 @click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="German", show_default=True, help="Determine the dataset(s) to be used.")
@@ -44,7 +45,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-dh", "--d-hid", "d_hid", type=int, default=1024, show_default=True, help="Dimension of transformer's linear layer.")
 @click.option("-nl", "--layers", "--nlayers", "nlayers", type=int, default=[1], multiple=True, show_default=True, help="Number of transformer blocks; multiple values possible.")
 @click.option("-do", "--dropout", "dropout", type=float, default=0.1, show_default=True, help="Dropout value for the model.")
-def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, iteration: int, model_selection: str, dataset: str, name: str, emb_length: int, num_epochs: int, batch_size: int, kl_Ms: int, kl_Rs: float, learning_rate: float, capacity: float, alpha: float, beta: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
+def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: bool, iteration: int, model_selection: str, dataset: str, name: str, emb_length: int, num_epochs: int, batch_size: int, kl_Ms: int, kl_Rs: float, learning_rate: float, capacity: float, alpha: float, beta: float, gamma: float, delta: float, use_reg_loss: bool, checkpoint_index: int, d_model: int, z_dim: int, nhead_encoder: int, nhead_decoder: int, d_hid: int, nlayers: int, dropout: float):
     # TODO assert value must adhere to specific ranges
     # e.g. 0 < lr < 10 for example
 
@@ -171,6 +172,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, iteration: in
                     delta=de,
                     capacity=ca,
                     use_reg_loss=use_reg_loss,
+                    save_model=save_model,
                     folderpath=path
                 )
 
