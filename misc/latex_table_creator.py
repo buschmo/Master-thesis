@@ -106,23 +106,24 @@ ylabels = {
 # LaTeX table
 
 
-def add_plot(path, colour="blue", key="accuracy_training", dots=False):
+def add_plot(path, options=[""], key="accuracy_training", dots=False):
     if dots:
         line = "dotted"
     else:
         line = "solid"
-    plot = f"    \\addplot[\n        color={colour},\n        {line}\n        ]\n        table[x=step, y={key}] {{{str(path.relative_to(PATH_FIGURES.parent))}}};\n"
+    options_str = f",\n{' '*8}".join(options+[line])
+    plot = f"    \\addplot[\n        {options_str}\n        ]\n        table[x=step, y={key}] {{{str(path.relative_to(PATH_FIGURES.parent))}}};\n"
     return plot
 
 
-def add_figures(path_list, colour="blue", key="accuracy_training", legendentry="LEGEND"):
+def add_figures(path_list, options=[""], key="accuracy_training", legendentry="LEGEND"):
     axis = ""
     for i, path in enumerate(path_list):
         if i < 1:
-            axis += add_plot(path, colour, key)
+            axis += add_plot(path, options, key)
             # axis += f"    \\addlegendentry{{{legendentry}}}\n"
         else:
-            axis += add_plot(path, colour, key, dots=True)
+            axis += add_plot(path, options, key, dots=True)
             # axis += "    \\addlegendentry{}\n"
     return axis
 
@@ -178,7 +179,7 @@ def make_picture(tables):
             path_figure = get_figure_path(fig_label, key)
             for legend, axis in figure["Axis"].items():
                 path_csv = get_csv_path(fig_label, legend)
-                colour = axis.get("Colour", "blue")
+                options = axis.get("Options", [""])
                 path_df = axis["Path"]
                 if isinstance(path_df, list):
                     path_df = merge(path_df, path_csv)
@@ -190,7 +191,7 @@ def make_picture(tables):
                 legend_str += legend
                 legend_str += ","*len(path_df)
 
-                figures.append(add_figures(path_df, colour, key, legend))
+                figures.append(add_figures(path_df, options, key, legend))
 
             figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        title={title},\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin=0, ymax={ymax},\n        xtick={xtick},\n        ytick={ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        ymajorgrids=true,\n        grid style=dashed,\n    ]\n\n"
 
