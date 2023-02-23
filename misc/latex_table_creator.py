@@ -145,17 +145,18 @@ def get_csv_path(fig_label, legend):
 
 
 def merge(paths, path_csv):
-    paths = [pd.read_csv(path, sep="\t", index_col="step") for path in paths]
-    mean = pd.concat(paths).groupby(level=0).mean()
-    min = pd.concat(paths).groupby(level=0).min()
-    max = pd.concat(paths).groupby(level=0).max()
-
     path_mean = path_csv.with_stem(path_csv.stem+"_mean")
     path_min = path_csv.with_stem(path_csv.stem+"_min")
     path_max = path_csv.with_stem(path_csv.stem+"_max")
-    mean.to_csv(path_mean, sep="\t")
-    min.to_csv(path_min, sep="\t")
-    max.to_csv(path_max, sep="\t")
+    if not (path_mean.exists() and path_min.exists() and path_max.exists()):
+        dfs = [pd.read_csv(path, sep="\t", index_col="step") for path in paths]
+        mean = pd.concat(dfs).groupby(level=0).mean()
+        min = pd.concat(dfs).groupby(level=0).min()
+        max = pd.concat(dfs).groupby(level=0).max()
+
+        mean.to_csv(path_mean, sep="\t")
+        min.to_csv(path_min, sep="\t")
+        max.to_csv(path_max, sep="\t")
     return [path_mean, path_min, path_max]
 
 
