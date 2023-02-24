@@ -136,8 +136,7 @@ if __name__ == "__main__":
     l = []
     for input_dir in input_dirs:
         output_file = Path(os.environ["MASTER"],
-                           "csv", input_dir.parents[2].name, input_dir.name+".csv")
-
+                           "csv", input_dir.parents[2].name, f"{'_'.join(input_dir.parent.name.split('_')[:2])}_{input_dir.name}.csv")
         if output_file.exists():
             continue
         if not output_file.parent.exists():
