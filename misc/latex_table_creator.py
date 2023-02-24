@@ -181,9 +181,11 @@ def make_picture(tables):
                 path_csv = get_csv_path(fig_label, legend)
                 options = axis.get("Options", [""])
                 path_df = axis["Path"]
-                if isinstance(path_df, list):
+                if isinstance(path_df, list) and len(path_df)>1:
                     path_df = merge(path_df, path_csv)
                 else:
+                    if isinstance(path_df, list):
+                        path_df = path_df[0]
                     path_df = Path(path_df)
                     path_csv = path_csv.with_stem(path_df.stem)
                     copyfile(path_df, path_csv)
