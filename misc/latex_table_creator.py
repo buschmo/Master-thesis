@@ -195,7 +195,7 @@ def make_picture(tables):
 
                 figures.append(add_figures(path_df, options, key, legend))
 
-            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin=0, ymax={ymax},\n        xtick={xtick},\n        ytick={ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        ymajorgrids=true,\n        grid style=dashed,\n    ]\n\n"
+            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin=0, ymax={ymax},\n        xtick={xtick},\n        ytick={ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        ymajorgrids=true,\n        grid style=dashed\n    ]\n\n"
 
             figure_str += "".join(figures)
 
