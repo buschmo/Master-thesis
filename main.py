@@ -148,9 +148,9 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
                     Trainer = NaiveTrainer
 
                 if not no_log:
-                    p = Path(
+                    path_log = Path(
                         folder_log, f"{timestamp}_{str(model)}_{str(dataset)}.json")
-                    with open(p, "w") as fp:
+                    with open(path_log, "w") as fp:
                         json.dump(args, fp, indent=4, sort_keys=True)
 
                 if not no_log:
@@ -177,10 +177,15 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
                 )
 
                 model.update_filepath(folderpath=path)
-                trainer.train_model(
-                    batch_size=batch_size,
-                    num_epochs=num_epochs
-                )
+                try:
+                    trainer.train_model(
+                        batch_size=batch_size,
+                        num_epochs=num_epochs
+                    )
+                except ValueError as err:
+                    with open("log.txt", "a") as fp:
+                        fp.write(str(err))
+                        fp.write(f"\n\nSee{str(path_log)}\n\n\n\n")
 
 
 def eval(path):
