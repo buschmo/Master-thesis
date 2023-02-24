@@ -202,9 +202,8 @@ def make_picture(tables):
             # legend_str = ",".join(figure["Axis"].keys())
             # figure_str += f"    \\legend{{{legend_str}}}\n"
             figure_str += "    \\end{axis}\n\\end{tikzpicture}"
-            if not path_figure.exists():
-                with open(path_figure, "w") as fp:
-                    fp.write(figure_str)
+            with open(path_figure, "w") as fp:
+                fp.write(figure_str)
 
 
 def main():
