@@ -164,16 +164,7 @@ def merge(paths, path_csv):
 def make_picture(tables):
     for fig_label, figure in tables.items():
         for key, title in keys.items():
-            # description = figure["Description"]
-
-            xlabel = figure.get("xlabel", "epochs")
-            ylabel = ylabels[key]
-            xmax = figure.get("xmax", "100")
-            ymax = figure.get("ymax", "1")
-            xtick = figure.get("xtick", "{0,20,40,60,80,100}")
-            ytick = figure.get("ytick", "{0,0.2,0.4,0.6,0.8,1}")
-            # legend_pos = figure.get("legend pos", "north west")
-
+            
             figures = []
             legend_str = ""
             path_figure = get_figure_path(fig_label, key)
@@ -194,8 +185,20 @@ def make_picture(tables):
                 legend_str += ","*len(path_df)
 
                 figures.append(add_figures(path_df, options, key, legend))
+            
+            xlabel = figure.get("xlabel", "epochs")
+            ylabel = ylabels[key]
+            xmax = figure.get("xmax", "50")
+            ymax = figure.get("ymax", "% ymax=1")
+            xtick = figure.get("xtick", "{0,10,20,30,40,50}")
+            ytick = figure.get("ytick", "% ytick={0,0.2,0.4,0.6,0.8,1}")
+            if not ymax.startswith("%"):
+                ymax = f"ymax={ymax}"
+            if not ytick.startswith("%"):
+                ytick = f"ytick={ytick}"
+            # legend_pos = figure.get("legend pos", "north west")
 
-            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin=0, ymax={ymax},\n        xtick={xtick},\n        ytick={ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        ymajorgrids=true,\n        grid style=dashed\n    ]\n\n"
+            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin=0, {ymax},\n        xtick={xtick},\n        {ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        ymajorgrids=true,\n        grid style=dashed\n    ]\n\n"
 
             figure_str += "".join(figures)
 
