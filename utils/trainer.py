@@ -291,7 +291,7 @@ class Trainer():
         queue.put((epoch_num, metrics))
 
     def kl_annealing(self, t, T):
-        tau = (t-1 % np.ceil(T / self.M)) / (T / self.M)
+        tau = ((t-1) % np.ceil(T / self.M)) / (T / self.M)
         if tau <= self.R:
             # TODO might be useful to replace with other functions
             beta = tau / self.R
