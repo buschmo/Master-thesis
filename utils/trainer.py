@@ -71,6 +71,9 @@ class Trainer():
                 # Train the model
                 self.model.train()
                 self.beta_kl = self.kl_annealing(epoch_index, num_epochs)
+                if self.writer:
+                    self.writer.add_scalar("beta_annealing", self.beta_kl, epoch_index)
+
                 mean_loss_dict_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
                     data_loader=generator_train,
                     epoch_num=epoch_index,
