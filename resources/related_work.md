@@ -9,6 +9,8 @@
   - Introduction references
     - the topics of image gender swap, speaking style change
     - **other disentangle approaches**
+- Fu et al (2019) - [Cyclical Annealing Schedule](http://arxiv.org/abs/1903.10145)
+  - KL annealing schedule
 
 # Models
 ## VAE
@@ -49,9 +51,9 @@
 - Spearman (1904) - [The Proof and Measurement of Association between Two Things](https://www.jstor.org/stable/1412159?origin=JSTOR-pdf#metadata_info_tab_contents)
   - Spearman Rank
 - Eastwood et al (2018) - [A framework for the quantitative evaluation of disentangled representations](https://proceedings.neurips.cc/paper/2017/hash/9cb9ed4f35cf7c2f295cc2bc6f732a84-Abstract.html)
-  - 
+  - several metrics
 - Carbonneau et al (2022) - [Measuring Disentanglement: A Review of Metrics](https://arxiv.org/abs/2012.09276)
-    -
+  - review
 
 ## German simplification (transformer)
 - [Research group on Language Technology for Accessibility at the university of zurich](https://www.cl.uzh.ch/en/texttechnologies/research/accessibility.html)
@@ -100,7 +102,7 @@
   - Referenced by many
 
 # Latent space disentanglement
-## Text
+## Text (also style transfer)
 - John et al (2019) - [Disentangled Representation Learning for Non-Parallel Text Style Transfer](https://aclanthology.org/P19-1041)
   - uses "Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation"
   - Goal: disentangle style and content in VAEs
@@ -125,6 +127,8 @@
   - split latent space into content and task-specific one encoding the labels
   - use mixture Gaussian for content, Gaussian prior for each label
   - Use OPTIMUS
+- [Formality Style Transfer with Hybrid Textual Annotations](http://arxiv.org/abs/1903.06353)
+  - Style transfer
 
 ## Other / Non-text
 - Hadjeres et al (2017) - [GLSR-VAE Geodesic Latent Space Regularization for Variational AutoEncoder Architectures](https://arxiv.org/abs/1707.04588)
@@ -166,7 +170,7 @@
   - present comparable methods
   - Content:
     - relate their task to both simplification as well as style transfer
-- Chan et al (2020) - [German’s Next Language Model](https://aclanthology.org/2020.coling-main.598/)
+- Chan et al (2020) - [German's Next Language Model](https://aclanthology.org/2020.coling-main.598/)
   - introduces German BERT and ELECTRA models
   - this will be used in the beginning for sentence encoding
   - this might be used for OPTIMUS
@@ -177,7 +181,35 @@
 - Mathieu et al (2019) - [Disentangling Disentanglement in Variational Autoencoders](https://proceedings.mlr.press/v97/mathieu19a.html)
   - might yield general decomposition scheme
 - Wang et al (2018) - [Style Tokens Unsupervised Style Modeling, Control and Transfer in End-to-End Speech Synthesis]()
-  -
+  - not clear yet
+- [Gradient Estimation Using Stochastic Computation Graphs](http://arxiv.org/abs/1506.05254)
+  - not clear yet
+- [Layer Normalization](http://arxiv.org/abs/1607.06450)
+  - Quite old, might not yield anything
+- [Learning Disentangled Representations with Semi-Supervised Deep Generative Models](https://proceedings.neurips.cc/paper/2017/hash/9cb9ed4f35cf7c2f295cc2bc6f732a84-Abstract.html)
+  - unsure
+- [Mask and Infill: Applying Masked Language Model for Sentiment Transfer](https://www.ijcai.org/proceedings/2019/732)
+  - Sentiment transfer
+- [Non-Parallel Text Style Transfer using Self-Attentional Discriminator as Supervisor](https://ieeexplore.ieee.org/abstract/document/9671820/)
+  - style transfer
+- [Posterior Collapse and Latent Variable Non-identifiability](https://proceedings.neurips.cc/paper/2021/hash/2b6921f2c64dee16ba21ebf17f3c2c92-Abstract.html)
+  - Post collapse
+- [Regularization via Structural Label Smoothing](https://proceedings.mlr.press/v108/li20e.html)
+  - unsure
+- [Training Tips for the Transformer Model](http://content.sciendo.com/view/journals/pralin/110/1/article-p43.xml)
+  - misc
+- [Transformer-based Conditional Variational Autoencoder for Controllable Story Generation](http://arxiv.org/abs/2101.00828)
+  - unsure
+- [“Transforming” Delete, Retrieve, Generate Approach for Controlled Text Style Transfer](https://aclanthology.org/D19-1322)
+  - style transfer
+- [Tutorial on Variational Autoencoders](http://arxiv.org/abs/1606.05908)
+  - titles says it all
+- [Understanding Posterior Collapse in Generative Latent Variable Models](https://openreview.net/forum?id=r1xaVLUYuE)
+  - Post collapse explanation
+- [Using the Output Embedding to Improve Language Models](http://arxiv.org/abs/1608.05859)
+  - not needed?
+- [Z-Forcing: Training Stochastic Recurrent Networks](http://arxiv.org/abs/1711.05411)
+  - word sampling
 
 # On hold
 ## Disentanglement
