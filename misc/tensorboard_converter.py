@@ -90,17 +90,20 @@ def convert_tb_data(root_dir):
     try:
         epoch_df = pd.DataFrame.from_dict(epoch_dict)
     except ValueError:
+        print(f"Error in dir {root_dir}, while parsing normal set")
         print(list(map(lambda x: f"{x[0]} {len(x[1])}", epoch_dict.items())))
         exit()
     try:
         batch_training_df = pd.DataFrame.from_dict(batch_training_dict)
     except ValueError:
+        print(f"Error in dir {root_dir}, while parsing batch training set")
         print(
             list(map(lambda x: f"{x[0]} {len(x[1])}", batch_training_dict.items())))
         exit()
     try:
         batch_validation_df = pd.DataFrame.from_dict(batch_validation_dict)
     except ValueError:
+        print(f"Error in dir {root_dir}, while parsing batch validation set")
         print(
             list(map(lambda x: f"{x[0]} {len(x[1])}", batch_validation_dict.items())))
         exit()
@@ -121,7 +124,7 @@ def parallel(input_dir, output_file):
 
 def get_file_list():
     root_path = Path(os.environ["MASTER"], "save")
-    dirs = [dir for dir in root_path.iterdir()]
+    dirs = [dir for dir in root_path.iterdir() if dir.name != "SORT"]
 
     l = []
     for dir in dirs:
