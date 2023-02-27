@@ -127,7 +127,7 @@ This file documents the specific experiments
         - Siegerwerte. langer run
         - epochs 100
         - batch-size 64
-### With KL annealing on batches
+### With KL annealing on batches (Error in kl)
 - Parameter hunt (delta not fixed!!!)
     - 2023-02-03 16:26:21 German128 lab36
         - Parameter search
@@ -155,7 +155,7 @@ This file documents the specific experiments
         - capacity 0
         - gamma 10
         - delta 0 (1)
-### Sentence level sampling
+### Sentence level sampling (Error in KL)
 - Comparison for Counterfactualparameters (delta not fixed!!!)
     - 2023-02-11 13:10:37 One/Two x2 Reg
     - 2023-02-11 13:10:47 One/Two x2 NoReg
@@ -168,7 +168,7 @@ This file documents the specific experiments
     - 2023-02-14 17:12:18 Alpha / Activation func on latent
     - 2023-02-14 17:17:07 Alpha Large Values / Activation func on latent
     - 2023-02-14 23:21:04 Beta Small
-- HyperParameter Wikipedia (delta not fixed!!!)
+- Hyperparameter Wikipedia (delta not fixed!!!)
     - 2023-02-15 00:06:05
     - 2023-02-15 00:06:21
     - 2023-02-15 00:07:02
@@ -178,6 +178,25 @@ This file documents the specific experiments
     - 2023-02-15 21:59:06
     - 2023-02-15 21:59:25
     - 2023-02-15 21:59:42
+### Fixed Delta
+- Hyperparameter German
+    - 2023-02-17 17:12:51 1e-4
+    - 2023-02-17 17:13:16 1e-5
+    - 2023-02-21 14:45:53 1e-4
+    - 2023-02-21 14:46:01 1e-5
+### Fixed kl annealing
+- Hyperparameter German
+    - 2023-02-25 16:23:09 1e-3
+    - 2023-02-25 16:23:17 1e-4
+    - 2023-02-25 16:23:29 1e-5
+        - beta 1, 1e-2, 1e-4
+        - capacity 0, 1, 10
+        - gamma 0.1, 1, 10
+        - delta 1
+        - klM 2
+        - epochs 25
+    - Result:
+        - 02-26 12:01 - 16:53 1e-3 good accuracy on train/val
 
 ## Diary
 
@@ -221,7 +240,7 @@ DELETED ALL PREVIOUS RUNS
 
 
 ### KL Annealing on epochs
-- 2023-02-17 HyperParametersuche
+- 2023-02-17 Hyperparametersuche
     - KL annealing wurde angepasst auf 
 
 
