@@ -27,7 +27,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("-N", "--name", "name", type=str, default="", show_default=True, help="Alternative name of the output folders.")
 @click.option("-E", "--emb-length", "emb_length", type=int, default=128, show_default=True, help="Sets the length of the WordPiece embedding.")
 @click.option("--num-epochs", "--epochs", "num_epochs", type=int, default=25, show_default=True, help="Number of epochs to be trained.")
-@click.option("-B", "--batch-size", "batch_size", type=int, default=64, show_default=True, help="Size of the batches to be trained.")
+@click.option("-B", "--batch-size", "batch_size", type=int, default=[64], multiple=True, show_default=True, help="Size of the batches to be trained.")
 @click.option("-klM", "--kl-cycles", "kl_Ms", type=int, default=[4], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible.")
 @click.option("-klR", "--kl-proportion", "kl_Rs", type=float, default=[0.5], multiple=True, show_default=True, help="for kl cyclical annealing; multiple values possible.")
 @click.option("-L", "--learning-rate", "learning_rate", type=float, default=[1e-4], multiple=True, show_default=True, help="Learning rate(s); multiple values possible.")
@@ -101,21 +101,21 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
             json.dump(args, fp, indent=4, sort_keys=True)
 
     parameters = [i for i in product(
-        nlayers, kl_Ms, kl_Rs, learning_rate, alpha, beta, gamma, delta, capacity, datasets)]
+        batch_size, nlayers, kl_Ms, kl_Rs, learning_rate, alpha, beta, gamma, delta, capacity, datasets)]
     if train:
-        for _ in tqdm(range(iteration), desc="Repetitions"):
-            for nlayer, kl_M, kl_R, lr, al, be, ga, de, ca, dataset in tqdm(parameters, desc="Models"):
-                args["dataset"] = str(dataset)
-                args["nlayers"] = nlayer
-                args["kl_Ms"] = kl_M
-                args["kl_Rs"] = kl_R
-                args["learning_rate"] = lr
-                args["alpha"] = al
-                args["beta"] = be
-                args["gamma"] = ga
-                args["delta"] = de
-                args["capacity"] = ca
-
+        for batch_size, nlayer, kl_M, kl_R, lr, al, be, ga, de, ca, dataset in tqdm(parameters, desc="Models"):
+            args["dataset"] = str(dataset)
+            args["batch_size"] = batch_size
+            args["nlayers"] = nlayer
+            args["kl_Ms"] = kl_M
+            args["kl_Rs"] = kl_R
+            args["learning_rate"] = lr
+            args["alpha"] = al
+            args["beta"] = be
+            args["gamma"] = ga
+            args["delta"] = de
+            args["capacity"] = ca
+            for _ in tqdm(range(iteration), desc="Repetitions"):
                 ts = time.time()
                 timestamp = datetime.datetime.fromtimestamp(ts).strftime(
                     '%Y-%m-%d_%H:%M:%S'
