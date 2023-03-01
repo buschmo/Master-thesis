@@ -106,6 +106,8 @@
 - John et al (2019) - [Disentangled Representation Learning for Non-Parallel Text Style Transfer](https://aclanthology.org/P19-1041)
   - uses "Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation"
   - Goal: disentangle style and content in VAEs
+  - introduces R-VAE
+    - uses bag-of-words for content. This might indicate bad accuracy if applied to task at hand
   - Split latent into style and content space
   - yields comparison metrics
   - Content:
