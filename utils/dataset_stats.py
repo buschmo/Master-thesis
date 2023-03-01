@@ -109,19 +109,23 @@ def calc_tree_depth():
     results = {"German": {}, "Wikipedia": {}}
     nlp = spacy.load("de_core_news_lg")
     lines = get_lines(path_german_easy) + get_lines(path_german_normal)
+    n_sents = 0
     for line in tqdm(lines, desc="German Tree Depth"):
         doc = nlp(line)
         sents = [sent for sent in doc.sents]
-        if len(sents) > 1:
-            print(doc)
-            print(sents)
-            return
-        node = sents[0].root
-        depth = walk_tree(node, 0)
-        results["German"][depth] = results["German"].setdefault(depth,0) + 1
+        # if len(sents) > 1:
+        #     print(doc)
+        #     print(sents)
+        #     return
+        n_sents += len(sents)
+        for sent in sents:
+            node = sent.root
+            depth = walk_tree(node, 0)
+            results["German"][depth] = results["German"].get(depth,0) + 1
+    print(f"There are {len(n_sents-lines)} more sents than lines")
 
     with open(p_tree, "w") as fp:
-        json.dump(results, fp, indent=4)
+        json.dump(results, fp, indent=4, sort_keys=True)
 
 @click.command()
 @click.option("-c", "--calc", is_flag=True, help="Calculate the stats")
