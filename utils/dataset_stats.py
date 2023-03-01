@@ -101,43 +101,34 @@ def culm_stats():
         json.dump(results, fp, indent=4)
 
 
-def parallel_tree_depth(nlp, line):
-    results = {"German": {}, "Wikipedia": {}}
-    doc = nlp(line)
-    sents = [sent for sent in doc.sents]
-    # if len(sents) > 1:
-    #     print(doc)
-    #     print(sents)
-    #     return
-    
-    for sent in sents:
-        node = sent.root
-        depth = walk_tree(node, 0)
-        results["German"][depth] = results["German"].get(depth, 0) + 1
-    return results
+def walk_tree(node, depth):
+    if node.n_lefts + node.n_rights > 0:
+        return max(walk_tree(child, depth + 1) for child in node.children)
+    else:
+        return depth
 
 
 def calc_tree_depth():
-    def walk_tree(node, depth):
-        if node.n_lefts + node.n_rights > 0:
-            return max(walk_tree(child, depth + 1) for child in node.children)
-        else:
-            return depth
-
     results = {"German": {}, "Wikipedia": {}}
     nlp = spacy.load("de_core_news_lg")
     lines = get_lines(path_german_easy) + get_lines(path_german_normal)
-
-    with Pool() as p:
-        results = p.starmap(parallel_tree_depth, product([nlp], lines))
-    # Merge
     n_sents = 0
-    for d in results:
-        for key, value in d["German"].items():
-            n_sents += value
-            results["German"][key] = results["German"].get(key, 0) + value
 
-    print(f"There are {n_sents-len(lines)} more sents than lines")
+    docs = list(nlp.pipe(lines))
+    for doc in tqdm(docs, desc="German lines"):
+        sents = [sent for sent in doc.sents]
+        # if len(sents) > 1:
+        #     print(doc)
+        #     print(sents)
+        #     return
+        n_sents += len(sents)
+        for sent in sents:
+            node = sent.root
+            depth = walk_tree(node, 0)
+            results["German"][depth] = results["German"].get(depth, 0) + 1
+
+    print(
+        f"There are {n_sents-len(lines)} more sents ({n_sents}) than lines ({len(lines)})")
 
     with open(p_tree, "w") as fp:
         json.dump(results, fp, indent=4, sort_keys=True)
