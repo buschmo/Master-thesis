@@ -5,6 +5,7 @@ from tqdm import tqdm
 import spacy
 import click
 from multiprocessing import Pool
+from itertools import product
 
 p_stats = Path("results/dataset_stats.json")
 p_cul = Path("results/dataset_stats_cul.json")
@@ -99,7 +100,8 @@ def culm_stats():
     with open(p_cul, "w", encoding="utf-8") as fp:
         json.dump(results, fp, indent=4)
 
-def parallel_tree_depth(line):
+
+def parallel_tree_depth(nlp, line):
     results = {"German": {}, "Wikipedia": {}}
     doc = nlp(line)
     sents = [sent for sent in doc.sents]
@@ -107,13 +109,13 @@ def parallel_tree_depth(line):
     #     print(doc)
     #     print(sents)
     #     return
-    n_sents += len(sents)
+    
     for sent in sents:
         node = sent.root
         depth = walk_tree(node, 0)
-        results["German"][depth] = results["German"].get(depth,0) + 1
+        results["German"][depth] = results["German"].get(depth, 0) + 1
     return results
-    
+
 
 def calc_tree_depth():
     def walk_tree(node, depth):
@@ -125,9 +127,9 @@ def calc_tree_depth():
     results = {"German": {}, "Wikipedia": {}}
     nlp = spacy.load("de_core_news_lg")
     lines = get_lines(path_german_easy) + get_lines(path_german_normal)
-    
+
     with Pool() as p:
-        results = p.map(parallel_tree_depth, lines)
+        results = p.starmap(parallel_tree_depth, product([nlp], lines))
     # Merge
     n_sents = 0
     for d in results:
@@ -139,6 +141,7 @@ def calc_tree_depth():
 
     with open(p_tree, "w") as fp:
         json.dump(results, fp, indent=4, sort_keys=True)
+
 
 @click.command()
 @click.option("-c", "--calc", is_flag=True, help="Calculate the stats")
