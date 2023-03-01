@@ -4,6 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 import spacy
 import click
+from multiprocessing import Pool
 
 p_stats = Path("results/dataset_stats.json")
 p_cul = Path("results/dataset_stats_cul.json")
@@ -98,6 +99,21 @@ def culm_stats():
     with open(p_cul, "w", encoding="utf-8") as fp:
         json.dump(results, fp, indent=4)
 
+def parallel_tree_depth(line):
+    results = {"German": {}, "Wikipedia": {}}
+    doc = nlp(line)
+    sents = [sent for sent in doc.sents]
+    # if len(sents) > 1:
+    #     print(doc)
+    #     print(sents)
+    #     return
+    n_sents += len(sents)
+    for sent in sents:
+        node = sent.root
+        depth = walk_tree(node, 0)
+        results["German"][depth] = results["German"].get(depth,0) + 1
+    return results
+    
 
 def calc_tree_depth():
     def walk_tree(node, depth):
@@ -109,7 +125,16 @@ def calc_tree_depth():
     results = {"German": {}, "Wikipedia": {}}
     nlp = spacy.load("de_core_news_lg")
     lines = get_lines(path_german_easy) + get_lines(path_german_normal)
+    
+    with Pool() as p:
+        results = p.map(parallel_tree_depth, lines)
+    # Merge
     n_sents = 0
+    for d in results:
+        for key, value in d["German"].items():
+            n_sents += value
+            results["German"][key] = results["German"].get(key, 0) + value
+
     print(f"There are {n_sents-len(lines)} more sents than lines")
 
     with open(p_tree, "w") as fp:
