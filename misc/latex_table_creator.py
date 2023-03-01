@@ -194,16 +194,13 @@ def make_picture(tables):
             ytick = figure.get("ytick", "{0,0.2,0.4,0.6,0.8,1}")
             ymax = f"ymax={ymax}"
             ytick = f"ytick={ytick}"
+            ymin=0
             if "loss" in key:
                 ymax = "%"+ymax
                 ytick = "%"+ytick+f",\n{' '*8}ymode=log"
-                ymin=1
-            else:
-                ymin=0
             # legend_pos = figure.get("legend pos", "north west")
-
-            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin={ymin}, {ymax},\n        xtick={xtick},\n        {ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        legend columns=3,\n        ymajorgrids=true,\n        grid style=dashed\n    ]\n\n"
-
+            legend_columns = figure.get("legend columns", "3")
+            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin={ymin}, {ymax},\n        xtick={xtick},\n        {ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        legend columns={legend_columns},\n        ymajorgrids=true,\n        grid style=dashed\n    ]\n\n"
             figure_str += "".join(figures)
 
             # legend_str = ",".join(figure["Axis"].keys())
