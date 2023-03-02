@@ -107,14 +107,9 @@ def walk_tree(node, depth):
     else:
         return depth
 
-
-def calc_tree_depth():
-    results = {"German": {}, "Wikipedia": {}}
-    nlp = spacy.load("de_core_news_lg")
-    lines = get_lines(path_german_easy) + get_lines(path_german_normal)
+def count_depths(docs):
     n_sents = 0
-
-    docs = list(nlp.pipe(lines))
+    result = {}
     for doc in tqdm(docs, desc="German lines"):
         sents = [sent for sent in doc.sents]
         # if len(sents) > 1:
@@ -125,10 +120,26 @@ def calc_tree_depth():
         for sent in sents:
             node = sent.root
             depth = walk_tree(node, 0)
-            results["German"][depth] = results["German"].get(depth, 0) + 1
+            result[depth] = result.get(depth, 0) + 1
+    return result, n_sents
 
+def calc_tree_depth():
+    results = {"German": {}, "Wikipedia": {}}
+    nlp = spacy.load("de_core_news_lg")
+    lines = get_lines(path_german_easy) + get_lines(path_german_normal)
+    docs = list(nlp.pipe(lines))
+    count, n_sents = count_depths(docs)
     print(
         f"There are {n_sents-len(lines)} more sents ({n_sents}) than lines ({len(lines)})")
+    results["German"] = count
+
+    nlp = spacy.load("en_core_web_lg")
+    lines = get_lines(path_wiki_easy) + get_lines(path_wiki_normal)
+    docs = list(nlp.pipe(lines))
+    count, n_sents = count_depths(docs)
+    print(
+        f"There are {n_sents-len(lines)} more sents ({n_sents}) than lines ({len(lines)})")
+    results["Wikipedia"] = count
 
     with open(p_tree, "w") as fp:
         json.dump(results, fp, indent=4, sort_keys=True)
