@@ -69,7 +69,7 @@ class TVAE(BaseModel):
         self.generator = nn.Linear(d_model, ntoken)
 
         # TODO rework initialization
-        # self.init_weights()
+        self.init_weights()
 
     def __str__(self):
         return "TVAE"
