@@ -134,7 +134,7 @@ def calc_tree_depth():
     results["German"] = count
 
     nlp = spacy.load("en_core_web_lg")
-    lines = get_lines(path_wiki_easy) + get_lines(path_wiki_normal)
+    lines = get_lines(path_wiki_easy, wiki=True) + get_lines(path_wiki_normal, wiki=True)
     docs = list(nlp.pipe(lines))
     count, n_sents = count_depths(docs)
     print(
