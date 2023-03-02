@@ -17,7 +17,7 @@
 - Higgins et al (2017) - [beta-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework](https://openreview.net/forum?id=Sy2fzU9gl)
   - introduce beta-VAE
 - Cho et al (2014) - [Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation](https://arxiv.org/abs/1406.1078)
-  - RNN-based VAE (R-VAE), used by John et al 2019
+  - RNN-based AE (R-AE), used by John et al 2019
 - Wang et al (2019) - [Controllable Unsupervised Text Attribute Transfer via Editing Entangled Latent Representation](https://proceedings.neurips.cc/paper/2019/hash/8804f94e16ba5b680e239a554a08f7d2-Abstract.html)
   - Transformer AE (T-AE)
   - based on Vaswani et al (2017) - [Attention is all you need](https://arxiv.org/abs/1706.03762) (Transformer Paper)
@@ -25,7 +25,7 @@
 - Nangi et al (2021) - [Counterfactuals to Control Latent Disentangled Text Representations for Style Transfer](https://aclanthology.org/2021.acl-short.7)
   - propose counterfactual-based approach to control the latent space for style transfer
   - no new disentanglement method
-  - Based on John et al (2018)
+  - Based on John et al (2019) general structure. Also use RNN
   - Introduce T-VAE based on T-AE by Wang et al (2019) in appendix
 
 
