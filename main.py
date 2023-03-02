@@ -177,15 +177,20 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
                 )
 
                 model.update_filepath(folderpath=path)
+                # while True:
                 try:
                     trainer.train_model(
                         batch_size=batch_size,
                         num_epochs=num_epochs
                     )
+                    # continue
                 except ValueError as err:
                     with open("log.txt", "a") as fp:
                         fp.write(str(err))
                         fp.write(f"\n\nSee{str(path_log)}\n\n\n\n")
+                    # break
+                # except torch.cuda.OutOfMemoryError as err:
+                #     continue
 
 
 def eval(path):
