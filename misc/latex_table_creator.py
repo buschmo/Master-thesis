@@ -200,7 +200,7 @@ def make_picture(tables):
                 ytick = "%"+ytick+f",\n{' '*8}ymode=log"
             # legend_pos = figure.get("legend pos", "north west")
             legend_columns = figure.get("legend columns", "3")
-            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0, xmax={xmax},\n        ymin={ymin}, {ymax},\n        xtick={xtick},\n        {ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        legend columns={legend_columns},\n        ymajorgrids=true,\n        grid style=dashed\n    ]\n\n"
+            figure_str = f"\\begin{{tikzpicture}}\n    \\begin{{axis}}[\n        xlabel={xlabel},\n        ylabel={ylabel},\n        xmin=0,\n        xmax={xmax},\n        ymin={ymin},\n        {ymax},\n        xtick={xtick},\n        {ytick},\n        legend entries={{{legend_str}}},\n        legend to name={{legend:{fig_label}_{key}}},\n        legend columns={legend_columns},\n        ymajorgrids=true,\n        grid style=dashed\n    ]\n\n"
             figure_str += "".join(figures)
 
             # legend_str = ",".join(figure["Axis"].keys())
