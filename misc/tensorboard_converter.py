@@ -108,6 +108,11 @@ def convert_tb_data(root_dir):
         print(
             list(map(lambda x: f"{x[0]} {len(x[1])}", batch_validation_dict.items())))
         exit()
+
+    epoch_df.index += 1
+    batch_training_df.index += 1
+    batch_validation_df.index += 1
+
     return epoch_df, batch_training_df, batch_validation_df
 
 
