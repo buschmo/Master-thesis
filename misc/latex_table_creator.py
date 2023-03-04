@@ -190,7 +190,7 @@ def make_picture(tables):
             ylabel = ylabels[key]
             xmax = figure.get("xmax", "50")
             ymax = figure.get("ymax", "1")
-            xtick = figure.get("xtick", "{0,10,20,30,40,50}")
+            xtick = figure.get("xtick", "{1,10,20,30,40,50}")
             ytick = figure.get("ytick", "{0,0.2,0.4,0.6,0.8,1}")
             ymax = f"ymax={ymax}"
             ytick = f"ytick={ytick}"
