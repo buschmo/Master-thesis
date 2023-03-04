@@ -80,13 +80,14 @@ def convert_tb_data(root_dir):
     for name in sorted(set(df["name"])):
         key = name.replace("/", "_")
         key = key.replace(" ", "_")
+        values = list(df[df["name"] == name]["value"])
         if "batchwise" in name:
             if "training" in name:
-                batch_training_dict[key] = list(df[df["name"] == name]["value"])
+                batch_training_dict[key] = values
             else:
-                batch_validation_dict[key] = list(df[df["name"] == name]["value"])
+                batch_validation_dict[key] = values
         else:
-            epoch_dict[key] = list(df[df["name"] == name]["value"])
+            epoch_dict[key] = values
     try:
         epoch_df = pd.DataFrame.from_dict(epoch_dict)
     except ValueError:
