@@ -270,7 +270,7 @@ class Trainer():
         processes = [
             Process(target=evl.compute_interpretability_metric,
                     args=(latent_codes, attributes, attr_list, q)),
-            Process(target=evl.compute_mig,
+            Process(target=evl.compute_discrete_mig,
                     args=(latent_codes, attributes, q)),
             Process(target=evl.compute_sap_score,
                     args=(latent_codes, attributes, q)),
