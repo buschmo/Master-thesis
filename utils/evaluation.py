@@ -96,6 +96,7 @@ def discrete_entropy(ys: Tensor) -> np.array:
     for j in range(num_factors):
         # H(Y) = I(Y|Y) in discrete case
         h[j] = mutual_info_score(ys[:, j], ys[:, j])
+    return h
 
 
 def _compute_score_matrix(mus: Tensor, ys: Tensor) -> np.array:
@@ -258,9 +259,19 @@ def compute_discrete_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, 
     Returns:
         dict[str, float]: key "mig" with score
     """
-    # TODO implement
-    # this should work similar to compute_mig, but swap for discrete mi and entropy
-    pass
+    scores = {}
+    # Equation (5)
+    m = discrete_mutual_info(latent_codes, attributes)
+    entropy = discrete_entropy(attributes)
+    sorted_m = np.sort(m, axis=0)[::-1]
+    # Equation (6)
+    scores = {
+        "Mutual Information Gap": np.mean(np.divide(sorted_m[0, :] - sorted_m[1, :], entropy[:]))
+    }
+    if queue:
+        queue.put(scores)
+    else:
+        return scores
 
 
 def compute_sap_score(latent_codes: Tensor, attributes: Tensor, queue: Queue) -> dict[str, float]:
