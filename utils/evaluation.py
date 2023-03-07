@@ -130,26 +130,6 @@ def _compute_score_matrix(mus: Tensor, ys: Tensor) -> np.array:
     return score_matrix
 
 
-def _compute_discrete_score_matrix(mus: Tensor, ys: Tensor) -> np.array:
-    """ Compute score matrix S given for discrete attributes by linear regression
-
-    Needed for SAP score.
-    Fits one or more thresholds directly on the i-th latent variable minimizing the balanced classification errors.
-    S_{i,j} is the balanced classification accuracy for the j-th attribute.
-
-    Balanced classification accuracy: sum(#correct / #all in class) / #classes
-
-    Args:
-        mus (Tensor): latent code
-        ys (Tensor): attributes
-
-    Returns:
-        np.array: score matrix
-    """
-    # TODO implement
-    pass
-
-
 def _compute_avg_diff_top_two(matrix: Tensor) -> float:
     """ Computes the difference between the two highest values in matrix
 
@@ -201,8 +181,6 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
     Based on Adel et al (2018) - Discovering Interpretable Representations for Both Deep Generative and Discriminative Models
     Chapter 4
 
-    Beware, this does not focus on the disentangled dimension, but considers all dimensions.
-
     Args:
         latent_codes (Tensor): latent code z
         attributes (Tensor): attributes to be interpreted
@@ -215,7 +193,6 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
     interpretability_metrics = {}
     total = 0
     for i, attr_name in enumerate(attr_list):
-        # get i-th attribute value
         attr_values = attributes[:, i]
         # (i) get maximal informative dimension of latent
         mutual_info = mutual_info_regression(
