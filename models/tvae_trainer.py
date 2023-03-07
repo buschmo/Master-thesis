@@ -50,9 +50,6 @@ class TVAETrainer(Trainer):
         src_key_padding_mask = (src == self.dataset.PAD)
         tgt_key_padding_mask = (tgt == self.dataset.PAD)
 
-        # # repeat labels for sequence length
-        # labels = labels.repeat_interleave(seq_length).view(-1, 1)
-
         # TODO no memory_key_padding? no src_masking?
         return (src.to("cuda"), tgt.to("cuda"), tgt_true.to("cuda"), tgt_mask.to("cuda"), memory_mask.to("cuda"), src_key_padding_mask.to("cuda"), tgt_key_padding_mask.to("cuda"), labels.to("cuda"))
 
@@ -96,10 +93,6 @@ class TVAETrainer(Trainer):
         if self.use_reg_loss:
             reg_loss = 0.0
             if type(self.reg_dim) == tuple:
-                # # remove last sentence token
-                # z_tilde = z_tilde[:, :-1, :]
-                # # [batch, sequence, d_model] -> [batch * sequence, d_model]
-                # z_tilde = z_tilde.reshape(-1, z_tilde.shape[-1])
                 for dim in self.reg_dim:
                     reg_loss += self.compute_reg_loss(
                         z_tilde, labels[:, dim], dim, gamma=self.gamma, factor=self.delta)
@@ -164,10 +157,6 @@ class TVAETrainer(Trainer):
                 tgt_key_padding_mask=tgt_key_padding_mask
             )
 
-            # # remove last sentence token
-            # z_tilde = z_tilde[:, :-1, :]
-            # # [batch, sequence, d_model] -> [batch * sequence, d_model]
-            # z_tilde = z_tilde.reshape([-1, z_tilde.shape[-1]])
             latent_codes.append(utl.to_numpy(z_tilde))
             attr_values.append(labels)
             if sample_id >= np.ceil(len(data_loader) / 4):

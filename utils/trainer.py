@@ -244,27 +244,9 @@ class Trainer():
                                    metrics["Separated Attribute Predictability"], epoch_num)
             self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
                                    metrics["Spearman's Rank Correlation"], epoch_num)
-        # if not results_fp.parent.exists():
-        #     results_fp.parent.mkdir(parents=True)
-        # with open(results_fp, 'w') as outfile:
-        #     json.dump(metrics, outfile, indent=2)
 
     @staticmethod
     def compute_eval_metrics(latent_codes, attributes, attr_list, epoch_num, queue):
-        # interp_metrics = evl.compute_interpretability_metric(
-        #     latent_codes, attributes, attr_list
-        # )
-        # metrics = {
-        #     "Interpretability": interp_metrics
-        # }
-        # # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
-        # metrics.update(evl.compute_mig(latent_codes, attributes))
-        # metrics.update(
-        #     evl.compute_sap_score(latent_codes, attributes))
-        # metrics.update(
-        #     evl.compute_correlation_score(latent_codes, attributes))
-        # # metrics.update(self.test_model(batch_size=batch_size))
-
         metrics = {}
         q = Queue()
         processes = [
