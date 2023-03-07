@@ -83,18 +83,12 @@ class TVAE(BaseModel):
             src_key_padding_mask=padding_mask
         )
 
-        # TODO this needs to be reconsidered
-        # [batch, sequence, d_model] -> [batch, d_model]
-        hidden_mean = torch.mean(hidden, dim=1)
-        # [batch, d_model] -> [batch, z_dim]
-        z_mean = self.enc_mean(hidden_mean)
-        # [batch, d_model] -> [batch, z_dim]
-        z_log_std = self.enc_log_std(hidden_mean)
+        # Word level sampling
+        # [batch, sequence, d_model] -> [batch, sequence, z_dim]
+        z_mean = self.enc_mean(hidden)
+        # [batch, sequence, d_model] -> [batch, sequence, z_dim]
+        z_log_std = self.enc_log_std(hidden)
 
-        # # [batch, sequence, d_model] -> [batch, sequence, z_dim]
-        # z_mean = self.enc_mean(hidden)
-        # # [batch, sequence, d_model] -> [batch, sequence, z_dim]
-        # z_log_std = self.enc_log_std(hidden)
         z_distribution = distributions.Normal(
             loc=z_mean, scale=torch.exp(z_log_std))
 
