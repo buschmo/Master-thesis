@@ -201,6 +201,8 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
     Based on Adel et al (2018) - Discovering Interpretable Representations for Both Deep Generative and Discriminative Models
     Chapter 4
 
+    Beware, this does not focus on the disentangled dimension, but considers all dimensions.
+
     Args:
         latent_codes (Tensor): latent code z
         attributes (Tensor): attributes to be interpreted
@@ -213,6 +215,7 @@ def compute_interpretability_metric(latent_codes: Tensor, attributes: Tensor, at
     interpretability_metrics = {}
     total = 0
     for i, attr_name in enumerate(attr_list):
+        # get i-th attribute value
         attr_values = attributes[:, i]
         # (i) get maximal informative dimension of latent
         mutual_info = mutual_info_regression(
