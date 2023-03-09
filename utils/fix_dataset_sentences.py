@@ -4,6 +4,8 @@ import torch
 from pathlib import Path
 from tqdm import tqdm
 from multiprocessing import Pool
+import re
+from itertools import chain
 
 
 def text_replace(s, replacements):
@@ -49,23 +51,31 @@ def walk_tree(node, depth):
 
 
 def create_attribute_file(path, nlp, wiki=False):
-    output = Path(path.parents[-2], path.stem + "_depth.pt")
     if output.exists():
         return
     lines = get_lines(path, wiki=wiki)
+    # remove hyphens
+    lines = map(lambda line: re.sub(r"(\w)-(\w)", r"\1\2", line), lines)
     docs = nlp.pipe(lines)
 
     l_depth = []
+    l_pos = []
     for doc in tqdm(docs, desc="Docs"):
         depths = map(lambda x: walk_tree(x.root, 0), doc.sents)
         depth = max(depths)
         l_depth.append(depth)
+        l_pos.append(len(set(map(lambda token: token.pos_, chain(doc.sents)))))
 
-    # save as torch tensor
-    if not output.parent.exists():
-        output.parent.mkdir(parents=True)
-    tensor = torch.tensor(l_depth)
-    torch.save(tensor, output)
+    # save as torch tensors
+    saving = [
+        [Path(path.parents[-2], path.stem + "_depth.pt"), l_depth],
+        [Path(path.parents[-2], path.stem + "_pos.pt"), l_pos]
+    ]
+    for output, content in saving:
+        if not output.parent.exists():
+            output.parent.mkdir(parents=True)
+        tensor = torch.tensor(content)
+        torch.save(tensor, output)
 
 
 def create_attribute_files():
