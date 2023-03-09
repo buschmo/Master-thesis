@@ -5,7 +5,6 @@ from pathlib import Path
 from tqdm import tqdm
 from multiprocessing import Pool
 import re
-from itertools import chain
 
 
 def text_replace(s, replacements):
@@ -51,8 +50,6 @@ def walk_tree(node, depth):
 
 
 def create_attribute_file(path, nlp, wiki=False):
-    if output.exists():
-        return
     lines = get_lines(path, wiki=wiki)
     # remove hyphens
     lines = map(lambda line: re.sub(r"(\w)-(\w)", r"\1\2", line), lines)
@@ -64,7 +61,7 @@ def create_attribute_file(path, nlp, wiki=False):
         depths = map(lambda x: walk_tree(x.root, 0), doc.sents)
         depth = max(depths)
         l_depth.append(depth)
-        l_pos.append(len(set(map(lambda token: token.pos_, chain(doc.sents)))))
+        l_pos.append(len(set(map(lambda token: token.pos_, doc))))
 
     # save as torch tensors
     saving = [
