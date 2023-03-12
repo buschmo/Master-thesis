@@ -52,7 +52,7 @@ def walk_tree(node, depth):
         return depth
 
 
-def create_attribute_file(path, nlp, wiki=False):
+def create_attribute_file(path, nlp, simple=False, wiki=False):
     lines = list(get_lines(path, wiki=wiki))
     # remove hyphens
     docs = nlp.pipe(lines)
@@ -71,18 +71,16 @@ def create_attribute_file(path, nlp, wiki=False):
     X = vectorizer.fit_transform(lines)
     l_tfidf = X.mean(axis=1).getA1()
 
+    # add simplicity attribute
+    lists = [[0 if simple else 1]*len(l_depth), l_depth, l_pos, l_len, l_tfidf]
     # save as torch tensors
-    saving = [
-        [Path(path.parents[-2], path.stem + "_depth.pt"), l_depth],
-        [Path(path.parents[-2], path.stem + "_pos.pt"), l_pos],
-        [Path(path.parents[-2], path.stem + "_len.pt"), l_len],
-        [Path(path.parents[-2], path.stem + "_tfidf.pt"), l_tfidf]
-    ]
-    for output, content in saving:
-        if not output.parent.exists():
-            output.parent.mkdir(parents=True)
-        tensor = torch.tensor(content)
-        torch.save(tensor, output)
+    tensors = [torch.tensor(l) for l in lists]
+    tensor = torch.stack(tensors, dim=1)
+
+    output_path = Path(path.parents[-2], path.stem + "_attributes.pt")
+    if not output_path.parent.exists():
+        output_path.parent.mkdir(parents=True)
+    torch.save(tensor, output_path)
 
 
 def create_attribute_files():
@@ -91,11 +89,11 @@ def create_attribute_files():
 
     paras = [
         [Path(
-            "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned"), nlp_wiki, True],
+            "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned"), nlp_wiki, True, True],
         [Path(
-            "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned"), nlp_wiki, True],
-        [Path("data/SimpleGerman/fixed_easy.txt"), nlp_ger, False],
-        [Path("data/SimpleGerman/fixed_normal.txt"), nlp_ger, False]
+            "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned"), nlp_wiki, False, True],
+        [Path("data/SimpleGerman/fixed_easy.txt"), nlp_ger, True, False],
+        [Path("data/SimpleGerman/fixed_normal.txt"), nlp_ger, False, False]
     ]
     for para in tqdm(paras, desc="Sets"):
         create_attribute_file(*para)
