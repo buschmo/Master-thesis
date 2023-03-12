@@ -39,6 +39,8 @@ def get_lines(file, wiki=False):
             lines = [i.split("\t")[-1].strip() for i in fp.readlines()]
         else:
             lines = [i.strip() for i in fp.readlines()]
+    lines = map(lambda line: re.sub(
+        r"(?<=[a-zA-ZÄäÖöÜü])-(?=[a-zA-ZÄäÖöÜü])", r"", line), lines)
     return lines
 
 
@@ -52,7 +54,6 @@ def walk_tree(node, depth):
 def create_attribute_file(path, nlp, wiki=False):
     lines = get_lines(path, wiki=wiki)
     # remove hyphens
-    lines = map(lambda line: re.sub(r"(\w)-(\w)", r"\1\2", line), lines)
     docs = nlp.pipe(lines)
 
     l_depth = []
