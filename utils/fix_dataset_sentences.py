@@ -5,6 +5,7 @@ from pathlib import Path
 from tqdm import tqdm
 from multiprocessing import Pool
 import re
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 def text_replace(s, replacements):
@@ -52,7 +53,7 @@ def walk_tree(node, depth):
 
 
 def create_attribute_file(path, nlp, wiki=False):
-    lines = get_lines(path, wiki=wiki)
+    lines = list(get_lines(path, wiki=wiki))
     # remove hyphens
     docs = nlp.pipe(lines)
 
@@ -66,11 +67,16 @@ def create_attribute_file(path, nlp, wiki=False):
         l_pos.append(len(set(map(lambda token: token.pos_, doc))))
         l_len.append(len(doc))
 
+    vectorizer = TfidfVectorizer(norm=None)
+    X = vectorizer.fit_transform(lines)
+    l_tfidf = X.mean(axis=1).getA1()
+
     # save as torch tensors
     saving = [
         [Path(path.parents[-2], path.stem + "_depth.pt"), l_depth],
-        [Path(path.parents[-2], path.stem + "_pos.pt"), l_pos]
-        [Path(path.parents[-2], path.stem + "_len.pt"), l_len]
+        [Path(path.parents[-2], path.stem + "_pos.pt"), l_pos],
+        [Path(path.parents[-2], path.stem + "_len.pt"), l_len],
+        [Path(path.parents[-2], path.stem + "_tfidf.pt"), l_tfidf]
     ]
     for output, content in saving:
         if not output.parent.exists():
