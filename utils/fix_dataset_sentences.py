@@ -57,16 +57,19 @@ def create_attribute_file(path, nlp, wiki=False):
 
     l_depth = []
     l_pos = []
+    l_len = []
     for doc in tqdm(docs, desc="Docs"):
         depths = map(lambda x: walk_tree(x.root, 0), doc.sents)
         depth = max(depths)
         l_depth.append(depth)
         l_pos.append(len(set(map(lambda token: token.pos_, doc))))
+        l_len.append(len(doc))
 
     # save as torch tensors
     saving = [
         [Path(path.parents[-2], path.stem + "_depth.pt"), l_depth],
         [Path(path.parents[-2], path.stem + "_pos.pt"), l_pos]
+        [Path(path.parents[-2], path.stem + "_len.pt"), l_len]
     ]
     for output, content in saving:
         if not output.parent.exists():
