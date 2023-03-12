@@ -19,7 +19,7 @@ class BaseDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, index):
-        return self.embeddings[index], self.labels[index].view(1,)
+        return self.embeddings[index], self.labels[index]
 
     def __str__(self):
         raise NotImplementedError
@@ -37,22 +37,32 @@ class DatasetBERT(BaseDataset):
                 "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned")
             self.path_normal_input = Path(
                 "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned")
+            self.path_easy_attribute = Path(
+                "data/SimpleWikipedia/simple_attribute.aligned")
+            self.path_normal_attribute = Path(
+                "data/SimpleWikipedia/normal_attribute.aligned")
             self.str = "SimpleWikipediaCorpus"
         else:
             self.path_easy = Path("data/SimpleGerman/BERTeasy.pt")
             self.path_normal = Path("data/SimpleGerman/BERTnormal.pt")
             self.path_easy_input = Path("data/SimpleGerman/fixed_easy.txt")
             self.path_normal_input = Path("data/SimpleGerman/fixed_normal.txt")
+            self.path_easy_attribute = Path(
+                "data/SimpleGerman/fixed_easy_attribute.txt")
+            self.path_normal_attribute = Path(
+                "data/SimpleGerman/fixed_normal_attribute.txt")
             self.str = "SimpleGermanCorpus"
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
         t_easy = torch.load(self.path_easy)
         t_normal = torch.load(self.path_normal)
 
+        t_easy_attr = torch.load(self.path_easy_attribute)
+        t_normal_attr = torch.load(self.path_normal_attribute)
+
         self.embeddings = torch.cat(
             [t_easy, t_normal])
-        self.labels = torch.cat(
-            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])])
+        self.labels = torch.cat([t_easy_attr, t_normal_attr])
 
     def __str__(self):
         return self.str
@@ -107,6 +117,10 @@ class DatasetWordPiece(BaseDataset):
                 f"data/SimpleWikipedia/WordPieceEasy{max_length}.pt")
             self.path_normal = Path(
                 f"data/SimpleWikipedia/WordPieceNormal{max_length}.pt")
+            self.path_easy_attribute = Path(
+                "data/SimpleWikipedia/simple_attribute.aligned")
+            self.path_normal_attribute = Path(
+                "data/SimpleWikipedia/normal_attribute.aligned")
             self.str = "SimpleWikipediaCorpus"
             model_name = "bert-base-uncased"
 
@@ -117,6 +131,10 @@ class DatasetWordPiece(BaseDataset):
                 f"data/SimpleGerman/WordPieceEasy{max_length}.pt")
             self.path_normal = Path(
                 f"data/SimpleGerman/WordPieceNormal{max_length}.pt")
+            self.path_easy_attribute = Path(
+                "data/SimpleGerman/fixed_easy_attribute.txt")
+            self.path_normal_attribute = Path(
+                "data/SimpleGerman/fixed_normal_attribute.txt")
             self.str = "SimpleGermanCorpus"
             model_name = "deepset/gbert-base"
 
@@ -132,10 +150,12 @@ class DatasetWordPiece(BaseDataset):
         t_easy = torch.load(self.path_easy).long()
         t_normal = torch.load(self.path_normal).long()
 
+        t_easy_attr = torch.load(self.path_easy_attribute)
+        t_normal_attr = torch.load(self.path_normal_attribute)
+
         self.embeddings = torch.cat(
             [t_easy, t_normal])
-        self.labels = torch.cat(
-            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])]).view((-1, 1))
+        self.labels = torch.cat([t_easy_attr, t_normal_attr])
 
     def __str__(self):
         return self.str
