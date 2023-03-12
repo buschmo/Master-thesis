@@ -52,14 +52,20 @@ class NaiveTrainer(Trainer):
         # compute and add regularization loss if needed
         if self.use_reg_loss:
             reg_loss = 0.0
+            reg = 0.0
             if type(self.reg_dim) == tuple:
                 for dim in self.reg_dim:
-                    reg_loss += self.compute_reg_loss(
+                    reg_loss_temp, reg_temp = self.compute_reg_loss(
                         z_tilde, labels[:, dim], dim, gamma=self.gamma, factor=self.delta)
+                    reg_loss += reg_loss_temp
+                    reg += reg_temp
             else:
                 raise TypeError(
                     "Regularization dimension must be a tuple of integers")
             loss += reg_loss
+        else:
+            reg_loss = torch.Tensor([0])
+            reg = torch.Tensor([0])
 
         # compute accuracy
         # TODO this might be incorrect
@@ -73,7 +79,8 @@ class NaiveTrainer(Trainer):
             "reconstruction": recons_loss,
             "KLD": dist_loss,
             "KLD_unscaled": kld,
-            "regularization": reg_loss
+            "regularization": reg_loss,
+            "regularization_unscaled": reg
         }
 
         return loss_dict, accuracy

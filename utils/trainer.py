@@ -72,7 +72,8 @@ class Trainer():
                 self.model.train()
                 self.beta_kl = self.kl_annealing(epoch_index, num_epochs)
                 if self.writer:
-                    self.writer.add_scalar("beta_annealing", self.beta_kl, epoch_index)
+                    self.writer.add_scalar(
+                        "beta_annealing", self.beta_kl, epoch_index)
 
                 mean_loss_dict_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
                     data_loader=generator_train,
@@ -194,7 +195,7 @@ class Trainer():
         # from trainer
         x = z[:, reg_dim]
         reg_loss = Trainer.reg_loss_sign(x, labels, factor=factor)
-        return gamma * reg_loss
+        return gamma * reg_loss, reg_loss
 
     @staticmethod
     def reg_loss_sign(latent_code, attribute, factor=1.0):
