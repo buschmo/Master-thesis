@@ -68,8 +68,8 @@ class TVAE(BaseModel):
         # self.generator = Generator(d_model, ntoken)
         self.generator = nn.Linear(d_model, ntoken)
 
-        # TODO rework initialization
-        self.init_weights()
+        # TODO rework initialization. Not necessary, as every module uses xavier/kaiming by default
+        # self.init_weights()
 
     def __str__(self):
         return "TVAE"
