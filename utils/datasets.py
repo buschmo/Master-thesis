@@ -38,9 +38,9 @@ class DatasetBERT(BaseDataset):
             self.path_normal_input = Path(
                 "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned")
             self.path_easy_attribute = Path(
-                "data/SimpleWikipedia/simple_attribute.aligned")
+                "data/SimpleWikipedia/simple_attribute.aligned.pt")
             self.path_normal_attribute = Path(
-                "data/SimpleWikipedia/normal_attribute.aligned")
+                "data/SimpleWikipedia/normal_attribute.aligned.pt")
             self.str = "SimpleWikipediaCorpus"
         else:
             self.path_easy = Path("data/SimpleGerman/BERTeasy.pt")
@@ -48,9 +48,9 @@ class DatasetBERT(BaseDataset):
             self.path_easy_input = Path("data/SimpleGerman/fixed_easy.txt")
             self.path_normal_input = Path("data/SimpleGerman/fixed_normal.txt")
             self.path_easy_attribute = Path(
-                "data/SimpleGerman/fixed_easy_attribute.txt")
+                "data/SimpleGerman/fixed_easy_attribute.pt")
             self.path_normal_attribute = Path(
-                "data/SimpleGerman/fixed_normal_attribute.txt")
+                "data/SimpleGerman/fixed_normal_attribute.pt")
             self.str = "SimpleGermanCorpus"
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
@@ -118,9 +118,9 @@ class DatasetWordPiece(BaseDataset):
             self.path_normal = Path(
                 f"data/SimpleWikipedia/WordPieceNormal{max_length}.pt")
             self.path_easy_attribute = Path(
-                "data/SimpleWikipedia/simple_attribute.aligned")
+                "data/SimpleWikipedia/simple_attribute.aligned.pt")
             self.path_normal_attribute = Path(
-                "data/SimpleWikipedia/normal_attribute.aligned")
+                "data/SimpleWikipedia/normal_attribute.aligned.pt")
             self.str = "SimpleWikipediaCorpus"
             model_name = "bert-base-uncased"
 
@@ -132,9 +132,9 @@ class DatasetWordPiece(BaseDataset):
             self.path_normal = Path(
                 f"data/SimpleGerman/WordPieceNormal{max_length}.pt")
             self.path_easy_attribute = Path(
-                "data/SimpleGerman/fixed_easy_attribute.txt")
+                "data/SimpleGerman/fixed_easy_attribute.pt")
             self.path_normal_attribute = Path(
-                "data/SimpleGerman/fixed_normal_attribute.txt")
+                "data/SimpleGerman/fixed_normal_attribute.pt")
             self.str = "SimpleGermanCorpus"
             model_name = "deepset/gbert-base"
 
