@@ -6,6 +6,7 @@ from tqdm import tqdm
 from multiprocessing import Pool
 import re
 from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 
 
 def text_replace(s, replacements):
@@ -69,7 +70,14 @@ def create_attribute_file(path, path_output, nlp, simple=False, wiki=False):
 
     vectorizer = TfidfVectorizer(norm=None)
     X = vectorizer.fit_transform(lines)
-    l_tfidf = X.mean(axis=1).getA1()
+    l_tfidf= []
+    for x in tqdm(X, desc="TF-IDF"):
+        x = x.A
+        x[x==0] = np.NaN
+        if np.isnan(x).all():
+            l_tfidf.append(0)
+        else:
+            l_tfidf.append(np.nanquantile(x, .75))
 
     # add simplicity attribute
     lists = [[0 if simple else 1]*len(l_depth), l_depth, l_pos, l_len, l_tfidf]
