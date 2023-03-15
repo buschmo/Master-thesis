@@ -85,7 +85,6 @@ def create_attribute_file(path, path_output, nlp, simple=False, wiki=False):
     tensors = [torch.tensor(l) for l in lists]
     tensor = torch.stack(tensors, dim=1)
 
-    path_output = Path(path.parents[-2], path.stem + "_attributes.pt")
     if not path_output.parent.exists():
         path_output.parent.mkdir(parents=True)
     torch.save(tensor, path_output)
@@ -97,13 +96,13 @@ def create_attribute_files():
 
     paras = [
         [Path(
-            "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned"), Path("data/SimpleWikipedia/simple_attribute.aligned"), nlp_wiki, True, True],
+            "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned"), Path("data/SimpleWikipedia/simple_attribute.aligned.pt"), nlp_wiki, True, True],
         [Path(
-            "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned"), Path("data/SimpleWikipedia/normal_attribute.aligned"), nlp_wiki, False, True],
+            "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned"), Path("data/SimpleWikipedia/normal_attribute.aligned.pt"), nlp_wiki, False, True],
         [Path("data/SimpleGerman/fixed_easy.txt"),
-         Path("data/SimpleGerman/fixed_easy_attribute.txt"), nlp_ger, True, False],
+         Path("data/SimpleGerman/fixed_easy_attribute.pt"), nlp_ger, True, False],
         [Path("data/SimpleGerman/fixed_normal.txt"),
-         Path("data/SimpleGerman/fixed_normal_attribute.txt"), nlp_ger, False, False]
+         Path("data/SimpleGerman/fixed_normal_attribute.pt"), nlp_ger, False, False]
     ]
     for para in tqdm(paras, desc="Sets"):
         create_attribute_file(*para)
@@ -111,11 +110,11 @@ def create_attribute_files():
 
 @click.command()
 @click.option("-u", "umlaut", is_flag=True, default=False)
-@click.option("-s", "spacy", is_flag=True, default=False)
-def main(umlaut, spacy):
+@click.option("-a", "attributes", is_flag=True, default=False, help="Create attributes files")
+def main(umlaut, attributes):
     if umlaut:
         convert_umlaut()
-    if spacy:
+    if attributes:
         create_attribute_files()
 
 
