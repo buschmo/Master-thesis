@@ -111,8 +111,6 @@ class TVAE(BaseModel):
         tgt = self.embedder(tgt)
 
         memory = self.latent2hidden(z_tilde)
-        memory = memory.view(memory.shape[0], 1, memory.shape[1]).repeat(
-            1, memory_mask.shape[1], 1)
 
         try:
             logits = self.decoder(
