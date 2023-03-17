@@ -72,7 +72,8 @@ class Trainer():
                 self.model.train()
                 self.beta_kl = self.kl_annealing(epoch_index, num_epochs)
                 if self.writer:
-                    self.writer.add_scalar("beta_annealing", self.beta_kl, epoch_index)
+                    self.writer.add_scalar(
+                        "beta_annealing", self.beta_kl, epoch_index)
 
                 mean_loss_dict_train, mean_accuracy_train = self.loss_and_acc_on_epoch(
                     data_loader=generator_train,
@@ -194,7 +195,7 @@ class Trainer():
         # from trainer
         x = z[:, reg_dim]
         reg_loss = Trainer.reg_loss_sign(x, labels, factor=factor)
-        return gamma * reg_loss
+        return gamma * reg_loss, reg_loss
 
     @staticmethod
     def reg_loss_sign(latent_code, attribute, factor=1.0):
@@ -244,33 +245,15 @@ class Trainer():
                                    metrics["Separated Attribute Predictability"], epoch_num)
             self.writer.add_scalar("Disentanglement/Spearman's Rank Correlation",
                                    metrics["Spearman's Rank Correlation"], epoch_num)
-        # if not results_fp.parent.exists():
-        #     results_fp.parent.mkdir(parents=True)
-        # with open(results_fp, 'w') as outfile:
-        #     json.dump(metrics, outfile, indent=2)
 
     @staticmethod
     def compute_eval_metrics(latent_codes, attributes, attr_list, epoch_num, queue):
-        # interp_metrics = evl.compute_interpretability_metric(
-        #     latent_codes, attributes, attr_list
-        # )
-        # metrics = {
-        #     "Interpretability": interp_metrics
-        # }
-        # # self.metrics.update(evl.compute_modularity(latent_codes, attributes))
-        # metrics.update(evl.compute_mig(latent_codes, attributes))
-        # metrics.update(
-        #     evl.compute_sap_score(latent_codes, attributes))
-        # metrics.update(
-        #     evl.compute_correlation_score(latent_codes, attributes))
-        # # metrics.update(self.test_model(batch_size=batch_size))
-
         metrics = {}
         q = Queue()
         processes = [
             Process(target=evl.compute_interpretability_metric,
                     args=(latent_codes, attributes, attr_list, q)),
-            Process(target=evl.compute_discrete_mig,
+            Process(target=evl.compute_mig,
                     args=(latent_codes, attributes, q)),
             Process(target=evl.compute_sap_score,
                     args=(latent_codes, attributes, q)),

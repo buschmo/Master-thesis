@@ -246,7 +246,7 @@ def compute_mig(latent_codes: Tensor, attributes: Tensor, queue: Queue) -> dict[
         return scores
 
 
-def compute_discrete_mig(latent_codes: Tensor, attributes: Tensor) -> dict[str, float]:
+def compute_discrete_mig(latent_codes: Tensor, attributes: Tensor, queue: Queue) -> dict[str, float]:
     """ Computes the mutual information gap for discrete attributes
 
     Based on Chen et al (2018) - Isolating Sources of Disentanglement in Variational Autoencoders

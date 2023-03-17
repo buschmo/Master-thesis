@@ -68,8 +68,8 @@ class TVAE(BaseModel):
         # self.generator = Generator(d_model, ntoken)
         self.generator = nn.Linear(d_model, ntoken)
 
-        # TODO rework initialization
-        self.init_weights()
+        # TODO rework initialization. Not necessary, as every module uses xavier/kaiming by default
+        # self.init_weights()
 
     def __str__(self):
         return "TVAE"
@@ -94,7 +94,27 @@ class TVAE(BaseModel):
 
         return z_distribution
 
+    def decode(self, z_tilde: Tensor, tgt: Tensor, tgt_mask: Tensor, memory_mask: Tensor, src_key_padding_mask: Tensor, tgt_key_padding_mask: Tensor) -> Tensor:
+        # [batch, seq_length-1] -> [batch, seq_length-1, d_model]
+        tgt = self.embedder(tgt)
+        # [batch, seq_length-1, z_dim] -> [batch, seq_length-1, d_model]
+        memory = self.latent2hidden(z_tilde)
+
+        # [batch, seq_length-1, d_model]
+        logits = self.decoder(
+            tgt=tgt,
+            memory=memory,
+            tgt_mask=tgt_mask,
+            memory_mask=memory_mask,  # is memory masking necessary for avg pooling?
+            tgt_key_padding_mask=tgt_key_padding_mask,
+            memory_key_padding_mask=src_key_padding_mask
+        )
+        # [batch, seq_length-1, ntoken]
+        logits = self.generator(logits)
+        return logits
+
     def reparametrize(self, z_dist: distributions.Distribution) -> Tensor:
+        # [batch, seq_length-1, z_dim]
         z_tilde = z_dist.rsample()
 
         prior_dist = distributions.Normal(loc=torch.zeros_like(

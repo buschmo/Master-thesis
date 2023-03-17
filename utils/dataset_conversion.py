@@ -4,6 +4,9 @@ import torch
 from pathlib import Path
 from tqdm import tqdm
 from multiprocessing import Pool
+import re
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 
 
 def text_replace(s, replacements):
@@ -38,6 +41,8 @@ def get_lines(file, wiki=False):
             lines = [i.split("\t")[-1].strip() for i in fp.readlines()]
         else:
             lines = [i.strip() for i in fp.readlines()]
+    lines = map(lambda line: re.sub(
+        r"(?<=[a-zA-ZÄäÖöÜü])-(?=[a-zA-ZÄäÖöÜü])", r"", line), lines)
     return lines
 
 
@@ -48,24 +53,41 @@ def walk_tree(node, depth):
         return depth
 
 
-def create_attribute_file(path, nlp, wiki=False):
-    output = Path(path.parents[-2], path.stem + "_depth.pt")
-    if output.exists():
-        return
-    lines = get_lines(path, wiki=wiki)
+def create_attribute_file(path, path_output, nlp, simple=False, wiki=False):
+    lines = list(get_lines(path, wiki=wiki))
+    # remove hyphens
     docs = nlp.pipe(lines)
 
     l_depth = []
+    l_pos = []
+    l_len = []
     for doc in tqdm(docs, desc="Docs"):
         depths = map(lambda x: walk_tree(x.root, 0), doc.sents)
         depth = max(depths)
         l_depth.append(depth)
+        l_pos.append(len(set(map(lambda token: token.pos_, doc))))
+        l_len.append(len(doc))
 
-    # save as torch tensor
-    if not output.parent.exists():
-        output.parent.mkdir(parents=True)
-    tensor = torch.tensor(l_depth)
-    torch.save(tensor, output)
+    vectorizer = TfidfVectorizer(norm=None)
+    X = vectorizer.fit_transform(lines)
+    l_tfidf = []
+    for x in tqdm(X, desc="TF-IDF"):
+        x = x.A
+        x[x == 0] = np.NaN
+        if np.isnan(x).all():
+            l_tfidf.append(0)
+        else:
+            l_tfidf.append(np.nanquantile(x, .75))
+
+    # add simplicity attribute
+    lists = [[0 if simple else 1]*len(l_depth), l_depth, l_pos, l_len, l_tfidf]
+    # save as torch tensors
+    tensors = [torch.tensor(l) for l in lists]
+    tensor = torch.stack(tensors, dim=1)
+
+    if not path_output.parent.exists():
+        path_output.parent.mkdir(parents=True)
+    torch.save(tensor, path_output)
 
 
 def create_attribute_files():
@@ -74,11 +96,13 @@ def create_attribute_files():
 
     paras = [
         [Path(
-            "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned"), nlp_wiki, True],
+            "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned"), Path("data/SimpleWikipedia/simple_attribute.aligned.pt"), nlp_wiki, True, True],
         [Path(
-            "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned"), nlp_wiki, True],
-        [Path("data/SimpleGerman/fixed_easy.txt"), nlp_ger, False],
-        [Path("data/SimpleGerman/fixed_normal.txt"), nlp_ger, False]
+            "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned"), Path("data/SimpleWikipedia/normal_attribute.aligned.pt"), nlp_wiki, False, True],
+        [Path("data/SimpleGerman/fixed_easy.txt"),
+         Path("data/SimpleGerman/fixed_easy_attribute.pt"), nlp_ger, True, False],
+        [Path("data/SimpleGerman/fixed_normal.txt"),
+         Path("data/SimpleGerman/fixed_normal_attribute.pt"), nlp_ger, False, False]
     ]
     for para in tqdm(paras, desc="Sets"):
         create_attribute_file(*para)
@@ -86,11 +110,11 @@ def create_attribute_files():
 
 @click.command()
 @click.option("-u", "umlaut", is_flag=True, default=False)
-@click.option("-s", "spacy", is_flag=True, default=False)
-def main(umlaut, spacy):
+@click.option("-a", "attributes", is_flag=True, default=False, help="Create attributes files")
+def main(umlaut, attributes):
     if umlaut:
         convert_umlaut()
-    if spacy:
+    if attributes:
         create_attribute_files()
 
 
