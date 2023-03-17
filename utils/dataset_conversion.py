@@ -70,10 +70,10 @@ def create_attribute_file(path, path_output, nlp, simple=False, wiki=False):
 
     vectorizer = TfidfVectorizer(norm=None)
     X = vectorizer.fit_transform(lines)
-    l_tfidf= []
+    l_tfidf = []
     for x in tqdm(X, desc="TF-IDF"):
         x = x.A
-        x[x==0] = np.NaN
+        x[x == 0] = np.NaN
         if np.isnan(x).all():
             l_tfidf.append(0)
         else:
