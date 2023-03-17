@@ -96,6 +96,28 @@ class TVAE(BaseModel):
 
         return z_distribution
 
+    def decode(self, z_tilde: Tensor, tgt: Tensor, tgt_mask: Tensor, memory_mask: Tensor, src_key_padding_mask: Tensor, tgt_key_padding_mask: Tensor) -> Tensor:
+        # [batch, seq_length-1] -> [batch, seq_length-1, d_model]
+        tgt = self.embedder(tgt)
+        # [batch, z_dim] -> [batch, d_model]
+        memory = self.latent2hidden(z_tilde)
+        # [batch, d_model] -> [batch, seq_length-1, d_model]
+        memory = memory.view(memory.shape[0], 1, memory.shape[1]).repeat(
+            1, memory_mask.shape[1], 1)
+
+        # [batch, seq_length-1, d_model]
+        logits = self.decoder(
+            tgt=tgt,
+            memory=memory,
+            tgt_mask=tgt_mask,
+            memory_mask=memory_mask,  # is memory masking necessary for avg pooling?
+            tgt_key_padding_mask=tgt_key_padding_mask,
+            memory_key_padding_mask=src_key_padding_mask
+        )
+        # [batch, seq_length-1, ntoken]
+        logits = self.generator(logits)
+        return logits
+
     def reparametrize(self, z_dist: distributions.Distribution) -> Tensor:
         # [batch, z_dim]
         z_tilde = z_dist.rsample()
@@ -111,25 +133,16 @@ class TVAE(BaseModel):
 
         z_tilde, z_prior, prior_dist = self.reparametrize(z_dist)
 
-        tgt = self.embedder(tgt)
-
-        # [batch, z_dim] -> [batch, d_model]
-        memory = self.latent2hidden(z_tilde)
-        # [batch, d_model] -> [batch, original_seq_length-1, d_model]
-        memory = memory.view(memory.shape[0], 1, memory.shape[1]).repeat(
-            1, memory_mask.shape[1], 1)
-
-        # [batch, original_seq_length-1, d_model]
-        logits = self.decoder(
+        # [batch, seq_length-1, ntoken]
+        logits = self.decode(
+            z_tilde=z_tilde,
             tgt=tgt,
-            memory=memory,
             tgt_mask=tgt_mask,
-            memory_mask=memory_mask,  # is memory masking necessary for avg pooling?
-            tgt_key_padding_mask=tgt_key_padding_mask,
-            memory_key_padding_mask=src_key_padding_mask
+            memory_mask=memory_mask,
+            src_key_padding_mask=src_key_padding_mask,
+            tgt_key_padding_mask=tgt_key_padding_mask
         )
-        # [batch, original_seq_length-1, ntoken]
-        logits = self.generator(logits)
+
         return logits, z_dist, prior_dist, z_tilde, z_prior
 
 
