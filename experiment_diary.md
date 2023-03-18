@@ -218,9 +218,9 @@ This file documents the specific experiments
     - 2023-02-28 21:05:27 Beta 1e-4
     - 2023-03-09_18:11:28 Beta 1e-4 x2
     - 2023-03-08 01:07:57 Beta 1e-3 NoReg
-    - 2023-03-14 23:25:29 Beta 1e-3 NoReg x3
+    - 2023-03-14 23:25:29 Beta 1e-3 NoReg x3 ~50h
     - 2023-03-08 01:08:26 Beta 1e-4 NoReg
-    - 2023-03-14 23:25:03 Beta 1e-4 NoReg x3
+    - 2023-03-14 23:25:03 Beta 1e-4 NoReg x3 ~50h
         - lr 1e-4
         - batchsize 64
         - capacity 0, 1, 10
