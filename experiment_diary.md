@@ -179,16 +179,19 @@ This file documents the specific experiments
     - 2023-02-15 21:59:25
     - 2023-02-15 21:59:42
 ### Fixed Delta
+- Hyperparameter German 
+    - 2023-02-17 17:12:51 lr 1e-4
+    - 2023-02-17 17:13:16 lr 1e-5
+    - 2023-02-21 14:45:53 lr 1e-4
+    - 2023-02-21 14:46:01 lr 1e-5
+### Fixed kl annealing (Moved all previous runs to archive)
 - Hyperparameter German
-    - 2023-02-17 17:12:51 1e-4
-    - 2023-02-17 17:13:16 1e-5
-    - 2023-02-21 14:45:53 1e-4
-    - 2023-02-21 14:46:01 1e-5
-### Fixed kl annealing
-- Hyperparameter German
-    - 2023-02-25 16:23:09 1e-3
-    - 2023-02-25 16:23:17 1e-4
-    - 2023-02-25 16:23:29 1e-5
+    - 2023-02-25 16:23:09 lr 1e-3
+    - 2023-02-25 16:23:17 lr 1e-4
+    - 2023-02-25 16:23:29 lr 1e-5
+    - 2023-02-27 00:09:51 lr 1e-3 NoReg
+    - 2023-02-27 00:10:20 lr 1e-4 NoReg
+    - 2023-02-27 00:11:22 lr 1e-5 NoReg
         - beta 1, 1e-2, 1e-4
         - capacity 0, 1, 10
         - gamma 0.1, 1, 10
@@ -196,7 +199,45 @@ This file documents the specific experiments
         - klM 2
         - epochs 25
     - Result:
-        - 02-26 12:01 - 16:53 1e-3 good accuracy on train/val
+        - 02-26 12:01 - 16:53 lr 1e-3 good accuracy on train/val
+- Hyperparameter German Batchsize
+    - 2023-02-28 21:04:56 Beta 1e-3
+    - 2023-03-09_18:10:42 Beta 1e-3 x2
+    - 2023-02-28 21:05:04 Beta 1e-4
+    - 2023-03-09_18:10:56 Beta 1e-4 x2
+        - lr 1e-4
+        - batchsize 8, 64
+        - capacity 0, 1, 10
+        - gamma 1
+        - delta 1
+        - klM 4
+        - epochs 50
+- Hyperparameter Wiki, filtered by previous german run
+    - 2023-02-28 21:05:17 Beta 1e-3
+    - 2023-03-09_18:11:08 Beta 1e-3 x2
+    - 2023-02-28 21:05:27 Beta 1e-4
+    - 2023-03-09_18:11:28 Beta 1e-4 x2
+    - 2023-03-08 01:07:57 Beta 1e-3 NoReg
+    - 2023-03-14 23:25:29 Beta 1e-3 NoReg x3
+    - 2023-03-08 01:08:26 Beta 1e-4 NoReg
+    - 2023-03-14 23:25:03 Beta 1e-4 NoReg x3
+        - lr 1e-4
+        - batchsize 64
+        - capacity 0, 1, 10
+        - gamma 1
+        - delta 1
+        - klM 4
+        - epochs 50
+- Explicit initialization German
+    - 2023-03-02 22:52:17
+        - used Xavier explicitly
+        - lr 1e-4
+        - batchsize 8, 64
+        - capacity 0, 1, 10
+        - gamma 1
+        - delta 1
+        - klM 4
+        - epochs 50
 
 ## Diary
 
