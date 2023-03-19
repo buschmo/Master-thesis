@@ -53,8 +53,13 @@ def walk_tree(node, depth):
         return depth
 
 
-def create_attribute_file(path, path_output, nlp, simple=False, wiki=False):
-    lines = list(get_lines(path, wiki=wiki))
+def create_attribute_file(paths, path_output, nlp, wiki=False):
+    lines = []
+    l_simplicity = []
+    for i, path in enumerate(paths):
+        new_lines = list(get_lines(path, wiki=wiki))
+        lines.extend(new_lines)
+        l_simplicity += [i] * len(new_lines)
     # remove hyphens
     docs = nlp.pipe(lines)
 
@@ -80,7 +85,7 @@ def create_attribute_file(path, path_output, nlp, simple=False, wiki=False):
             l_tfidf.append(np.nanquantile(x, .75))
 
     # add simplicity attribute
-    lists = [[0 if simple else 1]*len(l_depth), l_depth, l_pos, l_len, l_tfidf]
+    lists = [l_simplicity, l_depth, l_pos, l_len, l_tfidf]
     # save as torch tensors
     tensors = [torch.tensor(l) for l in lists]
     tensor = torch.stack(tensors, dim=1)
@@ -95,21 +100,31 @@ def create_attribute_files():
     nlp_ger = spacy.load("de_core_news_lg")
 
     paras = [
-        [Path(
-            "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned"), Path("data/SimpleWikipedia/simple_attribute.aligned.pt"), nlp_wiki, True, True],
-        [Path(
-            "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned"), Path("data/SimpleWikipedia/normal_attribute.aligned.pt"), nlp_wiki, False, True],
-        [Path("data/SimpleGerman/fixed_easy.txt"),
-         Path("data/SimpleGerman/fixed_easy_attribute.pt"), nlp_ger, True, False],
-        [Path("data/SimpleGerman/fixed_normal.txt"),
-         Path("data/SimpleGerman/fixed_normal_attribute.pt"), nlp_ger, False, False]
+        [
+            [
+                Path("data/SimpleWikipedia/sentence-aligned.v2/simple.aligned"),
+                Path("data/SimpleWikipedia/sentence-aligned.v2/normal.aligned")
+            ],
+            Path("data/SimpleWikipedia/attributes.pt"),
+            nlp_wiki,
+            True
+        ],
+        [
+            [
+                Path("data/SimpleGerman/fixed_easy.txt"),
+                Path("data/SimpleGerman/fixed_normal.txt")
+            ],
+            Path("data/SimpleGerman/attributes.pt"),
+            nlp_ger,
+            False
+        ]
     ]
     for para in tqdm(paras, desc="Sets"):
         create_attribute_file(*para)
 
 
 @click.command()
-@click.option("-u", "umlaut", is_flag=True, default=False)
+@click.option("-u", "umlaut", is_flag=True, default=False, help="Convert German 'Umlaute' from latin-1 to UTF-8")
 @click.option("-a", "attributes", is_flag=True, default=False, help="Create attributes files")
 def main(umlaut, attributes):
     if umlaut:
