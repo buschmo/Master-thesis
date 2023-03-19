@@ -202,9 +202,9 @@ This file documents the specific experiments
         - 02-26 12:01 - 16:53 lr 1e-3 good accuracy on train/val
 - Hyperparameter German Batchsize
     - 2023-02-28 21:04:56 Beta 1e-3
-    - 2023-03-09_18:10:42 Beta 1e-3 x2
+    - 2023-03-09 18:10:42 Beta 1e-3 x2
     - 2023-02-28 21:05:04 Beta 1e-4
-    - 2023-03-09_18:10:56 Beta 1e-4 x2
+    - 2023-03-09 18:10:56 Beta 1e-4 x2
         - lr 1e-4
         - batchsize 8, 64
         - capacity 0, 1, 10
@@ -214,9 +214,9 @@ This file documents the specific experiments
         - epochs 50
 - Hyperparameter Wiki, filtered by previous german run
     - 2023-02-28 21:05:17 Beta 1e-3
-    - 2023-03-09_18:11:08 Beta 1e-3 x2
+    - 2023-03-09 18:11:08 Beta 1e-3 x2
     - 2023-02-28 21:05:27 Beta 1e-4
-    - 2023-03-09_18:11:28 Beta 1e-4 x2
+    - 2023-03-09 18:11:28 Beta 1e-4 x2
     - 2023-03-08 01:07:57 Beta 1e-3 NoReg
     - 2023-03-14 23:25:29 Beta 1e-3 NoReg x3 ~50h
     - 2023-03-08 01:08:26 Beta 1e-4 NoReg
@@ -234,6 +234,17 @@ This file documents the specific experiments
         - lr 1e-4
         - batchsize 8, 64
         - capacity 0, 1, 10
+        - gamma 1
+        - delta 1
+        - klM 4
+        - epochs 50
+- Sampling Level comparison
+    - 2023-03-19 00:01:39 Wordlevel  x3 ~7h
+    - 2023-03-19 00:19:19 Sentencelevel x3
+        - lr 1e-4
+        - batchsize 64
+        - beta 1e-3
+        - capacity 0
         - gamma 1
         - delta 1
         - klM 4
