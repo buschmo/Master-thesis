@@ -42,8 +42,8 @@ def get_lines(file, wiki=False):
             lines = [i.split("\t")[-1].strip() for i in fp.readlines()]
         else:
             lines = [i.strip() for i in fp.readlines()]
-    lines = map(lambda line: re.sub(
-        r"(?<=[a-zA-ZÄäÖöÜü])-(?=[a-zA-ZÄäÖöÜü])", r"", line), lines)
+    lines = list(map(lambda line: re.sub(
+        r"(?<=[a-zA-ZÄäÖöÜü])-(?=[a-zA-ZÄäÖöÜü])", r"", line), lines))
     return lines
 
 
@@ -74,7 +74,8 @@ def create_attribute_file(paths, path_output, nlp, wiki=False):
     l_simplicity = []
     for i, path in enumerate(paths):
         new_lines = get_lines(path, wiki=wiki)
-        new_lines = [line for line in new_lines if filter_lines(line, tokenizer)]
+        new_lines = [
+            line for line in tqdm(new_lines, desc="Filter list") if filter_lines(line, tokenizer)]
         lines.extend(new_lines)
         l_simplicity += [i] * len(new_lines)
     # remove hyphens
@@ -93,7 +94,7 @@ def create_attribute_file(paths, path_output, nlp, wiki=False):
     vectorizer = TfidfVectorizer(norm=None)
     X = vectorizer.fit_transform(lines)
     l_tfidf = []
-    for x in tqdm(X, desc="TF-IDF"):
+    for x in tqdm(X, total=len(lines), desc="TF-IDF"):
         x = x.A
         x[x == 0] = np.NaN
         if np.isnan(x).all():
