@@ -7,6 +7,7 @@ from multiprocessing import Pool
 import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
+from transformers import BertTokenizer
 
 
 def text_replace(s, replacements):
@@ -46,6 +47,14 @@ def get_lines(file, wiki=False):
     return lines
 
 
+def filter_lines(line, tokenizer):
+    line_tokens = tokenizer.encode(line, padding="max_length")
+    if line_tokens[127] not in [PAD, SEP]:
+        # The sequence is longer than 128 tokens
+        return False
+    return True
+
+
 def walk_tree(node, depth):
     if node.n_lefts + node.n_rights > 0:
         return max(walk_tree(child, depth + 1) for child in node.children)
@@ -54,10 +63,17 @@ def walk_tree(node, depth):
 
 
 def create_attribute_file(paths, path_output, nlp, wiki=False):
+    if wiki:
+        model_name = "bert-base-uncased"
+    else:
+        model_name = "deepset/gbert-base"
+    tokenizer = BertTokenizer.from_pretrained(model_name)
+
     lines = []
     l_simplicity = []
     for i, path in enumerate(paths):
-        new_lines = list(get_lines(path, wiki=wiki))
+        new_lines = get_lines(path, wiki=wiki)
+        new_lines = [line for line in lines if filter_lines(line, tokenizer)]
         lines.extend(new_lines)
         l_simplicity += [i] * len(new_lines)
     # remove hyphens
@@ -123,9 +139,9 @@ def create_attribute_files():
         create_attribute_file(*para)
 
 
-@click.command()
-@click.option("-u", "umlaut", is_flag=True, default=False, help="Convert German 'Umlaute' from latin-1 to UTF-8")
-@click.option("-a", "attributes", is_flag=True, default=False, help="Create attributes files")
+@ click.command()
+@ click.option("-u", "umlaut", is_flag=True, default=False, help="Convert German 'Umlaute' from latin-1 to UTF-8")
+@ click.option("-a", "attributes", is_flag=True, default=False, help="Create attributes files")
 def main(umlaut, attributes):
     if umlaut:
         convert_umlaut()
