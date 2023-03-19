@@ -48,6 +48,7 @@ def get_lines(file, wiki=False):
 
 
 def filter_lines(line, tokenizer):
+    _, PAD, SEP = tokenizer.encode("[PAD]")
     line_tokens = tokenizer.encode(line, padding="max_length")
     if line_tokens[127] not in [PAD, SEP]:
         # The sequence is longer than 128 tokens
