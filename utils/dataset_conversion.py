@@ -73,7 +73,7 @@ def create_attribute_file(paths, path_output, nlp, wiki=False):
     l_simplicity = []
     for i, path in enumerate(paths):
         new_lines = get_lines(path, wiki=wiki)
-        new_lines = [line for line in lines if filter_lines(line, tokenizer)]
+        new_lines = [line for line in new_lines if filter_lines(line, tokenizer)]
         lines.extend(new_lines)
         l_simplicity += [i] * len(new_lines)
     # remove hyphens
