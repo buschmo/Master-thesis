@@ -66,7 +66,7 @@ def create_attribute_file(paths, path_output, nlp, wiki=False):
     l_depth = []
     l_pos = []
     l_len = []
-    for doc in tqdm(docs, desc="Docs"):
+    for doc in tqdm(docs, total=len(lines), desc="Docs"):
         depths = map(lambda x: walk_tree(x.root, 0), doc.sents)
         depth = max(depths)
         l_depth.append(depth)
