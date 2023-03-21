@@ -22,7 +22,7 @@ ATTRIBUTE_DIMENSIONS = {
     "Tree_depth": 1,
     "POS": 2,
     "Length": 3,
-    "TF-IDF": 4,
+    "TF-IDF": 4
 }
 
 
@@ -58,10 +58,13 @@ class Trainer():
         self.use_reg_loss = use_reg_loss
         self.reg_dim = (0,)
 
-    def train_model(self, batch_size, num_epochs):
+    def train_model(self, batch_size, num_epochs, seed=None):
+        generator= torch.default_generator
+        if seed:
+            generator = torch.Generator().manual_seed(seed)
         # from trainer
         dataset_train, dataset_val = torch.utils.data.random_split(
-            self.dataset, [0.8, 0.2]
+            self.dataset, [0.8, 0.2], generator=generator
         )
         generator_train = DataLoader(dataset_train, batch_size=batch_size)
         generator_val = DataLoader(dataset_val, batch_size=batch_size)

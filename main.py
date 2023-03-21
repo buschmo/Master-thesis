@@ -178,10 +178,20 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
 
                 model.update_filepath(folderpath=path)
                 # while True:
+
+                if save_model:
+                    seed = torch.random.initial_seed()
+                    path_seed = Path(
+                        folder_log, f"{timestamp}_seed.txt")
+                    with open(path_seed, "w") as fp:
+                        fp.write(str(seed))
+                else:
+                    seed = None
                 try:
                     trainer.train_model(
                         batch_size=batch_size,
-                        num_epochs=num_epochs
+                        num_epochs=num_epochs,
+                        seed=seed
                     )
                     # continue
                 except ValueError as err:
