@@ -1,6 +1,5 @@
 # for calculations
 import torch
-from torch.utils.data import DataLoader
 import numpy as np
 
 # miscellaneous
