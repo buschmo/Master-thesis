@@ -251,6 +251,13 @@ This file documents the specific experiments
         - delta 1
         - klM 4
         - epochs 50
+- Expand Attributes One Layer
+    - Wiki 3x ~37h
+- OneAttr Vary layers 
+    - German 3x ~6.5h
+    - Wiki 3x ~
+    - German 3x
+    - Wikipedia 3x
 
 ## Diary
 
