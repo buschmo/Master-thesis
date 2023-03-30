@@ -161,13 +161,16 @@ def merge(paths, path_csv):
     return [path_mean, path_min, path_max]
 
 
-def make_picture(tables):
+def make_picture(tables, overwrite=False):
     for fig_label, figure in tables.items():
         for key, title in keys.items():
-            
             figures = []
             legend_str = ""
             path_figure = get_figure_path(fig_label, key)
+            # Skip existing files if needed
+            if path_figure.exists() and not overwrite:
+                continue
+            
             for legend, axis in figure["Axis"].items():
                 path_csv = get_csv_path(fig_label, legend)
                 options = axis.get("Options", [""])
@@ -209,12 +212,13 @@ def make_picture(tables):
             with open(path_figure, "w") as fp:
                 fp.write(figure_str)
 
-
-def main():
+@click.command()
+@click.option("-o", "--overwrite", "overwrite", is_flag=True, type=bool, default=False, show_default=True, help="Overwrite existing files")
+def main(overwrite):
     # load data frame, calculate boxplot / mean, output it into (single) named thingy
     with open(PATH_TABLES) as fp:
         tables = json.load(fp)
-    make_picture(tables)
+    make_picture(tables, overwrite)
 
 
 if __name__ == "__main__":
