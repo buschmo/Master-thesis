@@ -243,6 +243,11 @@ This file documents the specific experiments
 - Sampling Level comparison
     - 2023-03-19 00:01:39 Wordlevel  3x ~7h
     - 2023-03-19 00:19:19 Sentencelevel 3x ~5.5h
+    - 2023-03-19 19:02:52 Wiki Wordlevel 3x ~70h abgebrochen
+    - 2023-03-22 15:45:55 Wiki Wordlevel 3x ~70h abgebrochen
+    - 2023-03-28 20:26:05 Wiki Wordlevel 3x ~41.5h
+    - 2023-03-19 19:02:52 Wiki Sentence 3x ~70h abgebrochen
+    - 2023-03-30 :: Wiki Sentence 3x ~70h abgebrochen
         - lr 1e-4
         - batchsize 64
         - beta 1e-3
@@ -253,11 +258,14 @@ This file documents the specific experiments
         - epochs 50
 - Expand Attributes One Layer
     - Wiki 3x ~37h
-- OneAttr Vary layers 
     - German 3x ~6.5h
-    - Wiki 3x ~
-    - German 3x
-    - Wikipedia 3x
+- OneAttr Vary layers 
+    - German One layer 3x ~6.6h
+    - Wiki One layer 3x ~31h
+    - German Two layers 3x ~6.5h
+    - Wiki Two layers 3x ~43h
+    - German Three layers 3x ~7.5h
+    - Wikipedia Three layers 3x ~41.5h
 
 ## Diary
 

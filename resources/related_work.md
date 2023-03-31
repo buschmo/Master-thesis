@@ -241,6 +241,8 @@
 ## Not related
 - Dai et al (2019) - [Style Transformer: Unpaired Text Style Transfer without Disentangled Latent Representation]()
   - No disentanglement, no VAE
+  - but transformer
+  - learn style transfer from non-parallel corpus
 - Li et al (2021) - [Surrogate Gradient Field for Latent Space Manipulation]()
   - Images and not using VAE
 - Yi et al (2020) - [Text Style Transfer via Learning Style Instance Supported Latent Space](https://www.ijcai.org/Proceedings/2020/0526)
