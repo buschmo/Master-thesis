@@ -19,7 +19,7 @@ class BaseDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, index):
-        return self.embeddings[index], self.labels[index]
+        return self.embeddings[index], self.labels[index].view(1,)
 
     def __str__(self):
         raise NotImplementedError
@@ -37,16 +37,12 @@ class DatasetBERT(BaseDataset):
                 "data/SimpleWikipedia/sentence-aligned.v2/simple.aligned")
             self.path_normal_input = Path(
                 "data/SimpleWikipedia/sentence-aligned.v2/normal.aligned")
-            self.path_attributes = Path(
-                "data/SimpleWikipedia/attributes.pt")
             self.str = "SimpleWikipediaCorpus"
         else:
             self.path_easy = Path("data/SimpleGerman/BERTeasy.pt")
             self.path_normal = Path("data/SimpleGerman/BERTnormal.pt")
             self.path_easy_input = Path("data/SimpleGerman/fixed_easy.txt")
             self.path_normal_input = Path("data/SimpleGerman/fixed_normal.txt")
-            self.path_attributes = Path(
-                "data/SimpleGerman/attributes.pt")
             self.str = "SimpleGermanCorpus"
         if not self.path_easy.exists() or not self.path_normal.exists():
             self.createDataset()
@@ -55,7 +51,8 @@ class DatasetBERT(BaseDataset):
 
         self.embeddings = torch.cat(
             [t_easy, t_normal])
-        self.labels = torch.load(self.path_attributes)
+        self.labels = torch.cat(
+            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])])
 
     def __str__(self):
         return self.str
@@ -110,8 +107,6 @@ class DatasetWordPiece(BaseDataset):
                 f"data/SimpleWikipedia/WordPieceEasy{max_length}.pt")
             self.path_normal = Path(
                 f"data/SimpleWikipedia/WordPieceNormal{max_length}.pt")
-            self.path_attributes = Path(
-                "data/SimpleWikipedia/attributes.pt")
             self.str = "SimpleWikipediaCorpus"
             model_name = "bert-base-uncased"
 
@@ -122,8 +117,6 @@ class DatasetWordPiece(BaseDataset):
                 f"data/SimpleGerman/WordPieceEasy{max_length}.pt")
             self.path_normal = Path(
                 f"data/SimpleGerman/WordPieceNormal{max_length}.pt")
-            self.path_attributes = Path(
-                "data/SimpleGerman/attributes.pt")
             self.str = "SimpleGermanCorpus"
             model_name = "deepset/gbert-base"
 
@@ -141,7 +134,8 @@ class DatasetWordPiece(BaseDataset):
 
         self.embeddings = torch.cat(
             [t_easy, t_normal])
-        self.labels = torch.load(self.path_attributes)
+        self.labels = torch.cat(
+            [torch.zeros(t_easy.shape[0]), torch.ones(t_normal.shape[0])]).view((-1, 1))
 
     def __str__(self):
         return self.str
