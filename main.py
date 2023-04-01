@@ -200,6 +200,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
                     with open("log.txt", "a") as fp:
                         fp.write(str(err))
                         fp.write(f"\n\nSee {str(path_log)}\n\n\n\n")
+                        fp.write(f"\n\nHost: {args['Host']}\n")
                     # break
                 # except torch.cuda.OutOfMemoryError as err:
                 #     continue
