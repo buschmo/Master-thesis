@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from itertools import product
 from tqdm import tqdm
+from socket import gethostname
 
 from models.naive_model import NaiveVAE
 from models.naive_trainer import NaiveTrainer
@@ -98,6 +99,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
         if not folder_log.exists():
             folder_log.mkdir(parents=True)
         with open(p, "w") as fp:
+            args["HOST"] = gethostname()
             json.dump(args, fp, indent=4, sort_keys=True)
 
     parameters = [i for i in product(
