@@ -1,10 +1,11 @@
 .vscode/
-checkpoints/
-data/
 __pycache__/
-runs/
-results/
-figures/
+checkpoints/
 csv/
+data/
+figures/
+logs/
+results/
+runs/
 Todo.md
 *.json
