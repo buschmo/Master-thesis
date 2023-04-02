@@ -18,11 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 # define attributes and the label dimension their represented by
 ATTRIBUTE_DIMENSIONS = {
-    "Simplicity": 0,
-    "Tree_depth": 1,
-    "POS": 2,
-    "Length": 3,
-    "TF-IDF": 4
+    "Simplicity": 0
 }
 
 
