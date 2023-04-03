@@ -267,6 +267,34 @@ This file documents the specific experiments
     - Wiki Two layers 3x ~43h
     - German Three layers 3x ~7.5h
     - Wikipedia Three layers 3x ~41.5h
+- Hyper Wiki
+    - 2023-03-31 19:58:49 lr 1e-3 ~54h with errors!
+    - 2023-03-31 20:04:15 lr 1e-4 ~62h
+    - 2023-04-01 13:12:16 lr 1e-5
+        - beta 1e-3, 1e-4
+    - 2023-03-31 20:06:21 lr 1e-4 ~62h
+        - beta 1e-1, 1e-2
+        - lr 1e-4
+        - batchsize 64
+        - capacity 0
+        - gamma 0.1, 1, 10
+        - delta 1
+        - klM 4
+        - epochs 50
+- Large Gamma
+    - 2023-04-03 14:49:28 German ~
+        - gamma 100, 1000
+    - 2023-04-03 14:50:43 Wikipedia ~
+        - gamma 100
+    - 2023-04-03 14:50:55 Wikipedia ~
+        - gamma 1000
+        - beta 1e-4
+        - lr 1e-4
+        - batchsize 64
+        - capacity 0
+        - delta 1
+        - klM 4
+        - epochs 50
 
 ## Diary
 
