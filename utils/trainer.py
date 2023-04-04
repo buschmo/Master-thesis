@@ -202,7 +202,7 @@ class Trainer():
         # from trainer
         x = z[:, reg_dim]
         reg_loss_unscaled = Trainer.reg_loss_sign(x, labels, factor=factor)
-        return gamma * reg_loss, reg_loss_unscaled
+        return gamma * reg_loss_unscaled, reg_loss_unscaled
 
     @staticmethod
     def reg_loss_sign(latent_code, attribute, factor=1.0):
