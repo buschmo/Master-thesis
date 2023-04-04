@@ -51,6 +51,9 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
     # e.g. 0 < lr < 10 for example
 
     args = locals()
+    seed = torch.random.initial_seed()
+    args["SEED"] = seed
+    args["HOST"] = gethostname()
 
     print("Parameters:")
     pp = pprint.PrettyPrinter(indent=4)
@@ -99,7 +102,6 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
         if not folder_log.exists():
             folder_log.mkdir(parents=True)
         with open(p, "w") as fp:
-            args["HOST"] = gethostname()
             json.dump(args, fp, indent=4, sort_keys=True)
 
     parameters = [i for i in product(
@@ -181,14 +183,6 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
                 model.update_filepath(folderpath=path)
                 # while True:
 
-                if save_model:
-                    seed = torch.random.initial_seed()
-                    path_seed = Path(
-                        folder_log, f"{timestamp}_seed.txt")
-                    with open(path_seed, "w") as fp:
-                        fp.write(str(seed))
-                else:
-                    seed = None
                 try:
                     trainer.train_model(
                         batch_size=batch_size,
