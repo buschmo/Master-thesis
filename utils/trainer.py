@@ -56,7 +56,7 @@ class Trainer():
         self.delta = delta
         self.capacity = capacity
         self.use_reg_loss = use_reg_loss
-        self.reg_dim = (0,)
+        self.reg_dim = tuple(ATTRIBUTE_DIMENSIONS.values())
 
     def train_model(self, batch_size, num_epochs, seed=None):
         generator= torch.default_generator
@@ -201,8 +201,8 @@ class Trainer():
     def compute_reg_loss(z, labels, reg_dim, gamma, factor=1.0):
         # from trainer
         x = z[:, reg_dim]
-        reg_loss = Trainer.reg_loss_sign(x, labels, factor=factor)
-        return gamma * reg_loss, reg_loss
+        reg_loss_unscaled = Trainer.reg_loss_sign(x, labels, factor=factor)
+        return gamma * reg_loss, reg_loss_unscaled
 
     @staticmethod
     def reg_loss_sign(latent_code, attribute, factor=1.0):
