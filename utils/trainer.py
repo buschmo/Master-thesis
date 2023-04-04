@@ -52,7 +52,7 @@ class Trainer():
         self.delta = delta
         self.capacity = capacity
         self.use_reg_loss = use_reg_loss
-        self.reg_dim = (0,)
+        self.reg_dim = tuple(ATTRIBUTE_DIMENSIONS.values())
 
     def train_model(self, batch_size, num_epochs):
         # from trainer
