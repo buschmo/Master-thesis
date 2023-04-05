@@ -61,7 +61,17 @@ keys = {
     "loss_regularization_training": "Regularization loss on training set",
     "loss_regularization_validation": "Regularization loss on validation set",
     "loss_sum_training": "Loss on training set",
-    "loss_sum_validation": "Loss on validation set"
+    "loss_sum_validation": "Loss on validation set",
+    "loss_reconstruction_training": "Batchwise reconstruction loss on training set",
+    "loss_reconstruction_validation": "Batchwise reconstruction loss on validation set",
+    "loss_regularization_training": "Batchwise regularization loss on training set",
+    "loss_regularization_validation": "Batchwise regularization loss on validation set",
+    "loss_sum_training": "Batchwise loss on training set",
+    "loss_sum_validation": "Batchwise loss on validation set",
+    "loss_KLD_batchwise/training": "Batchwise KLD loss on training set",
+    "loss_KLD_batchwise/validation": "Batchwise KLD loss on validation set",
+    "loss_KLD_unscaled_batchwise/training": "Batchwise unscaled KLD loss on training set",
+    "loss_KLD_unscaled_batchwise/validation": "Batchwise unscaled KLD loss on validation set"
 }
 
 # y-axis labels
@@ -82,7 +92,17 @@ ylabels = {
     "loss_regularization_training": "Loss",
     "loss_regularization_validation": "Loss",
     "loss_sum_training": "Loss",
-    "loss_sum_validation": "Loss"
+    "loss_sum_validation": "Loss",
+    "loss_reconstruction_training": "Loss",
+    "loss_reconstruction_validation": "Loss",
+    "loss_regularization_training": "Loss",
+    "loss_regularization_validation": "Loss",
+    "loss_sum_training": "Loss",
+    "loss_sum_validation": "Loss",
+    "loss_KLD_batchwise/training": "Loss",
+    "loss_KLD_batchwise/validation": "Loss",
+    "loss_KLD_unscaled_batchwise/training": "Loss",
+    "loss_KLD_unscaled_batchwise/validation": "Loss"
 }
 
 # LaTeX table
@@ -152,16 +172,20 @@ def make_picture(tables, overwrite=False):
             # Skip existing files if needed
             if path_figure.exists() and not overwrite:
                 continue
-            
+
+            not_finished = True
             for legend, axis in figure["Axis"].items():
                 path_csv = get_csv_path(fig_label, legend)
                 options = axis.get("Options", [""])
                 path_df = axis["Path"]
-                if isinstance(path_df, list) and len(path_df)>1:
+                with open(path_df[0]) as fp:
+                    header = fp.readline()
+                    if not key in header:
+                        break
+                if len(path_df) > 1:
                     path_df = merge(path_df, path_csv)
                 else:
-                    if isinstance(path_df, list):
-                        path_df = path_df[0]
+                    path_df = path_df[0]
                     path_df = Path(path_df)
                     path_csv = path_csv.with_stem(path_df.stem)
                     copyfile(path_df, path_csv)
@@ -170,7 +194,11 @@ def make_picture(tables, overwrite=False):
                 legend_str += ","*len(path_df)
 
                 figures.append(add_figures(path_df, options, key, legend))
-            
+            else:
+                not_finished = False
+            if not_finished:
+                break
+
             xlabel = figure.get("xlabel", "epochs")
             ylabel = ylabels[key]
             xmax = figure.get("xmax", "50")
@@ -179,7 +207,7 @@ def make_picture(tables, overwrite=False):
             ytick = figure.get("ytick", "{0,0.2,0.4,0.6,0.8,1}")
             ymax = f"ymax={ymax}"
             ytick = f"ytick={ytick}"
-            ymin=0
+            ymin = 0
             if "loss" in key:
                 ymax = "% "+ymax
                 ytick = "% "+ytick+f",\n{' '*8}% ymode=log"
@@ -193,6 +221,7 @@ def make_picture(tables, overwrite=False):
             figure_str += "    \\end{axis}\n\\end{tikzpicture}"
             with open(path_figure, "w") as fp:
                 fp.write(figure_str)
+
 
 @click.command()
 @click.option("-o", "--overwrite", "overwrite", is_flag=True, type=bool, default=False, show_default=True, help="Overwrite existing files")
