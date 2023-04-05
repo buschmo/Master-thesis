@@ -17,9 +17,13 @@ os.chdir(Path(os.environ["MASTER"]))
 
 
 def convert_tfevent(filepath, name_suffix=""):
-    return pd.DataFrame([
-        parse_tfevent(e, name_suffix) for e in summary_iterator(filepath) if len(e.summary.value)
-    ])
+    try:
+        return pd.DataFrame([
+            parse_tfevent(e, name_suffix) for e in summary_iterator(filepath) if len(e.summary.value)
+        ])
+    except tf.errors.DataLossError as err:
+        print(f"Error with file:\n\t{filepath}")
+        raise err
 
 
 def parse_tfevent(tfevent, name_suffix=""):
