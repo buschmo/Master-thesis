@@ -43,26 +43,7 @@ all_keys = [
     'loss_sum/validation'
 ]
 
-# keys = [
-#     "Disentanglement_Interpretability Mean",
-#     "Disentanglement_Interpretability Simplicity",
-#     "Disentanglement_Mutual Information Gap",
-#     "Disentanglement_Separated Attribute Predictability",
-#     "Disentanglement_Spearman's Rank Correlation",
-#     "accuracy_training",
-#     "accuracy_validation",
-#     "loss_KLD_training",
-#     "loss_KLD_validation",
-#     "loss_KLD_unscaled_training",
-#     "loss_KLD_unscaled_validation",
-#     "loss_reconstruction_training",
-#     "loss_reconstruction_validation",
-#     "loss_regularization_training",
-#     "loss_regularization_validation",
-#     "loss_sum_training",
-#     "loss_sum_validation"
-# ]
-
+# Table titles
 keys = {
     "Disentanglement_Interpretability_Mean": "Interpretability Mean",
     "Disentanglement_Interpretability_Simplicity": "Interpretability Simplicity",
@@ -83,6 +64,7 @@ keys = {
     "loss_sum_validation": "Loss on validation set"
 }
 
+# y-axis labels
 ylabels = {
     "Disentanglement_Interpretability_Mean": "Score",
     "Disentanglement_Interpretability_Simplicity": "Score",
