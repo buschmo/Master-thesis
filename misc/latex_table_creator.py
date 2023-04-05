@@ -20,28 +20,6 @@ try:
 except KeyError:
     PATH_TABLES = Path("tables.json")
 
-all_keys = [
-    'Disentanglement/Interpretability',
-    'Disentanglement/Mutual Information Gap',
-    'Disentanglement/Separated Attribute Predictability',
-    "Disentanglement/Spearman's Rank Correlation",
-    'accuracy/training',
-    'accuracy/validation',
-    'loss_KLD/training',
-    'loss_KLD/validation',
-    'loss_KLD_batchwise/training',
-    'loss_KLD_batchwise/validation',
-    'loss_KLD_unscaled/training',
-    'loss_KLD_unscaled/validation',
-    'loss_KLD_unscaled_batchwise/training',
-    'loss_KLD_unscaled_batchwise/validation',
-    'loss_reconstruction/training',
-    'loss_reconstruction/validation',
-    'loss_regularization/training',
-    'loss_regularization/validation',
-    'loss_sum/training',
-    'loss_sum/validation'
-]
 
 # Table titles
 keys = {
