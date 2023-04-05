@@ -153,14 +153,18 @@ class Trainer():
         # from trainer
         mean_loss_dict = {}
         mean_accuracy = 0
-        # for batch_num, batch in tqdm(enumerate(data_loader), desc="Batch"):
+        epoch_len = len(data_loader)
+        if train:
+            mode = "training"
+        else:
+            mode = "validation"
         for batch_num, batch in enumerate(data_loader):
             batch_data = self.process_batch_data(batch)
 
             self.optimizer.zero_grad()
 
             loss_dict, accuracy = self.loss_and_acc_for_batch(
-                batch_data, epoch_num, batch_num, len(data_loader), train=train
+                batch_data, epoch_num, batch_num, train=train
             )
 
             loss = loss_dict["sum"]
@@ -174,6 +178,16 @@ class Trainer():
                     loss_dict[k].mean()) + mean_loss_dict.setdefault(k, 0)
             if accuracy is not None:
                 mean_accuracy += utl.to_numpy(accuracy)
+
+            if self.writer:
+                step = epoch_num*epoch_len + batch_num
+
+                for key, value in loss_dict.items():
+                    self.writer.add_scalar(
+                        f"loss_{key}_batchwise/{mode}", value.mean(), step)
+
+                self.writer.add_scalar(
+                    "accuracy_batchwise/{mode}", accuracy, step)
 
         for k, v in mean_loss_dict.items():
             mean_loss_dict[k] = v / len(data_loader)
