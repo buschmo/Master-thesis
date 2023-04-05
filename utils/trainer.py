@@ -59,7 +59,7 @@ class Trainer():
         self.reg_dim = tuple(ATTRIBUTE_DIMENSIONS.values())
 
     def train_model(self, batch_size, num_epochs, seed=None):
-        generator= torch.default_generator
+        generator = torch.default_generator
         if seed:
             generator = torch.Generator().manual_seed(seed)
         # from trainer
@@ -74,7 +74,7 @@ class Trainer():
         queue = Queue()
         process_counter = 0
         try:
-            for epoch_index in tqdm(range(num_epochs), desc="Epochs"):
+            for epoch_index in tqdm(range(num_epochs), leave=False, desc="Epochs"):
                 # Train the model
                 self.model.train()
                 self.beta_kl = self.kl_annealing(epoch_index, num_epochs)
@@ -136,7 +136,7 @@ class Trainer():
             print("Exiting training...")
         finally:
             try:
-                for _ in tqdm(range(process_counter), desc="Waiting for metrics"):
+                for _ in tqdm(range(process_counter), leave=False, desc="Waiting for metrics"):
                     i, metrics = queue.get()
                     self.save_metrics(metrics, i)
                 for process in processes:
@@ -158,7 +158,8 @@ class Trainer():
             mode = "training"
         else:
             mode = "validation"
-        for batch_num, batch in enumerate(data_loader):
+        for batch_num, batch in tqdm(enumerate(data_loader), leave=False, total=epoch_len, desc=f"Batch {mode.capitalize()}"):
+        # for batch_num, batch in enumerate(data_loader):
             batch_data = self.process_batch_data(batch)
 
             self.optimizer.zero_grad()

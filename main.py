@@ -107,7 +107,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
     parameters = [i for i in product(
         batch_size, nlayers, kl_Ms, kl_Rs, learning_rate, alpha, beta, gamma, delta, capacity, datasets)]
     if train:
-        for batch_size, nlayer, kl_M, kl_R, lr, al, be, ga, de, ca, dataset in tqdm(parameters, desc="Models"):
+        for batch_size, nlayer, kl_M, kl_R, lr, al, be, ga, de, ca, dataset in tqdm(parameters, leave=False, desc="Models"):
             args["dataset"] = str(dataset)
             args["batch_size"] = batch_size
             args["nlayers"] = nlayer
@@ -119,7 +119,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
             args["gamma"] = ga
             args["delta"] = de
             args["capacity"] = ca
-            for _ in tqdm(range(iteration), desc="Repetitions"):
+            for _ in tqdm(range(iteration), leave=False, desc="Repetitions"):
                 ts = time.time()
                 timestamp = datetime.datetime.fromtimestamp(ts).strftime(
                     '%Y-%m-%d_%H:%M:%S'
@@ -215,7 +215,7 @@ def eval(path):
                 d[i.stem[:19]].append(i)
         dataset = DatasetWordPiece(large=True)
         data_loader = DataLoader(dataset, batch_size=32)
-        for k, v in tqdm(d.items(), desc="Model Iteration"):
+        for k, v in tqdm(d.items(), leave=False, desc="Model Iteration"):
             # Writer anlegen
             # Datensätze laden
             if k == "2022-12-27_10:09:49":
@@ -223,7 +223,7 @@ def eval(path):
             else:
                 reg = False
             old_epoch = -1
-            for f in tqdm(v, desc="Epochs Iteration"):
+            for f in tqdm(v, leave=False, desc="Epochs Iteration"):
                 epoch_num = int(f.stem.split("_")[-1])
                 if epoch_num == old_epoch+1:
                     old_epoch = epoch_num
