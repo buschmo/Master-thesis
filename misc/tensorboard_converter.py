@@ -130,7 +130,7 @@ def parallel(input_dir, output_file):
 
 def get_file_list():
     root_path = Path(os.environ["MASTER"], "save")
-    dirs = [dir for dir in root_path.iterdir() if dir.name not in ["Archive", "SORT"]]
+    dirs = [dir for dir in root_path.iterdir() if dir.name.startswith("20")]
 
     l = []
     for dir in dirs:
