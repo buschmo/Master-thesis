@@ -163,9 +163,13 @@ class Trainer():
 
             self.optimizer.zero_grad()
 
-            loss_dict, accuracy = self.loss_and_acc_for_batch(
-                batch_data, epoch_num, batch_num, train=train
-            )
+            try:
+                loss_dict, accuracy = self.loss_and_acc_for_batch(
+                    batch_data, train=train
+                )
+            except RuntimeError as err:
+                print(f"Epoch-Batch: {epoch_num}-{batch_num}")
+                raise err
 
             loss = loss_dict["sum"]
 
