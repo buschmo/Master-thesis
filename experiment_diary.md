@@ -247,7 +247,7 @@ This file documents the specific experiments
     - 2023-03-22 15:45:55 Wiki Wordlevel 3x ~70h abgebrochen
     - 2023-03-28 20:26:05 Wiki Wordlevel 3x ~41.5h
     - 2023-03-19 19:02:52 Wiki Sentence 3x ~70h abgebrochen
-    - 2023-03-30 :: Wiki Sentence 3x ~70h abgebrochen
+    - 2023-03-30 ??:??:?? Wiki Sentence 3x ~70h abgebrochen
     - 2023-03-30 22:04:57 Wiki Sentence 3x ~31h
         - lr 1e-4
         - batchsize 64
@@ -270,7 +270,7 @@ This file documents the specific experiments
 - Hyper Wiki
     - 2023-03-31 19:58:49 lr 1e-3 ~54h with errors!
     - 2023-03-31 20:04:15 lr 1e-4 ~62h
-    - 2023-04-01 13:12:16 lr 1e-5
+    - 2023-04-01 13:12:17 lr 1e-5 cancelled last two
         - beta 1e-3, 1e-4
     - 2023-03-31 20:06:21 lr 1e-4 ~62h
         - beta 1e-1, 1e-2
