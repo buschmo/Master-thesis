@@ -257,7 +257,7 @@ This file documents the specific experiments
         - delta 1
         - klM 4
         - epochs 50
-- Expand Attributes One Layer
+- Expand Attributes One Layer (Coding mistake)
     - Wiki 3x ~37h
     - German 3x ~6.5h
 - OneAttr Vary layers 
@@ -288,12 +288,27 @@ This file documents the specific experiments
         - gamma 100
     - 2023-04-03 14:50:55 Wikipedia ~
         - gamma 1000
-        - beta 1e-4
+        - beta 1e-3
         - lr 1e-4
         - batchsize 64
         - capacity 0
         - delta 1
         - klM 4
+        - epochs 50
+- Wiki No Reg
+    - 2023-04-03 15:27:28
+- Expand Attributes
+    - 2023-04-04 15:05:06 Wiki
+    - 2023-04-04 15:05:37 Wiki
+    - 2023-04-04 15:06:01 Wiki
+    - 2023-04-04 15:06:56 German
+        - beta 1e-3
+        - gamma 1
+        - lr 1e-4
+        - delta 1
+        - klM 4
+        - batchsize 64
+        - capacity 0
         - epochs 50
 
 ## Diary
