@@ -32,7 +32,7 @@ class BaseModel(nn.Module):
 
         torch.save(self.state_dict(), self.filepath.with_stem(
             f"{epoch_num}"))
-        print(f"Model checkpoint {self} saved for epoch {epoch_num}.")
+        # print(f"Model checkpoint {self} saved for epoch {epoch_num}.")
 
     def load(self):
         self.load_state_dict(torch.load(self.filepath))
