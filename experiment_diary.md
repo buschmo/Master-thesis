@@ -310,6 +310,12 @@ This file documents the specific experiments
         - batchsize 64
         - capacity 0
         - epochs 50
+- Saving model
+    - wikipedia 3 layers ~14h
+    - wikipedia 2 layers ~12h
+    - wikipedia 1 layer ~10.5h
+    - German 1-3 layers ~8h
+
 
 ## Diary
 
