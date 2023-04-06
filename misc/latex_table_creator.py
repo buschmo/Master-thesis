@@ -110,9 +110,8 @@ def add_figures(path_list, options=[""], key="accuracy_training", legendentry="L
 
 def get_figure_path(fig_label, key):
     fig_label = fig_label.replace(" ", "_")
+    key = key.replace("/", "_")
     path_figure = Path(PATH_FIGURES, f"{fig_label}/{key}.tex")
-    if not path_figure.parent.exists():
-        path_figure.parent.mkdir(parents=True)
     return path_figure
 
 
@@ -197,6 +196,8 @@ def make_picture(tables, overwrite=False):
             # legend_str = ",".join(figure["Axis"].keys())
             # figure_str += f"    \\legend{{{legend_str}}}\n"
             figure_str += "    \\end{axis}\n\\end{tikzpicture}"
+            if not path_figure.parent.exists():
+                path_figure.parent.mkdir(parents=True)
             with open(path_figure, "w") as fp:
                 fp.write(figure_str)
 
