@@ -8,7 +8,9 @@ from tensorflow.python.summary.summary_iterator import summary_iterator
 
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-os.chdir("..")
+if not "__path__" in locals():
+    __path__ = Path().absolute()
+    os.chdir("..")
 
 """ convert_tfevent, parse_tfevent, convert_tb_data
     Taken from https://gist.github.com/laszukdawid/62656cf7b34cac35b325ba21d46ecfcd
