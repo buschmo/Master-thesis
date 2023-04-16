@@ -77,7 +77,7 @@ class Trainer():
             for epoch_index in tqdm(range(num_epochs), leave=False, desc="Epochs"):
                 # Train the model
                 self.model.train()
-                self.beta_kl = self.kl_annealing(epoch_index, num_epochs)
+                self.beta_kl = self.kl_annealing(t=epoch_index, T=num_epochs)
                 if self.writer:
                     self.writer.add_scalar(
                         "beta_annealing", self.beta_kl, epoch_index)
@@ -159,7 +159,7 @@ class Trainer():
         else:
             mode = "validation"
         for batch_num, batch in tqdm(enumerate(data_loader), leave=False, total=epoch_len, desc=f"Batch {mode.capitalize()}"):
-        # for batch_num, batch in enumerate(data_loader):
+            # for batch_num, batch in enumerate(data_loader):
             batch_data = self.process_batch_data(batch)
 
             self.optimizer.zero_grad()
@@ -300,7 +300,7 @@ class Trainer():
         queue.put((epoch_num, metrics))
 
     def kl_annealing(self, t, T):
-        # t from 1 to epoch
+        # t from 1 to max number of epoch
         # mod(t-1, ceil(T/M))
         tau = (t % np.ceil(T / self.M)) / (T / self.M)
         if tau <= self.R:
