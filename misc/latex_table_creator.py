@@ -174,7 +174,7 @@ def make_picture(tables, overwrite=False):
             else:
                 not_finished = False
             if not_finished:
-                break
+                continue
 
             xlabel = figure.get("xlabel", "epochs")
             ylabel = ylabels[key]
