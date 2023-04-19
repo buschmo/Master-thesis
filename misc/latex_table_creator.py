@@ -42,6 +42,8 @@ keys = {
     "loss_reconstruction_validation": "Reconstruction loss on validation set",
     "loss_regularization_training": "Regularization loss on training set",
     "loss_regularization_validation": "Regularization loss on validation set",
+    "loss_regularization_unscaled_training": "Regularization loss (unscaled) on training set",
+    "loss_regularization_unscaled_validation": "Regularization loss (unscaled) on validation set",
     "loss_sum_training": "Loss on training set",
     "loss_sum_validation": "Loss on validation set",
     "loss_reconstruction_training": "Batchwise reconstruction loss on training set",
@@ -77,6 +79,8 @@ ylabels = {
     "loss_reconstruction_validation": "Loss",
     "loss_regularization_training": "Loss",
     "loss_regularization_validation": "Loss",
+    "loss_regularization_unscaled_training": "Loss",
+    "loss_regularization_unscaled_validation": "Loss",
     "loss_sum_training": "Loss",
     "loss_sum_validation": "Loss",
     "loss_reconstruction_training": "Loss",
@@ -180,6 +184,7 @@ def make_picture(tables, overwrite=False):
 
                 figures.append(add_figures(path_df, options, key, legend))
             else:
+                print(f"found {key} in {path_df[0].name}")
                 not_finished = False
             if not_finished:
                 continue
