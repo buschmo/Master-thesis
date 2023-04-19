@@ -107,7 +107,7 @@ def main(dry_run: bool, train: bool, evaluate: Path, no_log: bool, save_model: b
     parameters = [i for i in product(
         batch_size, nlayers, kl_Ms, kl_Rs, learning_rate, alpha, beta, gamma, delta, capacity, datasets)]
     if train:
-        for batch_size, nlayer, kl_M, kl_R, lr, al, be, ga, de, ca, dataset in tqdm(parameters, leave=False, desc="Models"):
+        for batch_size, nlayer, kl_M, kl_R, lr, al, be, ga, de, ca, dataset in tqdm(parameters, desc="Models"):
             args["dataset"] = str(dataset)
             args["batch_size"] = batch_size
             args["nlayers"] = nlayer
