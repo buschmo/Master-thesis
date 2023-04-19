@@ -25,6 +25,10 @@ except KeyError:
 keys = {
     "Disentanglement_Interpretability_Mean": "Interpretability Mean",
     "Disentanglement_Interpretability_Simplicity": "Interpretability Simplicity",
+    "Disentanglement_Interpretability_Length": "Interpretability Length",
+    "Disentanglement_Interpretability_POS": "Interpretability unique POS",
+    "Disentanglement_Interpretability_TF-IDF": "Interpretability 3rd-quartile TF-IDF",
+    "Disentanglement_Interpretability_depth": "Interpretability Parse Tree Depth",
     "Disentanglement_Mutual_Information_Gap": "Mutual Information Gap",
     "Disentanglement_Separated_Attribute_Predictability": "Separated Attribute Predictability",
     "Disentanglement_Spearman's_Rank_Correlation": "Spearman's Rank Correlation",
@@ -56,6 +60,10 @@ keys = {
 ylabels = {
     "Disentanglement_Interpretability_Mean": "Score",
     "Disentanglement_Interpretability_Simplicity": "Score",
+    "Disentanglement_Interpretability_Length": "Score",
+    "Disentanglement_Interpretability_POS": "Score",
+    "Disentanglement_Interpretability_TF-IDF": "Score",
+    "Disentanglement_Interpretability_depth": "Score",
     "Disentanglement_Mutual_Information_Gap": "Score",
     "Disentanglement_Separated_Attribute_Predictability": "Score",
     "Disentanglement_Spearman's_Rank_Correlation": "Score",
