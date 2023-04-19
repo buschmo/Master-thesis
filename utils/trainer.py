@@ -158,7 +158,7 @@ class Trainer():
             mode = "training"
         else:
             mode = "validation"
-        for batch_num, batch in tqdm(enumerate(data_loader), leave=False, total=epoch_len, desc=f"Batch {mode.capitalize()}"):
+        for batch_num, batch in tqdm(enumerate(data_loader), leave=False, total=epoch_len, mininterval=1, miniters=20, desc=f"Batch {mode.capitalize()}"):
             # for batch_num, batch in enumerate(data_loader):
             batch_data = self.process_batch_data(batch)
 
