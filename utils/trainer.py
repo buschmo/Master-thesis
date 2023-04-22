@@ -121,14 +121,14 @@ class Trainer():
                     self.save_metrics(metrics, i)
                     process_counter -= 1
 
-                data_element = {
-                    'epoch_index': epoch_index,
-                    'num_epochs': num_epochs,
-                    'mean_loss_train': mean_loss_dict_train["sum"],
-                    'mean_accuracy_train': mean_accuracy_train,
-                    'mean_loss_val': mean_loss_dict_val["sum"],
-                    'mean_accuracy_val': mean_accuracy_val
-                }
+                # data_element = {
+                #     'epoch_index': epoch_index,
+                #     'num_epochs': num_epochs,
+                #     'mean_loss_train': mean_loss_dict_train["sum"],
+                #     'mean_accuracy_train': mean_accuracy_train,
+                #     'mean_loss_val': mean_loss_dict_val["sum"],
+                #     'mean_accuracy_val': mean_accuracy_val
+                # }
                 # self.print_epoch_stats(**data_element)
 
                 if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.save_model:
