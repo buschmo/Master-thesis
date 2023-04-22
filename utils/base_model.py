@@ -24,7 +24,7 @@ class BaseModel(nn.Module):
             self.filepath.parent.mkdir(parents=True)
 
         torch.save(self.state_dict(), self.filepath)
-        print(f"Model {self} saved")
+        # print(f"Model {self} saved")
 
     def save_checkpoint(self, epoch_num):
         if not self.filepath.parent.exists():

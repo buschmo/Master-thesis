@@ -34,6 +34,7 @@ class Trainer():
         else:
             self.writer = None
         self.save_model = save_model
+        self.best_accuracy_val = 0
 
         self.dataset = dataset
         self.model = model
@@ -130,8 +131,13 @@ class Trainer():
                 }
                 # self.print_epoch_stats(**data_element)
 
-                if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.writer and self.save_model:
+                if self.checkpoint_index and (epoch_index % self.checkpoint_index == 0) and self.save_model:
                     self.model.save_checkpoint(epoch_index)
+
+                if self.save_model and self.best_accuracy_val < mean_accuracy_val:
+                    self.best_accuracy_val = mean_accuracy_val
+                    self.model.save()
+
         except KeyboardInterrupt:
             print("Exiting training...")
         finally:
@@ -145,9 +151,6 @@ class Trainer():
                 print("Terminating remaining processes.")
                 for process in processes:
                     process.terminate()
-
-        if self.writer and self.save_model:
-            self.model.save()
 
     def loss_and_acc_on_epoch(self, data_loader, epoch_num=None, train=True):
         # from trainer

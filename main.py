@@ -21,7 +21,7 @@ from utils.datasets import DatasetBERT, DatasetWordPiece
 @click.option("--train", "train", is_flag=True, type=bool, default=False, show_default=True, help="Flag, if a model is to be trained.")
 @click.option("--evaluate", "evaluate", type=click.Path(exists=True, path_type=Path), help="Evaluate a specific model.")
 @click.option("--no-log", "no_log", is_flag=True, type=bool, default=False, show_default=True, help="Toggle logging.")
-@click.option("--save-model", "save_model", is_flag=True, type=bool, default=False, show_default=True, help="Toggle model saving.")
+@click.option("--save-model", "save_model", is_flag=True, type=bool, default=False, show_default=True, help="Toggle saving of model with best validation accuracy.")
 @click.option("--iteration", "iteration", type=int, default=1, show_default=True, help="How many times the program is repeated.")
 @click.option("-M", "--model", "model_selection", type=click.Choice(["TVAE", "Naive"], case_sensitive=False), default="TVAE", show_default=True, help="The model to be used.")
 @click.option("-D", "--dataset", "dataset", type=click.Choice(["German", "Wikipedia", "All"], case_sensitive=False), default="German", show_default=True, help="Determine the dataset(s) to be used.")
