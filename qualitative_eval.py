@@ -16,19 +16,19 @@ models = [
     (Path("ModelGerman.pt"),
         3,
         DatasetWordPiece(large=False, max_length=128),
-        "14779805221749554585"),
+        14779805221749554585),
     (Path("ModelGermanNoReg.pt"),
         3,
         DatasetWordPiece(large=False, max_length=128),
-        "9911442391652574031"),
+        9911442391652574031),
     (Path("ModelWiki.pt"),
         3,
         DatasetWordPiece(large=True, max_length=128),
-        "6003809420069737480"),
+        6003809420069737480),
     (Path("ModelWikiNoReg.pt"),
         3,
         DatasetWordPiece(large=True, max_length=128),
-        "6003809420069737480")
+        6003809420069737480)
 ]
 
 ATTRIBUTE_DIMENSIONS = {
@@ -61,14 +61,11 @@ def sentence_accuracy(weights, targets):
 
 
 def main():
-    # needed for processing batch data
-    fake_label = torch.IntTensor([[1]])
     batch_size = 64
-
     for path_model, nlayers, dataset, seed in models:
         model = TVAE(ntoken=dataset.vocab_size, nlayers=nlayers)
         model.load_state_dict(torch.load(str(path_model)))
-        # model.cuda()
+        model.cuda()
         model.eval()
         trainer = TVAETrainer(dataset=dataset, model=model)
 
@@ -96,10 +93,6 @@ def main():
         sampling_attr = []
 
         for num, batch in tqdm(enumerate(data_loader), leave=False, total=len(data_loader), desc=f"Sentences"):
-            # for num, batch in enumerate(data_loader):
-            # t = torch.Tensor(dataset.encode())
-            # t = t.view(1, -1).long()
-            # batch = trainer.process_batch_data((t, fake_label))
             src, tgt, tgt_true, tgt_mask, memory_mask, src_key_padding_mask, tgt_key_padding_mask, labels = trainer.process_batch_data(
                 batch)
 
@@ -134,6 +127,8 @@ def main():
 
             # Save 3 sentences with accuracy over 90%
             if any(accuracy > .9) and len(interpolations) < 3:
+                mean, std = z_dist.loc, z_dist.scale
+
                 # interpolate every sentence
                 for dim in np.flatnonzero(accuracy > .9):
                     # get sentence
@@ -143,7 +138,6 @@ def main():
                     interpolations[sent_true] = {}
                     # interpolate for every attribute
                     for attr, attr_dim in ATTRIBUTE_DIMENSIONS.items():
-                        mean, std = z_dist.loc, z_dist.scale
                         # [z_dim] -> ["batch", z_dim]
                         interp = compute_latent_interpolations(
                             sent_z, mean, std, dim=attr_dim)
@@ -159,6 +153,8 @@ def main():
                         out_tokens = torch.argmax(logits, dim=-1)
 
                         interpolations[sent_true][attr] = {}
+                        interpolations[sent_true][attr]["mean"] = mean
+                        interpolations[sent_true][attr]["std"] = std
                         for i, out_token in enumerate(out_tokens):
                             out_token = [int(i) for i in out_token.tolist()]
                             interp_sent = dataset.tokenizer.decode(out_token)
@@ -171,7 +167,7 @@ def main():
 
         stem = path_model.stem
         # save two example sentences
-        with open(path_model.with_name(stem+"Example.json"), "w") as fp:
+        with open(path_model.with_name(stem+"Examples.json"), "w") as fp:
             json.dump({
                 "sent_best": dataset.tokenizer.decode(sent_best),
                 "sent_true_best": dataset.tokenizer.decode(sent_true_best),
