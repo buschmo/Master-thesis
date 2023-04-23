@@ -195,7 +195,7 @@ class Trainer():
                         f"loss_{key}_batchwise/{mode}", value.mean(), step)
 
                 self.writer.add_scalar(
-                    "accuracy_batchwise/{mode}", accuracy, step)
+                    f"accuracy_batchwise/{mode}", accuracy, step)
 
         for k, v in mean_loss_dict.items():
             mean_loss_dict[k] = v / len(data_loader)
