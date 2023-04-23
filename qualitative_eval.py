@@ -70,6 +70,9 @@ def to_float(t):
 
 
 def main():
+    if not Path("results").exists():
+        Path("results").mkdir()
+
     batch_size = 64
 
     interpolations = {}
