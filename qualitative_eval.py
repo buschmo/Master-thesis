@@ -8,6 +8,7 @@ from tqdm import tqdm
 from transformers import logging
 import json
 import pandas as pd
+import numpy as np
 logging.set_verbosity_error()
 
 print(torch.__version__)
@@ -40,7 +41,7 @@ ATTRIBUTE_DIMENSIONS = {
 }
 
 
-def compute_latent_interpolations(z, mean, std, dim=0, num_points=7):
+def compute_latent_interpolations(z, mean, std, dim=0, num_points=9):
     x = torch.linspace(mean-2*std, mean+2*std, num_points)
     z = z.repeat(num_points, 1)
     z[:, dim] = x.contiguous()
@@ -60,8 +61,19 @@ def sentence_accuracy(weights, targets):
     return acc
 
 
+def to_numpy(t):
+    return t.detach().cpu().numpy()
+
+
+def to_float(t):
+    return float(t.detach().cpu())
+
+
 def main():
     batch_size = 64
+
+    interpolations = {}
+    examples = {}
     for path_model, nlayers, dataset, seed in models:
         model = TVAE(ntoken=dataset.vocab_size, nlayers=nlayers)
         model.load_state_dict(torch.load(str(path_model)))
@@ -86,13 +98,16 @@ def main():
 
         # for saving 3 good sentences for interpolation
         sents_interpolation = []
-        interpolations = {}
+        interpolations[path_model.stem] = {}
 
         # for saving sampling
         sampling_z = []
         sampling_attr = []
+        # sampling_mean = 0
+        # sampling_std = 0
 
-        for num, batch in tqdm(enumerate(data_loader), leave=False, total=len(data_loader), desc=f"Sentences"):
+        # for num, batch in enumerate(data_loader):
+        for num, batch in tqdm(enumerate(data_loader), leave=True, total=len(data_loader), desc=f"Sentence batch"):
             src, tgt, tgt_true, tgt_mask, memory_mask, src_key_padding_mask, tgt_key_padding_mask, labels = trainer.process_batch_data(
                 batch)
 
@@ -111,87 +126,103 @@ def main():
             accuracy = sentence_accuracy(logits, tgt_true)
 
             # save sampling
-            sampling_z.append(z_tilde)
-            sampling_attr.append(labels)
+            sampling_z.append(to_numpy(z_tilde))
+            sampling_attr.append(to_numpy(labels))
+
+            # save mean and std
+            # sampling_mean += torch.sum(z_dist.loc)
+            # sampling_std += torch.sum(z_dist.scale)
 
             # save best sentence
             if accuracy.max() > acc_best:
-                acc_best = accuracy.max()
-                sent_best = out_tokens[accuracy.argmax()]
-                sent_true_best = tgt_true[accuracy.argmax()]
+                acc_best = float(accuracy.max())
+                sent_best = [int(i)
+                             for i in out_tokens[accuracy.argmax()].tolist()]
+                sent_true_best = [int(i)
+                                  for i in tgt_true[accuracy.argmax()].tolist()]
             # save worst sentence
             if accuracy.min() < acc_worst:
-                acc_worst = accuracy.min()
-                sent_worst = out_tokens[accuracy.argmin()]
-                sent_true_worst = tgt_true[accuracy.argmin()]
+                acc_worst = float(accuracy.min())
+                sent_worst = [int(i)
+                              for i in out_tokens[accuracy.argmin()].tolist()]
+                sent_true_worst = [
+                    int(i) for i in tgt_true[accuracy.argmin()].tolist()]
 
             # Save 3 sentences with accuracy over 90%
-            if any(accuracy > .9) and len(interpolations) < 3:
-                mean, std = z_dist.loc, z_dist.scale
-
+            if any(accuracy > .9) and len(interpolations[path_model.stem]) < 3:
                 # interpolate every sentence
                 for dim in np.flatnonzero(accuracy > .9):
                     # get sentence
                     sent_z = z_tilde[dim]
-                    sent_true = tgt_true[dim]
+                    sent_true = dataset.tokenizer.decode(
+                        [int(i) for i in tgt_true[dim].tolist()])
 
-                    interpolations[sent_true] = {}
+                    # _, tgt, _, tgt_mask, memory_mask, src_key_padding_mask, tgt_key_padding_mask, _ = trainer.process_batch_data(
+                    #     (batch[0][dim].view(1, -1).repeat(9,1), batch[1][dim].view(1, -1).repeat(9,1)))
+                    interp_tgt = tgt[dim].view(1, -1).repeat(9, 1)
+                    interp_src_key_padding_mask = src_key_padding_mask[dim].view(
+                        1, -1).repeat(9, 1)
+                    interp_tgt_key_padding_mask = tgt_key_padding_mask[dim].view(
+                        1, -1).repeat(9, 1)
+
+                    interpolations[path_model.stem][sent_true] = {}
                     # interpolate for every attribute
                     for attr, attr_dim in ATTRIBUTE_DIMENSIONS.items():
+                        mean = to_float(z_dist.loc[dim][attr_dim])
+                        std = to_float(z_dist.scale[dim][attr_dim])
+
                         # [z_dim] -> ["batch", z_dim]
                         interp = compute_latent_interpolations(
                             sent_z, mean, std, dim=attr_dim)
 
                         logits = model.decode(
                             z_tilde=interp,
-                            tgt=tgt,
+                            tgt=interp_tgt,
                             tgt_mask=tgt_mask,
                             memory_mask=memory_mask,
-                            src_key_padding_mask=src_key_padding_mask,
-                            tgt_key_padding_mask=tgt_key_padding_mask
+                            src_key_padding_mask=interp_src_key_padding_mask,
+                            tgt_key_padding_mask=interp_tgt_key_padding_mask
                         )
                         out_tokens = torch.argmax(logits, dim=-1)
 
-                        interpolations[sent_true][attr] = {}
-                        interpolations[sent_true][attr]["mean"] = mean
-                        interpolations[sent_true][attr]["std"] = std
+                        interpolations[path_model.stem][sent_true][attr] = {}
+                        interpolations[path_model.stem][sent_true][attr]["mean"] = mean
+                        interpolations[path_model.stem][sent_true][attr]["std"] = std
                         for i, out_token in enumerate(out_tokens):
                             out_token = [int(i) for i in out_token.tolist()]
                             interp_sent = dataset.tokenizer.decode(out_token)
-
-                            interpolations[sent_true][attr][i] = interp_sent
+                            interpolations[path_model.stem][sent_true][attr][i] = interp_sent
 
                     # Break if enough were found already
-                    if len(interpolations) >= 3:
+                    if len(interpolations[path_model.stem]) >= 3:
                         break
 
-        stem = path_model.stem
-        # save two example sentences
-        with open(path_model.with_name(stem+"Examples.json"), "w") as fp:
-            json.dump({
-                "sent_best": dataset.tokenizer.decode(sent_best),
-                "sent_true_best": dataset.tokenizer.decode(sent_true_best),
-                "acc_best": acc_best,
-                "sent_worst": dataset.tokenizer.decode(sent_worst),
-                "sent_true_worst": dataset.tokenizer.decode(sent_true_worst),
-                "acc_worst": acc_worst
-            }, fp, indent=4)
+        # sampling_mean = torch.div(sampling_mean, len(data_loader))
+        # sampling_std = torch.div(sampling_std, len(data_loader))
 
-        with open(path_model.with_name(stem+"Interpolation.json"), "w") as fp:
-            json.dump(interpolations, fp, indent=4)
+        examples[path_model.stem] = {
+            "sent_best": dataset.tokenizer.decode(sent_best),
+            "sent_true_best": dataset.tokenizer.decode(sent_true_best),
+            "acc_best": acc_best,
+            "sent_worst": dataset.tokenizer.decode(sent_worst),
+            "sent_true_worst": dataset.tokenizer.decode(sent_true_worst),
+            "acc_worst": acc_worst,
+            # "sampling_mean": sampling_mean,
+            # "sampling_std": sampling_std
+        }
 
         # with open(path_model.with_name(stem+"Sampling.dat"), "w") as fp:
-        sampling_z = torch.concat(sampling_z)
-        sampling_attr = torch.concat(sampling_attr)
+        sampling_z = np.vstack(sampling_z)
+        sampling_attr = np.vstack(sampling_attr)
 
         sampling_z = pd.DataFrame(sampling_z)
         sampling_attr = pd.DataFrame(
-            sampling_attr, columms=ATTRIBUTE_DIMENSIONS.keys())
+            sampling_attr, columns=ATTRIBUTE_DIMENSIONS.keys())
 
         sampling = pd.concat([sampling_z, sampling_attr], axis=1)
 
         sampling.to_csv(path_model.with_name(
-            stem+"Sampling.dat"), sep="\t", index=False)
+            path_model.stem+"Sampling.dat"), sep="\t", index=False)
 
         # out_tokens = torch.argmax(logits, dim=-1)
         # out_tokens = [int(i) for i in list(out_tokens.data.to("cpu")[0])]
@@ -200,6 +231,13 @@ def main():
         # print("2", dataset.tokenizer.decode(true_tokens))
         # if num > 5:
         #     break
+
+    # save two example sentences
+    with open("Examples.json", "w") as fp:
+        json.dump(examples, fp, indent=4)
+
+    with open("Interpolation.json", "w") as fp:
+        json.dump(interpolations, fp, indent=4)
 
 
 if __name__ == "__main__":
