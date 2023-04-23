@@ -221,8 +221,7 @@ def main():
 
         sampling = pd.concat([sampling_z, sampling_attr], axis=1)
 
-        sampling.to_csv(path_model.with_name(
-            path_model.stem+"Sampling.dat"), sep="\t", index=False)
+        sampling.to_csv("results/"+path_model.stem+"Sampling.dat", sep="\t", index=False)
 
         # out_tokens = torch.argmax(logits, dim=-1)
         # out_tokens = [int(i) for i in list(out_tokens.data.to("cpu")[0])]
@@ -233,10 +232,10 @@ def main():
         #     break
 
     # save two example sentences
-    with open("Examples.json", "w") as fp:
+    with open("results/Examples.json", "w") as fp:
         json.dump(examples, fp, indent=4)
 
-    with open("Interpolation.json", "w") as fp:
+    with open("results/Interpolation.json", "w") as fp:
         json.dump(interpolations, fp, indent=4)
 
 
