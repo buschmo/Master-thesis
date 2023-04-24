@@ -2,12 +2,10 @@ from pathlib import Path
 import os
 import pandas as pd
 import numpy as np
-import pprint
 import json
 from shutil import copyfile
 import click
 
-p = pprint.PrettyPrinter(indent=4)
 os.chdir(Path(os.environ["MASTER"]))
 
 try:
