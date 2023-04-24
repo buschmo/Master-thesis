@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import logging
+import click
 import json
 import pandas as pd
 import numpy as np
@@ -41,7 +42,7 @@ ATTRIBUTE_DIMENSIONS = {
 }
 
 
-def compute_latent_interpolations(z, mean, std, dim=0, num_points=9):
+def compute_latent_interpolations(z, mean=0, std=2, dim=0, num_points=9):
     x = torch.linspace(mean-2*std, mean+2*std, num_points)
     z = z.repeat(num_points, 1)
     z[:, dim] = x.contiguous()
@@ -69,7 +70,9 @@ def to_float(t):
     return float(t.detach().cpu())
 
 
-def main():
+@click.command()
+@click.option("--sample", "flag_sample", is_flag=True, type=bool, default=False, show_default=True, help="Flag, if sampling should be done.")
+def main(flag_sample: bool):
     if not Path("results").exists():
         Path("results").mkdir()
 
@@ -104,6 +107,7 @@ def main():
         interpolations[path_model.stem] = {}
 
         # for saving sampling
+        path_sampling = Path("results/"+path_model.stem+"Sampling.dat")
         sampling_z = []
         sampling_attr = []
         # sampling_mean = 0
@@ -176,7 +180,8 @@ def main():
 
                         # [z_dim] -> ["batch", z_dim]
                         interp = compute_latent_interpolations(
-                            sent_z, mean, std, dim=attr_dim)
+                            # sent_z, mean, std, dim=attr_dim)
+                            sent_z, dim=attr_dim)
 
                         logits = model.decode(
                             z_tilde=interp,
@@ -214,17 +219,18 @@ def main():
             # "sampling_std": sampling_std
         }
 
-        # with open(path_model.with_name(stem+"Sampling.dat"), "w") as fp:
-        sampling_z = np.vstack(sampling_z)
-        sampling_attr = np.vstack(sampling_attr)
+        if flag_sample:
+            # with open(path_model.with_name(stem+"Sampling.dat"), "w") as fp:
+            sampling_z = np.vstack(sampling_z)
+            sampling_attr = np.vstack(sampling_attr)
 
-        sampling_z = pd.DataFrame(sampling_z)
-        sampling_attr = pd.DataFrame(
-            sampling_attr, columns=ATTRIBUTE_DIMENSIONS.keys())
+            sampling_z = pd.DataFrame(sampling_z)
+            sampling_attr = pd.DataFrame(
+                sampling_attr, columns=ATTRIBUTE_DIMENSIONS.keys())
 
-        sampling = pd.concat([sampling_z, sampling_attr], axis=1)
+            sampling = pd.concat([sampling_z, sampling_attr], axis=1)
 
-        sampling.to_csv("results/"+path_model.stem+"Sampling.dat", sep="\t", index=False)
+            sampling.to_csv(path_sampling, sep="\t", index=False)
 
         # out_tokens = torch.argmax(logits, dim=-1)
         # out_tokens = [int(i) for i in list(out_tokens.data.to("cpu")[0])]
