@@ -129,6 +129,7 @@ def get_figure_path(fig_label, key):
 
 def get_csv_path(fig_label, legend):
     fig_label = fig_label.replace(" ", "_")
+    fig_label = fig_label.replace(":", "_")
     legend = legend.replace(" ", "_")
     path_csv = Path(PATH_FIGURES, f"data/{fig_label}_{legend}.csv")
     if not path_csv.parent.exists():
