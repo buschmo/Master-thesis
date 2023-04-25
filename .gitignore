@@ -6,6 +6,7 @@ data/
 figures/
 logs/
 results/
+results (copy)/
 runs/
 Todo.md
 *.json
