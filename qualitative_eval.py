@@ -139,26 +139,33 @@ def main(flag_sample: bool):
             # save mean and std
             # sampling_mean += torch.sum(z_dist.loc)
             # sampling_std += torch.sum(z_dist.scale)
-
+            
+            max_index = accuracy.argmax()
+            min_index = accuracy.argmin()
+            
             # save best sentence
-            if accuracy.max() > acc_best:
+            if accuracy.max() > acc_best and (labels[max_index][3] > 5 and labels[max_index][3] < 15):
                 acc_best = float(accuracy.max())
                 sent_best = [int(i)
-                             for i in out_tokens[accuracy.argmax()].tolist()]
+                             for i in out_tokens[max_index].tolist()]
                 sent_true_best = [int(i)
-                                  for i in tgt_true[accuracy.argmax()].tolist()]
+                                  for i in tgt_true[max_index].tolist()]
             # save worst sentence
-            if accuracy.min() < acc_worst:
+            if accuracy.min() < acc_worst and (labels[min_index][3] > 5 and labels[min_index][3] < 15):
                 acc_worst = float(accuracy.min())
                 sent_worst = [int(i)
-                              for i in out_tokens[accuracy.argmin()].tolist()]
+                              for i in out_tokens[min_index].tolist()]
                 sent_true_worst = [
-                    int(i) for i in tgt_true[accuracy.argmin()].tolist()]
+                    int(i) for i in tgt_true[min_index].tolist()]
 
             # Save 3 sentences with accuracy over 90%
             if any(accuracy > .9) and len(interpolations[path_model.stem]) < 3:
                 # interpolate every sentence
                 for dim in np.flatnonzero(accuracy > .9):
+                    # Skip too long or too short sentences                    
+                    if not (labels[dim][3] > 5 and labels[dim][3] < 15):
+                        continue
+
                     # get sentence
                     sent_z = z_tilde[dim]
                     sent_true = dataset.tokenizer.decode(
@@ -173,6 +180,7 @@ def main(flag_sample: bool):
                         1, -1).repeat(9, 1)
 
                     interpolations[path_model.stem][sent_true] = {}
+                    interpolations[path_model.stem][sent_true]["Accuracy"] = accuracy[dim]
                     # interpolate for every attribute
                     for attr, attr_dim in ATTRIBUTE_DIMENSIONS.items():
                         mean = to_float(z_dist.loc[dim][attr_dim])
@@ -196,10 +204,11 @@ def main(flag_sample: bool):
                         interpolations[path_model.stem][sent_true][attr] = {}
                         interpolations[path_model.stem][sent_true][attr]["mean"] = mean
                         interpolations[path_model.stem][sent_true][attr]["std"] = std
+                        interpolations[path_model.stem][sent_true][attr]["label"] = to_float(labels[dim][attr_dim])
                         for i, out_token in enumerate(out_tokens):
                             out_token = [int(i) for i in out_token.tolist()]
                             interp_sent = dataset.tokenizer.decode(out_token)
-                            interpolations[path_model.stem][sent_true][attr][i] = interp_sent
+                            interpolations[path_model.stem][sent_true][attr][-4+(i*1)] = interp_sent
 
                     # Break if enough were found already
                     if len(interpolations[path_model.stem]) >= 3:
