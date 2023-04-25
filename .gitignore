@@ -5,8 +5,7 @@ csv/
 data/
 figures/
 logs/
-results/
-results (copy)/
+results*/
 runs/
 Todo.md
 *.json
