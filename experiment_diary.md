@@ -214,7 +214,7 @@ This file documents the specific experiments
         - delta 1
         - klM 4
         - epochs 50
-- Hyperparameter Wiki, filtered by previous german run
+- Hyperparameter Wiki, filtered by previous german run (WRONG DATASET!)
     - 2023-02-28 21:05:17 Beta 1e-3
     - 2023-03-09 18:11:08 Beta 1e-3 2x
     - 2023-02-28 21:05:27 Beta 1e-4
@@ -301,7 +301,7 @@ This file documents the specific experiments
     - 2023-04-04 15:05:06 Wiki
     - 2023-04-04 15:05:37 Wiki
     - 2023-04-04 15:06:01 Wiki
-    - 2023-04-04 15:06:56 German
+    - 2023-04-04 15:06:56 German x3
         - beta 1e-3
         - gamma 1
         - lr 1e-4
