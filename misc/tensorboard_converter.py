@@ -21,7 +21,7 @@ if not "__path__" in locals():
 def convert_tfevent(filepath, name_suffix=""):
     try:
         return pd.DataFrame([
-            parse_tfevent(e, name_suffix) for e in summary_iterator(filepath) if len(e.summary.value)
+            parse_tfevent(e, name_suffix) for e in summary_iterator(filepath) if len(e.summary.value) and "batchwise" not in e.summary.value[0].tag
         ])
     except tf.errors.DataLossError as err:
         print(f"Error with file:\n\t{filepath}")
@@ -78,7 +78,13 @@ def convert_tb_data(root_dir):
         break
 
     # Concatenate (and sort) all partial individual dataframes
-    df = pd.concat(out)[columns_order]
+    try:
+        df = pd.concat(out)[columns_order]
+    except KeyError as err:
+        print(root_dir)
+        print(out)
+        print(err)
+        raise RuntimeError
 
     epoch_dict = {}
     batch_training_dict = {}
@@ -123,8 +129,11 @@ def convert_tb_data(root_dir):
 
 
 def parallel(input_dir, output_file):
-    epoch_df, batch_training_df, batch_validation_df = convert_tb_data(
+    try:
+        epoch_df, batch_training_df, batch_validation_df = convert_tb_data(
         input_dir)
+    except RuntimeError:
+        return
 
     epoch_df.to_csv(output_file, sep="\t", index_label="step")
     if not (batch_training_df.empty or batch_validation_df.empty):
@@ -159,3 +168,5 @@ if __name__ == "__main__":
         l.append((input_dir, output_file))
     with Pool() as pool:
         pool.starmap(parallel, l)
+    # for i in l:
+    #     parallel(input_dir=i[0],output_file=i[1])

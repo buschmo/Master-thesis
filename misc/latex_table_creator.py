@@ -154,6 +154,8 @@ def merge(paths, path_csv):
 def make_picture(tables, overwrite=False):
     for fig_label, figure in tables.items():
         for key, title in keys.items():
+            if "batchwise" in key:
+                continue
             figures = []
             legend_str = ""
             path_figure = get_figure_path(fig_label, key)
@@ -183,7 +185,6 @@ def make_picture(tables, overwrite=False):
 
                 figures.append(add_figures(path_df, options, key, legend))
             else:
-                print(f"found {key} in {path_df[0].name}")
                 not_finished = False
             if not_finished:
                 continue
